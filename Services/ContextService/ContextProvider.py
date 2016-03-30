@@ -1,0 +1,147 @@
+#!/usr/bin/env python
+
+import multiprocessing
+import signal
+import itertools
+import logging
+import zmq
+import threading
+import sys, os
+import time
+import json
+import pprint
+
+import logging.handlers
+from threading import Thread
+
+from Context import ContextGroup
+from Utils import ParseXml2Dict
+from Provider.Service import TaskedService
+from Utils import Utilities
+import Utils
+
+def init_worker():
+  signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+def run_forwarder( id_, *args, **kwargs):
+  try:
+    frontendURL = args[0]
+    backendURL  = args[1]
+    
+    # Creating context and sockets
+    context = zmq.Context(1)
+    frontend = context.socket(zmq.SUB)
+    backend = context.socket(zmq.PUB)
+    
+    # Socket facing clients
+    frontend.bind(frontendURL)
+    #frontend.bind("tcp://*:5557")
+    frontend.setsockopt(zmq.SUBSCRIBE, "")
+
+    # Socket facing services
+    backend.bind(backendURL)
+    #backend.bind("tcp://*:5556")
+
+    #Setting up forwarder device
+    zmq.device(zmq.FORWARDER, frontend, backend)
+  except KeyboardInterrupt, e:
+      pass
+
+def CreateSafeFowarder(frontBind, backendBind, logger):
+  logger.debug("  Creating pool with signal handler")
+  args = (frontBind, backendBind, logger)
+  pool = multiprocessing.Pool(1, init_worker)
+  
+  args, kw = (frontBind,backendBind), {}
+  sol = pool.apply_async(run_forwarder, (0,) + args, kw)
+  return pool
+
+def main(filename):
+  myFormat = '%(asctime)s|%(name)25s|%(message)s'
+  logging.basicConfig(format=myFormat, level=logging.DEBUG)
+
+  joined        = 0
+  keepAlive	= True
+  threads	= []
+  logger	= logging.getLogger("ContextProvider")
+  pool		= None
+  
+  try: 
+    rootName 		= 'Context'
+    testConf 		= ParseXml2Dict(filename, rootName)
+    
+    frontend 		= testConf['FrontEndEndpoint']
+    backend 		= testConf['BackendEndpoint']
+    frontBind 		= testConf['FrontBind']
+    backendBind		= testConf['BackendBind']
+    
+    testConfKeys	= testConf.keys()
+    
+    # Running forwarder
+    pool = CreateSafeFowarder(frontBind, backendBind, logger)
+    
+    # Getting log name
+    if 'TaskLogName' not in testConfKeys:      
+      logger.debug( "Log name not found in file: "+filename)
+      return
+    
+    # Setting up logger
+    log_name 	= testConf['TaskLogName']
+    logger	= logging.getLogger(log_name)
+    logger.debug( "Parsing tree  ["+rootName+"] in file: "+filename)
+
+
+    # Starting threaded services
+    logger.debug("Creating an context provider")
+    s1 = TaskedService(0, frontend	=frontend, 
+			  backend	=backend,
+			  strategy	=ContextGroup,
+			  topic		='context')
+    threads.append(s1)
+    
+    time.sleep(0.5)
+    #if s1.isDevice:
+      #threads.append(s1.forwarder)
+    
+    # Looping service provider
+    threadSize = len(threads)
+    while keepAlive:
+      if joined != threadSize:
+	for i in range(threadSize):
+	  if threads[i] is not None and threads[i].isAlive():
+	    logger.debug("Joining thread %d..."%i)
+	    threads[i].join(1)
+	    joined += 1
+      #time.sleep()
+      else:
+	# Doing nothing while other threads do their work
+	time.sleep(1)
+    
+  except KeyboardInterrupt:
+    logger.debug( "Ctrl-C received! Sending kill to all threads...")
+    # Stopping thread execution
+    threadSize = len(threads)
+    print "===> threadSize :", threadSize 
+    for i in range(threadSize):
+      logger.debug("Killing thread [%d]..."%i)
+      print "===> threads[",i,"] :", threads[i] 
+      if threads[i] is not None:
+	threads[i].stop()
+    # Stopping pool
+    logger.debug( "Stopping process pool")
+    if pool is not None:
+      pool.close()
+
+  except Exception as inst:
+    Utilities.ParseException(inst, logger=logger)		
+
+  finally:
+    ##TODO: Do not reach this point until all processes are stopped
+    logger.debug("Ending main thread...")
+    keepAlive = False
+
+if __name__ == '__main__':
+  if len(sys.argv) > 1:
+      print "usage: ContextService.py "
+      raise SystemExit
+  main(sys.argv[1])
