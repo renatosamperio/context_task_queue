@@ -233,40 +233,45 @@ def message(options):
 
   elif header["service_name"] == 'sniffer':
     configuration = {
-      "device_action":	'',
-      "result":		'',
-      "tracks":		''
+      "device_action":	''
     }
     
     if options.device_action is not None:
       configuration["device_action"] = options.device_action
-    if options.result is not None:
-      configuration["result"] = options.result
-    if options.track_title is not None or len(options.track_title)>0:
-      configuration["tracks"] = []
-      for i in range(len(options.track_title)):
-	track = options.track_title[i]
-	item = {'track':track, 'timestamp': ''}
-	#print "track:", options.track_title
-	try:
-	  timestamp = options.track_timestamp[i]
-	  print "===> item:", item
-	  item['timestamp'] = timestamp
-	except IndexError:
-	  item['timestamp'] = str(datetime.datetime.now())
-	except Exception as inst: 
-	  exc_type, exc_obj, exc_tb = sys.exc_info()
-	  exception_fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-	  exception_line = str(exc_tb.tb_lineno) 
-	  exception_type = str(type(inst))
-	  exception_desc = str(inst)
-	  print "  %s: %s in %s:%s"%(exception_type, 
-				    exception_desc, 
-				    exception_fname,  
-				    exception_line )
-	## Adding track item to content 
-	configuration["tracks"].append(item)	
-    content = {"content": {"status": configuration}}
+      if options.service_name == 'track_found':
+	if options.result != 'none':
+	  configuration["result"] = options.result
+	
+	if options.track_title is not None or len(options.track_title)>0:
+	  configuration["tracks"] = []
+	  for i in range(len(options.track_title)):
+	    track = options.track_title[i]
+	    item = {'track':track, 'timestamp': ''}
+	    #print "track:", options.track_title
+	    try:
+	      timestamp = options.track_timestamp[i]
+	      item['timestamp'] = timestamp
+	    except IndexError:
+	      item['timestamp'] = str(datetime.datetime.now())
+	    except Exception as inst: 
+	      exc_type, exc_obj, exc_tb = sys.exc_info()
+	      exception_fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+	      exception_line = str(exc_tb.tb_lineno) 
+	      exception_type = str(type(inst))
+	      exception_desc = str(inst)
+	      print "  %s: %s in %s:%s"%(exception_type, 
+					exception_desc, 
+					exception_fname,  
+					exception_line )
+	    ## Adding track item to content 
+	    configuration["tracks"].append(item)
+	    content = {"content": {"status": configuration}}
+	    
+      elif options.service_name == 'sniffer' and (options.action == 'start' or options.action == 'restart'):
+	configuration.update({"filter": options.sniffer_filter})
+	configuration.update({"headerPath": options.sniffer_header})
+	configuration.update({"interface": options.interface})
+	content = {"content": {"configuration": configuration}}
 
   elif header["service_name"] == 'music_search':
     configuration = {
@@ -325,7 +330,7 @@ if __name__ == '__main__':
   ''' '''
   available_services		= ['ftp', 'portal', 'device', 'local', 'context', 'state', 'sniffer', 'music_search', 'all']
   available_action_cmds		= ['new_songs', 'none']
-  available_device_actions	= ['syslog', 'downloader', 'track_found', 'track_report','none']
+  available_device_actions	= ['syslog', 'downloader', 'track_found', 'track_report', 'sniff', 'none']
   available_actions		= ['start', 'stop', 'restart', 'request', 'updated', 'none']
   available_topics		= ['process', 'context', 'control']
   available_results		= ['success', 'failure', 'none']
@@ -546,12 +551,28 @@ if __name__ == '__main__':
 		      default=None,
                       help='sets report track query. Text to be found in DB record.')
   
+  
+  snifferOpts = OptionGroup(parser, "Sniffer service",
+		      "These options are for configuring sniffer command"
+		      "")
+  snifferOpts.add_option('--sniffer_filter',
+		    type="string",
+		    action='store',
+		    default=None,
+		    help='path where local files are found')  
+  snifferOpts.add_option('--sniffer_header',
+		    type="string",
+		    action='store',
+		    default=None,
+		    help='path where local files are found')  
+  
   parser.add_option_group(deviceOpts)
   parser.add_option_group(ftpOpts)
   parser.add_option_group(localOpts)
   parser.add_option_group(portalOpts)
   parser.add_option_group(contextOpts)
   parser.add_option_group(annotatorOpts)
+  parser.add_option_group(snifferOpts)
 
   (options, args) = parser.parse_args()
  
@@ -617,11 +638,23 @@ if __name__ == '__main__':
     if options.device_action == 'none':
       parser.error("Missing required option: device_action")
     
-    if options.result == 'none':
-      parser.error("Missing required option: result")
+    #if options.result is not 'none':
+    if options.result == 'track_found':
+      #parser.error("Missing required option: result")
     
-    if len(options.track_title)<1:
-      parser.error("Missing required option: track_title")
+      if len(options.track_title)<1:
+	parser.error("Missing required option: track_title")
+    
+    if options.service_name == 'sniffer' and (options.action == 'start' or options.action == 'restart'):
+      if options.sniffer_filter is None:
+	parser.error("Missing required option: sniffer_filter")
+	
+      if options.sniffer_header is None:
+	parser.error("Missing required option: sniffer_header")
+	
+      if options.interface is None:
+	parser.error("Missing required option: interface")
+    
 
   if options.service_name == 'music_search':
     if options.action == 'none':
