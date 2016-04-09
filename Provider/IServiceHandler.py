@@ -206,8 +206,21 @@ class ServiceHandler:
     '''Start specific service implementation'''
     self.logger.debug("  Starting service handler")
     try:
+      msgKeys = msg.keys()
       
+      if 'header' not in msgKeys:
+	self.logger.debug("  - Inactive process, received message without header")
+	return
       header = msg['header']
+      
+      if 'content' not in msgKeys:
+	self.logger.debug("  - Inactive process, received message without content")
+	return
+      
+      contentKeys = msg['content'].keys()
+      if 'configuration' not in contentKeys:
+	self.logger.debug("  - Inactive process, received message without content configuration")
+	return
       conf   = msg['content']['configuration']
 	
       if self.actionHandler is None:
