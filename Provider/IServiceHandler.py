@@ -168,8 +168,8 @@ class ServiceHandler:
       # Cleaning up the message template
       contentKeys = self.content.keys()
       for key in contentKeys:
-	if key != 'status':
-	  self.content.pop(key, 0)
+	if key == 'status':
+	  self.content['status'] = {}
 	
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
