@@ -4,6 +4,33 @@ import ctypes
 import sys, os
 import string
 import random
+import logging
+import logging.handlers
+
+''' Base name for file logger'''
+LOG_FILENAME	= 'context_provider.log'
+
+''' Base name for logger'''
+LOG_NAME	= 'ContextProvider'
+
+def GetLogger(logName=LOG_NAME, useFile=True):
+  ''' Returns an instance of logger '''
+  logger = logging.getLogger(logName)
+  if useFile:
+    fileHandler = GetFileLogger()
+    logger.addHandler(fileHandler)
+  return logger
+    
+def GetFileLogger(fileLength=100000, numFiles=5):
+  ''' Sets up file handler for logger'''
+  myFormat = '%(asctime)s|%(name)25s|%(message)s'
+  formatter = logging.Formatter(myFormat)
+  fileHandler = logging.handlers.RotatingFileHandler(
+                    filename=LOG_FILENAME, 
+                    maxBytes=fileLength, 
+                    backupCount=numFiles)
+  fileHandler.setFormatter(formatter)
+  return fileHandler
 
 def ParseException(inst, logger=None):
   exc_type, exc_obj, exc_tb = sys.exc_info()
