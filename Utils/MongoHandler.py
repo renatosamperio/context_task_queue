@@ -18,7 +18,7 @@ class MongoAccess:
   def __init__(self, debug=False):
     ''' '''
     component		= self.__class__.__name__
-    self.logger		= logging.getLogger(component)
+    self.logger		= Utilities.GetLogger(component)
     self.collection 	= None
     self.debug	 	= debug
     
@@ -160,11 +160,11 @@ def db_handler_call(options):
 if __name__ == '__main__':
   ''''''
   LOG_NAME = 'MongoAccessTool'
-  logger = logging.getLogger(LOG_NAME)
+  logger = Utilities.GetLogger(LOG_NAME, useFile=False)
   
   myFormat = '%(asctime)s|%(name)30s|%(message)s'
   logging.basicConfig(format=myFormat, level=logging.DEBUG)
-  logger 	= logging.getLogger(LOG_NAME)
+  logger 	= Utilities.GetLogger(LOG_NAME, useFile=False)
   logger.debug('Logger created.')
 
   usage = "usage: %prog opt1=arg1 opt2=arg2"
