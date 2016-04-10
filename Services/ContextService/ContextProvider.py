@@ -16,7 +16,7 @@ from threading import Thread
 
 from Context import ContextGroup
 from Utils import ParseXml2Dict
-from Provider.Service import TaskedService
+from Provider.Service import MultiProcessTasks
 from Utils import Utilities
 import Utils
 
@@ -90,10 +90,9 @@ def main(filename):
     logger	= logging.getLogger(log_name)
     logger.debug( "Parsing tree  ["+rootName+"] in file: "+filename)
 
-
     # Starting threaded services
     logger.debug("Creating an context provider")
-    s1 = TaskedService(0, frontend	=frontend, 
+    s1 = MultiProcessTasks(0, frontend	=frontend, 
 			  backend	=backend,
 			  strategy	=ContextGroup,
 			  topic		='context')
@@ -108,7 +107,7 @@ def main(filename):
     while keepAlive:
       if joined != threadSize:
 	for i in range(threadSize):
-	  if threads[i] is not None and threads[i].isAlive():
+	  if threads[i] is not None:
 	    logger.debug("Joining thread %d..."%i)
 	    threads[i].join(1)
 	    joined += 1
