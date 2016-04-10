@@ -63,7 +63,7 @@ def main(filename):
   joined        = 0
   keepAlive	= True
   threads	= []
-  logger	= logging.getLogger("ContextProvider")
+  logger	= Utilities.GetLogger("ContextProvider", useFile=True)
   pool		= None
   
   try: 
@@ -87,7 +87,7 @@ def main(filename):
     
     # Setting up logger
     log_name 	= testConf['TaskLogName']
-    logger	= logging.getLogger(log_name)
+    logger	= Utilities.GetLogger(logName=log_name)
     logger.debug( "Parsing tree  ["+rootName+"] in file: "+filename)
 
     # Starting threaded services
