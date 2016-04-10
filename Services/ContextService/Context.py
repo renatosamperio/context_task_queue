@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import logging
 import time
 import json
 import zmq
@@ -21,7 +20,7 @@ class ContextGroup:
   ''' '''
   def __init__(self, **kwargs):    
     component		= self.__class__.__name__
-    self.logger		= logging.getLogger(component)
+    self.logger		= Utilities.GetLogger(logName=component)
     self.trialTimes 	= 0
     self.threads	= {}
     self.joined		= 0
