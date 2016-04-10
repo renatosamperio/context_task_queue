@@ -26,11 +26,12 @@ class TaskedService(object):
       ''' '''
       try:
 	# Initialising thread parent class
-	threading.Thread.__init__(self)
-	component	    	= self.__class__.__name__
+	component	= self.__class__.__name__
+	self.threadID	= threadID
+	self.logger	= Utilities.GetLogger(logName=component+str(self.threadID))
+	
 	self.ipc_ready 	= False
 	self.tStop 	= threading.Event()
-	self.threadID	= threadID
 	self.frontend	= None
 	self.backend	= None
 	self.endpoint	= None
@@ -38,11 +39,10 @@ class TaskedService(object):
 	self.context  	= None
 	self.action	= None
 	self.tid      	= None
-	self.transaction	= None
-	self.logger	= logging.getLogger(component+str(self.threadID))
-    
+	self.transaction= None
+
 	# Parsing extra arguments
-	self.logger.debug("[%s] Parsing extra arguments" % self.threadID)
+	self.logger.debug("[%s] Parsing constructor arguments" % self.threadID)
 	for key, value in kwargs.iteritems():
 	  ''' '''
 	  #print "*** ["+component+"-"+str(threadID)+"] kwargs[%s] = %s" % (key, value)
