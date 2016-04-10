@@ -19,7 +19,8 @@ class ServiceHandler:
   def __init__(self, **kwargs):
     ''' Constructor of simple service'''
     self.component	= self.__class__.__name__
-    self.logger		= logging.getLogger(self.component)
+    self.logger		= Utilities.GetLogger(logName=self.component)
+    
     self.stopped    	= True
     self.actionHandler 	= None
     self.service_id	= None
