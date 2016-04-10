@@ -3,6 +3,7 @@
 import logging
 import zmq
 import threading
+import multiprocessing
 import sys
 import time
 import random
@@ -16,8 +17,7 @@ from Utils import Utilities
 
 REQUEST_TIMEOUT	= 100
 
-
-class TaskedService(threading.Thread):
+class TaskedService(object):
     '''
       A service is an interface for executing self contained
       programs within different logic
@@ -60,9 +60,6 @@ class TaskedService(threading.Thread):
 	  elif "endpoint" == key:
 	    self.endpoint = value
 	    
-	# Starting thread 
-	self.logger.debug("[%s] Starting thread in tasked service" % self.threadID)
-	self.start()
       except Exception as inst:
 	Utilities.ParseException(inst, logger=self.logger)
       
@@ -145,3 +142,40 @@ class TaskedService(threading.Thread):
       self.logger.debug( "  Clearing thread event")
       self.tStop.clear()
       
+class ThreadTasks(threading.Thread, TaskedService):
+  def __init__(self, threadID, **kwargs):
+    ''' '''
+    TaskedService.__init__(self, threadID, **kwargs)
+    try:
+      # Initialising task service class
+      component	 = self.__class__.__name__
+      self.logger	= Utilities.GetLogger(component+str(self.threadID))
+
+
+      # Initialising thread parent class
+      self.logger.debug("Initialising thread parent class")
+      threading.Thread.__init__(self)
+      
+      # Starting thread 
+      self.start()
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+  
+class MultiProcessTasks(TaskedService, multiprocessing.Process):
+  def __init__(self, threadID, **kwargs):
+    ''' '''
+    TaskedService.__init__(self, threadID, **kwargs)
+    try:
+      # Initialising task service class
+      component	 = self.__class__.__name__
+      self.logger	= Utilities.GetLogger(component+str(self.threadID))
+	  
+      # Initialising multiprocessing parent class
+      self.logger.debug("Initialising multiprocessing parent class")
+      multiprocessing.Process.__init__(self)
+      
+      # Starting thread 
+      self.start()
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+  
