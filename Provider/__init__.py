@@ -1,4 +1,4 @@
 #!/usr/bin/python
 
-from Service import TaskedService
+from Service import ThreadTasks, MultiProcessTasks
 from IServiceHandler import ServiceHandler
