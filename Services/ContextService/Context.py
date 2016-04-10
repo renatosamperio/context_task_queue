@@ -15,7 +15,7 @@ from datetime import datetime
 from Utils import Utilities
 from Utils import ModuleLoader
 from Utils.Utilities import *
-from Provider.Service import TaskedService
+from Provider.Service import MultiProcessTasks, ThreadTasks
 
 class ContextGroup:
   ''' '''
@@ -206,6 +206,7 @@ class ContextGroup:
 	  taskTopic 	= task['topic']
 	  taskType	= task['type']
 	  taskInstance	= task['instance']
+	  serviceType	= task['serviceType']
 	  message	= task['Task']['message']
 	  msg_conf	= message["content"]["configuration"]
 	  msg_header	= message["header"]
@@ -223,14 +224,22 @@ class ContextGroup:
 	  # Starting service and wait give time for connection
 	  if taskStrategy is not None:
 	    try:
-	      self.logger.debug("  => [%s] Creating an [%s] worker"%(i, taskInstance))
-	      # Starting threaded services	      
-	      tService = TaskedService(i+1, frontend	=frontend, 
-					  backend	=backend, 
-					  #name		=logName, 
-					  strategy	=taskStrategy,
-					  topic		=taskTopic,
-					  transaction	=transaction)
+	      self.logger.debug("  => [%s] Creating an [%s] worker of [%s]"%(i, taskInstance, serviceType))
+	      # Starting threaded services
+	      
+	      if serviceType == 'Process':
+		tService = MultiProcessTasks(i+1, frontend	=frontend, 
+						  backend	=backend, 
+						  strategy	=taskStrategy,
+						  topic		=taskTopic,
+						  transaction	=transaction)
+	      elif serviceType == 'Thread':
+		tService = Process(i+1, frontend	=frontend, 
+					backend	=backend, 
+					#name		=logName, 
+					strategy	=taskStrategy,
+					topic		=taskTopic,
+					transaction	=transaction)
 	      time.sleep(0.4)
 	      
 	      # Checking if service has been initialised (IPC is ready?)
