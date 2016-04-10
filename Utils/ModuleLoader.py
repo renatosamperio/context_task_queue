@@ -18,7 +18,7 @@ class ModuleLoader:
   def __init__(self, **kwargs):
     ''' Class constructor'''
     component		= self.__class__.__name__
-    self.logger		= logging.getLogger(component)
+    self.logger		= Utilities.GetLogger(component)
      
   def GetInstance(self, path):
     ''' '''
