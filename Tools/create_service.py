@@ -42,38 +42,38 @@ class AutoCode(object):
   TaskClass = 'TestTaskClass'
   
   '''
+  Required for logging and identifying task operations.
+  '''
+  TaskDescription = 'TestTaskDescription'
+  
+  '''
+  Logging context name. It is used in 'TaskLogName' in the configuration file.
+  '''
+  ContextName = 'TestContextName'
+  
+  '''
   Defines a service name for the identifying service process messages.
   It is called in process configuration configuration file.
   '''
   ServiceName = 'TestServiceName'
   
   '''
-  Required for logging and identifying task operations.
-  '''
-  TaskDescription = 'TestTaskDescription'
-  
-  '''
-  IP address of server endpoint. It is used in 'FrontEndEndpoint' amd 'BackendEndpoint'
+  IP address of server endpoint. It is used in 'FrontEndEndpoint' and 'BackendEndpoint'
   in the configuration file.
   '''
   ServerIP = 'TestServerIP'
 
   '''
   Front end port for subscriber and back end binding ports. It is used in 'FrontEndEndpoint'
-  amd 'BackendBind' in the configuration file.
+  and 'BackendBind' in the configuration file.
   '''
   SubPort = 'TestSubPort'
   
   '''
   Back end port for subscriber and front end binding ports. It is used in 'BackendEndpoint'
-  amd 'FrontBind' in the configuration file.
+  and 'FrontBind' in the configuration file.
   '''
   PubPort = 'TestPubPort'
-  
-  '''
-  Logging context name. It is used in 'TaskLogName' in the configuration file.
-  '''
-  ContextName = 'TestContextName'
   
   '''
   Task service ID identifier. It is used as parameter 'id' in 'TaskService' label in the
@@ -89,20 +89,24 @@ class AutoCode(object):
   
   def __init__(self, options):
     ''' Class constructor'''
+    
+    ## Service configuration location
+    self.ServicePath	= options.service_path
+    
+    ## Service generation stub variables
     self.ServiceType	= options.task_service
     self.TaskFile	= options.task_file
     self.TaskClass	= options.task_class
-    self.ServiceName	= options.service_name
     self.TaskDescription= options.task_desc
+    
+    ## Service XML configuration options
+    self.ServiceName	= options.service_name
     self.ServerIP	= options.server_ip
     self.SubPort	= options.sub_port
     self.PubPort	= options.pub_port
     self.ContextName	= options.context_name
     self.TaskID		= options.task_id
     self.DeviceAction	= options.device_action
-    
-    ## Class variables
-    self.ServicePath	= options.service_path
     
     servicePathExists = os.path.exists(self.ServicePath+'/Services')
     toolsPathExists   = os.path.exists(self.ServicePath+'/Tools')
@@ -332,83 +336,107 @@ class AutoCode(object):
 
 sUsage =  "usage:\n"\
 	  "  For sending a message to an annotator service\n"\
-	  "\t  python Tools/create_service.py\ \n"\
-	  "\t\t--task_service='instance_type'\\ \n"\
-	  "\t\t--task_file='task_file_name\  \n" \
-	  "\t\t--task_class='task_class_name'\ \n"\
-	  "\t\t--service_name='service_name'\ \n"\
-	  "\t\t--task_desc='task_description'\ \n"\
-	  "\t\t--service_path='/abs/path/unix/style'\n"\
-	  "\t\t--server_ip='127.0.0.1'\ \n"\
-	  "\t\t--sub_port='XXXX'\ \n"\
-	  "\t\t--pub_port='YYYY'\ \n"\
-	  "\t\t--context_name='context_test_name'\n"\
-	  "\t\t--task_id='task_ID'\ \n"\
-	  "\t\t--device_action='device_action_id'\ \n"
+	  "\t  python Tools/create_service.py \n"\
+	  "\t\t--service_path='/abs/path/unix/style' \n"\
+	  "\t\t--task_service='instance_type' \n"\
+	  "\t\t--task_file='task_file_name \n" \
+	  "\t\t--task_class='task_class_name' \n"\
+	  "\t\t--service_name='service_name' \n"\
+	  "\t\t--task_desc='task_description' \n"\
+	  "\t\t--server_ip='127.0.0.1' \n"\
+	  "\t\t--sub_port='XXXX' \n"\
+	  "\t\t--pub_port='YYYY' \n"\
+	  "\t\t--context_name='context_test_name' \n"\
+	  "\t\t--task_id='task_ID' \n"\
+	  "\t\t--device_action='device_action_id' \n"
 
 if __name__ == '__main__':
   usage = sUsage
   parser = OptionParser(usage=usage)
-  parser.add_option('--task_service', 
+  
+  
+  systemOpts = OptionGroup(parser, "Service configuration location")
+  systemOpts.add_option('--service_path', 
+		  metavar="PATH",
+		  default=None,
+		  help="Absolute root path where context services are located")
+  
+  contextOpts= OptionGroup(parser, "Service generation stub variables")
+  contextOpts.add_option('--task_service', 
 		    metavar="SERVICE", 
 		    default=None,
 		    help="Service instance is the type of created service as defined "
 		    "in task service parameters in the configuration file")
-  parser.add_option('--task_file', 
+  contextOpts.add_option('--task_file', 
 		    metavar="TASK_FILE", 
 		    default=None,
 		    help="Task file name is for defining specific operations from "
 		    "task class. It will be imported from created directory and "
 		    "used to instance a task class in task service parameters in "
 		    "the configuration file")
-  parser.add_option('--task_class', 
+  contextOpts.add_option('--task_class', 
 		    metavar="TASK_CLASS", 
 		    default=None,
 		    help="Name of the autogenerated task class. It should have the "
 		    "logic for producing a service. It is called by the service and "
 		    "and imported by file name")
-  parser.add_option('--service_name', 
-		    metavar="SERVICE_NAME", 
-		    default=None,
-		    help="Defines a service name for the identifying service process "
-		    "messages. It is called in process configuration configuration file")
-  parser.add_option('--task_desc', 
+  contextOpts.add_option('--task_desc', 
 		    metavar="TASK_DESCRIPTION", 
 		    default=None,
 		    help="Required for logging and identifying task operations.")
   
-  parser.add_option('--server_ip', 
-		    metavar="SERVERIP", 
-		    default=None,
-		    help=".")
-  parser.add_option('--sub_port', 
-		    metavar="SUBPORT", 
-		    default=None,
-		    help=".")
-  parser.add_option('--pub_port', 
-		    metavar="PUBPORT", 
-		    default=None,
-		    help=".")
-  parser.add_option('--context_name', 
+  xmltOpts= OptionGroup(parser, "Service XML configuration options")
+  xmltOpts.add_option('--context_name', 
 		    metavar="CONTEXTNAME", 
 		    default=None,
-		    help=".")
-  parser.add_option('--task_id', 
+		    help="Logging context name. It is used in 'TaskLogName' in the "
+		    "configuration file.")
+  xmltOpts.add_option('--service_name', 
+		    metavar="SERVICE_NAME", 
+		    default=None,
+		    help="Defines a service name for the identifying service process "
+		    "messages. It is called in process configuration configuration file")
+  xmltOpts.add_option('--server_ip', 
+		    metavar="SERVERIP", 
+		    default=None,
+		    help="IP address of server endpoint. It is used in "
+		    "'FrontEndEndpoint' and 'BackendEndpoint' in the "
+		    "configuration file.")
+  xmltOpts.add_option('--sub_port', 
+		    metavar="SUBPORT", 
+		    default=None,
+		    help="Front end port for subscriber and back end binding ports. "
+		    "It is used in 'FrontEndEndpoint' and 'BackendBind' in the "
+		    "configuration file.")
+  xmltOpts.add_option('--pub_port', 
+		    metavar="PUBPORT", 
+		    default=None,
+		    help="Back end port for subscriber and front end binding ports. "
+		    "It is used in 'BackendEndpoint' and 'FrontBind' in the "
+		    "configuration file.")
+  xmltOpts.add_option('--task_id', 
 		    metavar="TASKID", 
 		    default=None,
-		    help=".")
-  parser.add_option('--device_action', 
+		    help="Task service ID identifier. It is used as parameter"
+		    "'id' in 'TaskService' label in the configuration file")
+  xmltOpts.add_option('--device_action', 
 		    metavar="DEVICEACTION", 
 		    default=None,
-		    help=".")
+		    help="Task device action used for message identification. messages."
+		    "It is called in process configuration configuration file It is "
+		    "used as 'device_action of the content configuration of the task "
+		    "service in the configuration file.")
   
-  parser.add_option('--service_path', 
-		  metavar="PATH",
-		  default=None,
-		  help="Absolute root path where context services are located")
+  parser.add_option_group(systemOpts)
+  parser.add_option_group(contextOpts)
+  parser.add_option_group(xmltOpts)
   
   (options, args) = parser.parse_args()
   
+  if options.service_path is None:
+    parser.error("Missing required option: service_path")
+    parser.print_help()
+    
   if options.task_service is None:
     parser.error("Missing required option: task_service")
     parser.print_help()
@@ -421,16 +449,16 @@ if __name__ == '__main__':
     parser.error("Missing required option: task_class")
     parser.print_help()
     
-  if options.service_name is None:
-    parser.error("Missing required option: service_name")
-    parser.print_help()
-    
   if options.task_desc is None:
     parser.error("Missing required option: task_desc")
     parser.print_help()
     
-  if options.service_path is None:
-    parser.error("Missing required option: service_path")
+  if options.context_name is None:
+    parser.error("Missing required option: context_name")
+    parser.print_help()
+    
+  if options.service_name is None:
+    parser.error("Missing required option: service_name")
     parser.print_help()
     
   if options.server_ip is None:
@@ -445,9 +473,6 @@ if __name__ == '__main__':
     parser.error("Missing required option: pub_port")
     parser.print_help()
     
-  if options.context_name is None:
-    parser.error("Missing required option: context_name")
-    parser.print_help()
     
   if options.task_id is None:
     parser.error("Missing required option: task_id")
