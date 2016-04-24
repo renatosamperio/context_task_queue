@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Context>
+  
+  <!-- Service communication -->
+
+  <FrontEndEndpoint>tcp://$ServerIP:$SubPort</FrontEndEndpoint> <!--   SUB -->
+  <BackendEndpoint>tcp://$ServerIP:$PubPort</BackendEndpoint>   <!--   PUB -->
+  
+  <FrontBind>tcp://*:$PubPort</FrontBind> 
+  <BackendBind>tcp://*:$SubPort</BackendBind>
+  
+  <TaskLogName>$ContextName</TaskLogName>
+ 
+  <TaskService id='$TaskID' type="on_call" topic='process' instance='$ServiceType' serviceType='Process'>
+    <Task>
+      <description>
+	$TaskDescription
+      </description>
+      
+      <message>
+	<header>
+	  <action>start</action>
+	  <service_name>$ServiceName</service_name>
+	</header>
+
+	<content>
+	  <configuration>
+	    <device_action>$DeviceAction</device_action>
+	  </configuration>
+	</content>
+      </message>
+      
+      <state>
+	<on_exit>
+	</on_exit>
+	
+	<on_fail>
+	</on_fail>
+	
+	<on_start>
+	</on_start>
+      </state>
+
+    </Task>
+  </TaskService>
+  
+</Context>

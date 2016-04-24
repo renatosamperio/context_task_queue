@@ -1,0 +1,92 @@
+#!/usr/bin/python
+
+import json
+import time
+import sys, os
+import json
+import logging
+import threading
+
+from Utils import Utilities
+
+# Include additional python modules
+
+# Include class variables
+
+class $TaskClass(threading.Thread):
+  def __init__(self, **kwargs):
+    '''Service task constructor'''
+    # Initialising thread parent class
+    threading.Thread.__init__(self)
+    
+    try:
+      # Initialising class variables
+      component		= self.__class__.__name__
+      self.logger	= Utilities.GetLogger(component)
+      
+      # Thread action variables
+      self.tStop 	= threading.Event()
+      self.threads	= []
+      self.tid		= None
+      self.started	= False
+      
+      ## Adding local variables
+      self.value	= None
+
+      # Generating instance of strategy
+      for key, value in kwargs.iteritems():
+	if "value" == key:
+	  self.value = value
+	  
+      # Starting action thread
+      self.start()
+      
+      ## Adding monitor thread to the list of references
+      self.threads.append(self)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  def hasStarted(self):
+    ''' Reports task thread status'''
+    return self.started and not self.tStop.isSet()
+
+  def run(self):
+    '''Threaded action '''
+    try:
+      # Getting thread GetPID
+      self.started	= True
+      self.tid		= Utilities.GetPID()
+      self.logger.debug('Starting thread [%d]'%self.tid)
+      
+      self.logger.debug('Looping for capture monitoring [%d]'%self.tid)
+      while not self.tStop.isSet():
+	# Do something here!
+	# ...
+	self.tStop.wait(5)
+	
+      # Ending thread routine
+      self.logger.debug('Ending thread [%d]'%self.tid)
+      self.started = False
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
+  def close(self):
+    ''' Ending task service'''
+    try:
+      # Do additional stopping routines here
+      # ...
+      
+      # Stop thread and give some time to do whatever it has to do
+      self.logger.debug("  Stopping network monitoring thread...")
+      self.tStop.set()
+      time.sleep(0.75)
+      
+      # Force to stop before leaving
+      if self.is_alive(): 
+	self.logger.debug( "  Stopping the thread and wait for it to end")
+	threading.Thread.join(self, 1)  
+      self.logger.debug( "  Thread [%d] stopped"%self.tid)
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)

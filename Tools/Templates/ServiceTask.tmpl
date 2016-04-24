@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+# -*- coding: latin-1 -*-
+
+import logging
+import zmq
+import threading
+import sys
+import time
+import random
+import signal
+import os
+import json
+
+from Utils import Utilities
+from Provider.IServiceHandler import ServiceHandler
+from $ServiceType import $TaskFile
+
+class Service$ServiceType(ServiceHandler):
+  ''' Service for $TaskDescription'''
+  def __init__(self, **kwargs):
+    ''' Service constructor'''
+    ServiceHandler.__init__(self, **kwargs)
+    
+  def DeserializeAction(self, msg):
+    ''' Validates incoming message when called in service section'''
+    try:
+      self.logger.debug("Validating configured action...")
+      isForDevice = msg['header']['service_name'] == '$ServiceName' or msg['header']['service_name'] == 'all'
+      
+      isRightTransaction = False
+      if 'transaction' in msg['header'].keys():
+	isRightTransaction = msg['header']['transaction'] == self.transaction
+      elif 'service_transaction' in msg['header'].keys():
+	isRightTransaction = msg['header']['service_transaction'] == self.transaction
+      else:
+	self.logger.debug("Message without transaction ID")
+	return isRightTransaction
+      
+      if not isRightTransaction:
+	self.logger.debug("Service with different transaction")
+	return false
+      
+      result = (isForDevice and isRightTransaction)
+      return result
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+  
+  def ParseItems(self, items, resp_format):
+    ''' Obtains data from input parameters'''
+    try:
+      self.logger.debug("  + Parsing items in action...")
+      status = resp_format["content"]["status"]
+      
+      ## Adding more parameters
+      ## if items is not None:
+      ## 	itemsKeys = items.keys()
+      ## 	if "ITEM_NAME" in itemsKeys:
+      ## 	  status.update({"ITEM_NAME":items["ITEM_NAME"]})
+
+      resp_format["content"]["status"] = status 
+      return resp_format  
+	      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  def GetActionHandler(self, msg):
+    ''' '''    
+    self.logger.debug("Creating a $TaskDescription")
+    
+    try:
+      conf 	= msg['content']['configuration']
+      confKeys 	= conf.keys()
+      args 	= {}
+
+      ## Adding expected arguments to args
+      ## 	if "ITEM_NAME" in itemsKeys:
+      ## 	  args.update({'port': conf['ITEM_NAME']})
+
+      # Adding service for notification
+      args.update({'service': self})
+      
+      # Creating service object and notify
+      deviceAction = $TaskFile.$TaskClass(**args)
+      self.notify("started", "success")
+      
+      return deviceAction
+		
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  def close(self):
+    ''' Ends process inside the service'''
+    self.logger.debug("Stopping $TaskDescription service")
+    
+  def ControlAction(self, msg):
+    ''' Actions taken if another process reports with control topic'''
+    try:
+      ## Validating transaction
+      isRightTransaction = self.ValidateTransaction(msg)
+      if not isRightTransaction:
+	self.logger.debug("Service with different transaction")
+	return isRightTransaction
+	  
+      header = msg['header']
+      status =  msg['content']['status']
+
+      # Filtering reporting process
+      ## if header['service_name'] == 'PROCESS1' and status["result"] == "success":
+      ##   self.logger.debug("Received message from PROCESS1")
+      ##   Do something useful
+
+      ## elif header['service_name'] == 'PROCESS2'  and status["result"] == 'success':
+      ##   self.logger.debug("Received message from PROCESS2'")
+      ##   Do something useful
+
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+      
