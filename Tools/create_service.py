@@ -5,21 +5,19 @@ import sys, os
 from optparse import OptionParser, OptionGroup
 import xml.etree.ElementTree as ET
 
+## Importing Utils from parent path
+file_path = os.path.dirname(__file__)
+join_path = os.path.join(file_path, '../Utils')
+abs_path  = os.path.abspath(join_path)
+sys.path.append(abs_path)
+
+import Utilities
+from XMLParser import ParseXml2Dict
+
 class AutoCodeError(Exception):
    def __init__(self, message, reason):
       self.message = message
       self.reason = reason
-      
-def PrintException(inst, logger=None):
-  exc_type, exc_obj, exc_tb = sys.exc_info()
-  exception_fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-  exception_line = str(exc_tb.tb_lineno) 
-  exception_type = str(type(inst))
-  exception_desc = str(inst)
-  print "  %s: %s in %s:%s"%(exception_type, 
-			     exception_desc, 
-			     exception_fname,  
-			     exception_line )
 
 class AutoCode(object):
   ''' 
@@ -144,7 +142,7 @@ class AutoCode(object):
 	  init_file.write(data)
 
     except Exception as inst:
-      PrintException(inst)
+      Utilities.ParseException(inst)
     finally:
       return servicePath
     
@@ -163,7 +161,7 @@ class AutoCode(object):
       os.makedirs(servicePath)
 
     except Exception as inst:
-      PrintException(inst)
+      Utilities.ParseException(inst)
     finally:
       return servicePath
 
@@ -193,7 +191,7 @@ class AutoCode(object):
 	with open(fileOutput, "w") as init_file:
 	  init_file.write(data)
     except Exception as inst:
-      PrintException(inst)
+      Utilities.ParseException(inst)
 	  
   def CreateTaskStub(self):
     '''Create strategy task stub file'''
@@ -216,7 +214,7 @@ class AutoCode(object):
 	with open(fileOutput, "w") as init_file:
 	  init_file.write(data)
     except Exception as inst:
-      PrintException(inst)
+      Utilities.ParseException(inst)
       
   def AdaptConfFile(self):
     '''Create strategy task stub file'''
@@ -290,7 +288,7 @@ class AutoCode(object):
 	    init_file.write(data)
       
     except Exception as inst:
-      PrintException(inst)
+      Utilities.ParseException(inst)
   
   def SetValues(self, data):
     '''Setting values to template '''
@@ -332,7 +330,7 @@ class AutoCode(object):
     except AutoCodeError as e:
       print e.message+" : "+e.reason
     except Exception as inst:
-      PrintException(inst)
+      Utilities.ParseException(inst)
 
 sUsage =  "usage:\n"\
 	  "  For sending a message to an annotator service\n"\
