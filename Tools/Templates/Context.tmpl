@@ -12,7 +12,7 @@
   
   <TaskLogName>$ContextName</TaskLogName>
  
-  <TaskService id='$TaskID' type="on_call" topic='process' instance='$ServiceType' serviceType='Process'>
+  <TaskService id='$TaskID' topic='process' instance='$ServiceType' serviceType='Process'>
     <Task>
       <description>
 	$TaskDescription
@@ -31,9 +31,12 @@
 	</content>
       </message>
       
-      <state>
+      <state type="$EntryAction">
 	<on_exit>
 	</on_exit>
+	
+	<on_update>
+	</on_update>
 	
 	<on_fail>
 	</on_fail>

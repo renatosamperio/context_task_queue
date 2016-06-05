@@ -85,6 +85,13 @@ class AutoCode(object):
   '''
   DeviceAction = 'TestDeviceAction'
   
+  '''
+  Defines entry action to be executed upon entry to a state associated with 
+  other states. It is not to transitions and it is called regardless of how a 
+  state is resulted. This fixture is related to UML statechart.
+  '''
+  EntryAction = 'TestEntryAction'
+  
   def __init__(self, options):
     ''' Class constructor'''
     self.ServicePath	= None
@@ -100,6 +107,7 @@ class AutoCode(object):
     self.ContextName	= None
     self.TaskID		= None
     self.DeviceAction	= None
+    self.EntryAction	= None
     
     ## Service configuration location
     self.ServicePath	= options['service_path']
@@ -112,12 +120,13 @@ class AutoCode(object):
     
     ## Service XML configuration options
     self.ServiceName	= options['service_name']
-    self.ServerIP	= options['server_ip']
-    self.SubPort	= options['sub_port']
-    self.PubPort	= options['pub_port']
+    self.ServerIP		= options['server_ip']
+    self.SubPort		= options['sub_port']
+    self.PubPort		= options['pub_port']
     self.ContextName	= options['context_name']
-    self.TaskID	= options['task_id']
+    self.TaskID			= options['task_id']
     self.DeviceAction	= options['device_action']
+    self.EntryAction	= options['entry_action']
     
     servicePathExists = os.path.exists(self.ServicePath+'/Services')
     toolsPathExists   = os.path.exists(self.ServicePath+'/Tools')
@@ -310,10 +319,11 @@ class AutoCode(object):
     data = data.replace('$PubPort',	self.PubPort)
     data = data.replace('$ContextName',	self.ContextName)
     data = data.replace('$TaskID',	self.TaskID)
-    data = data.replace('$DeviceAction',	self.DeviceAction)
+    data = data.replace('$DeviceAction',self.DeviceAction)
     data = data.replace('$TaskDescription',self.TaskDescription)
-    data = data.replace('$ServiceName', 	self.ServiceName)
-    data = data.replace('$ServiceType', 	self.ServiceType)
+    data = data.replace('$ServiceName', self.ServiceName)
+    data = data.replace('$ServiceType', self.ServiceType)
+    data = data.replace('$EntryAction', self.EntryAction)
     return data
     
   def CreateFiles(self):
@@ -362,6 +372,8 @@ sUsage =  "usage:\n"\
 	  "\t\t--device_action='device_action_id' \n"
 
 if __name__ == '__main__':
+  available_entry_actions = ['on_exit', 'on_fail', 'on_start', 'on_update']
+  
   usage = sUsage
   parser = OptionParser(usage=usage)
 
@@ -440,6 +452,16 @@ if __name__ == '__main__':
 		    "It is called in process configuration configuration file It is "
 		    "used as 'device_action of the content configuration of the task "
 		    "service in the configuration file.")
+  xmltOpts.add_option('--entry_action',
+                      type='choice',
+                      action='store',
+                      dest='entry_action',
+                      choices=available_entry_actions,
+                      default=None,
+		      help="Defines entry action to be executed upon entry to a state associated with "
+		      "other states. It is not to transitions and it is called regardless of how a "
+		      "state is resulted. This fixture is related to UML statechart from the following "
+		      "choices: "+str(available_entry_actions))
   
   parser.add_option_group(systemOpts)
   parser.add_option_group(contextOpts)
@@ -512,6 +534,10 @@ if __name__ == '__main__':
       
     if options.device_action is None:
       parser.error("Missing required option: device_action")
+      parser.print_help()
+      
+    if options.entry_action is None:
+      parser.error("Missing required option: entry_action")
       parser.print_help()
 
     ## Calling code autogenerator
