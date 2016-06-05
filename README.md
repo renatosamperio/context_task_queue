@@ -23,7 +23,7 @@ To create a context service it is required to do the following steps:
 
 In this tutorial we are using the ```create_service.py``` command that is contained in the ```Tools``` section. This command allow us to run all steps for generating a context service.
 
-We will create a context service called __EchoAction__:
+To create a single process environment for a service called __EchoAction__, use the following command:
 
     $ python create_service.py     
         --service_path='/abs/unix/path/'
@@ -106,3 +106,91 @@ The ```conf_command.py``` command requires of the following parameters:
   * __Action__: the context actions are *start*, *stop* and *restart*.
   
 This command will generate a context with identifier __6FDAHH3WPRVV7FGZCRIN__ and a unique service __EchoAction__. Any further reference to stear __EchoAction__ service would require the context identifier.  
+
+ 
+## Generating multiple services
+To generate skeleton environment for multiple services, prepare a service configuration XML file:
+
+    <MetaServiceConf>
+      <context_name>StateMachineSample</context_name>
+      <server_ip>127.0.0.1</server_ip>
+      <sub_port>5556</sub_port>
+      <pub_port>5557</pub_port>
+    
+      <Service>
+        <service_path>/path-to-services-home/</service_path>
+        <task_service>Stand</task_service>
+        <task_file>Stand</task_file>
+        <task_class>Standing</task_class>
+        <task_desc>Stand up without doing anything</task_desc>
+        <service_name>state_update</service_name>
+        <task_id>ts_100</task_id>
+        <device_action>pass_state1</device_action>
+      </Service>
+      
+      <Service>
+        <service_path>/path-to-services-home/</service_path>
+        <task_service>Walk</task_service>
+        <task_file>Walker</task_file>
+        <task_class>Walking</task_class>
+        <task_desc>Walk along the street</task_desc>
+        <service_name>state_update</service_name>
+        <task_id>ts_101</task_id>
+        <device_action>pass_state2</device_action>
+      </Service>
+    
+      <Service>
+        <service_path>/path-to-services-home/</service_path>
+        <task_service>DrinkCoffee</task_service>
+        <task_file>CoffeeDrinker</task_file>
+        <task_class>Drinking</task_class>
+        <task_desc>Stop and take a coffee</task_desc>
+        <service_name>state_update</service_name>
+        <task_id>ts_102</task_id>
+        <device_action>pass_state3</device_action>
+      </Service>
+    
+      <Service>
+        <service_path>/path-to-services-home/</service_path>
+        <task_service>Run</task_service>
+        <task_file>Runner</task_file>
+        <task_class>Running</task_class>
+        <task_desc>Start running</task_desc>
+        <service_name>state_update</service_name>
+        <task_id>ts_103</task_id>
+        <device_action>pass_state4</device_action>
+      </Service>
+    </MetaServiceConf>
+
+This configuration includes information for generating skeleton code of four services. To generate the service environment execute the command:
+
+    $ python Tools/create_service.py --xml_file=Conf/Services-StateMachine.xml
+
+The command will generate the following file structure:
+
+    $ ls -laR Services/
+    
+    Services/Run/:
+    __init__.py  
+    Run.py  Run.pyc
+    ServiceRun.py
+    
+    Services/Stand/:
+    __init__.py  
+    ServiceStand.py
+    Stand.py
+    
+    Services/Stand/:
+    __init__.py
+    ServiceStand.py
+    Stand.py
+    
+    Services/Walk/:
+    __init__.py
+    ServiceWalk.py
+    Walk.py
+
+The environment is loaded by the service context command:
+
+    $ python service_context.py Conf/Context-StateMachine.xml
+    $ python conf_command.py --endpoint='tcp://127.0.0.1:5557' --context_file='Conf/Context-StateMachine.xml' --service_name='context' --service_id='context001' --transaction='5HGAHZ3WPZUI71PACRPP' --action='start'
