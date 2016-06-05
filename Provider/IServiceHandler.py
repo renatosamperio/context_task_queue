@@ -64,23 +64,24 @@ class ServiceHandler:
       if topic == service.topic:
 	''' '''
 	# Getting Message task from message
-	if 'Task' in msg.keys():
-	  msg = msg['Task']['message']
+	if 'Task' not in msg.keys():
+	  self.logger.debug("Task key not found")
+	  return
 	
 	# Getting header and configuration content
-	header = msg['header']
+	message = msg['Task']['message']
+	header = message['header']
 	
 	# Giving message interpreation within actions
-	if header['service_name'] == 'all' or (self.DeserializeAction(msg)):
+	if header['service_name'] == 'all' or (self.DeserializeAction(message)):
 					  
-	  json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
+	  json_msg = json.dumps(message, sort_keys=True, indent=4, separators=(',', ': '))
 	  self.logger.debug("[%s] thread [%s] received message of size %d" % 
 			  (self.service_id, service.tid, len(json_msg)))
 	  
 	  # Looking for service ID
 	  if "service_id" in header.keys():
 	    if len(header["service_id"])>0:
-	      #print "====> service_name:", header["service_name"]
 	      self.resp_format["header"].update({"service_name":header["service_name"]})
 	      self.resp_format["header"].update({"service_id" :header["service_id"]})
 	      self.resp_format["header"].update({"action" : ""})
@@ -206,23 +207,24 @@ class ServiceHandler:
   def start(self, msg):
     '''Start specific service implementation'''
     self.logger.debug("  Starting service handler")
+    message = msg['Task']['message']
     try:
-      msgKeys = msg.keys()
+      msgKeys = message.keys()
       
       if 'header' not in msgKeys:
 	self.logger.debug("  - Inactive process, received message without header")
 	return
-      header = msg['header']
+      header = message['header']
       
       if 'content' not in msgKeys:
 	self.logger.debug("  - Inactive process, received message without content")
 	return
       
-      contentKeys = msg['content'].keys()
+      contentKeys = message['content'].keys()
       if 'configuration' not in contentKeys:
 	self.logger.debug("  - Inactive process, received message without content configuration")
 	return
-      conf   = msg['content']['configuration']
+      conf   = message['content']['configuration']
 	
       if self.actionHandler is None:
 	self.stopped = False
