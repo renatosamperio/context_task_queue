@@ -87,24 +87,37 @@ class AutoCode(object):
   
   def __init__(self, options):
     ''' Class constructor'''
+    self.ServicePath	= None
+    self.ServiceType	= None
+    self.TaskFile	= None
+    self.TaskFile	= None
+    self.TaskClass	= None
+    self.TaskDescription= None
+    self.ServiceName	= None
+    self.ServerIP	= None
+    self.SubPort	= None
+    self.PubPort	= None
+    self.ContextName	= None
+    self.TaskID		= None
+    self.DeviceAction	= None
     
     ## Service configuration location
-    self.ServicePath	= options.service_path
+    self.ServicePath	= options['service_path']
     
     ## Service generation stub variables
-    self.ServiceType	= options.task_service
-    self.TaskFile	= options.task_file
-    self.TaskClass	= options.task_class
-    self.TaskDescription= options.task_desc
+    self.ServiceType	= options['task_service']
+    self.TaskFile	= options['task_file']
+    self.TaskClass	= options['task_class']
+    self.TaskDescription= options['task_desc']
     
     ## Service XML configuration options
-    self.ServiceName	= options.service_name
-    self.ServerIP	= options.server_ip
-    self.SubPort	= options.sub_port
-    self.PubPort	= options.pub_port
-    self.ContextName	= options.context_name
-    self.TaskID		= options.task_id
-    self.DeviceAction	= options.device_action
+    self.ServiceName	= options['service_name']
+    self.ServerIP	= options['server_ip']
+    self.SubPort	= options['sub_port']
+    self.PubPort	= options['pub_port']
+    self.ContextName	= options['context_name']
+    self.TaskID	= options['task_id']
+    self.DeviceAction	= options['device_action']
     
     servicePathExists = os.path.exists(self.ServicePath+'/Services')
     toolsPathExists   = os.path.exists(self.ServicePath+'/Tools')
@@ -351,13 +364,16 @@ sUsage =  "usage:\n"\
 if __name__ == '__main__':
   usage = sUsage
   parser = OptionParser(usage=usage)
-  
-  
+
   systemOpts = OptionGroup(parser, "Service configuration location")
   systemOpts.add_option('--service_path', 
 		  metavar="PATH",
 		  default=None,
 		  help="Absolute root path where context services are located")
+  systemOpts.add_option('--xml_file', 
+		  metavar="PATH XML FILE",
+		  default=None,
+		  help="Absolute root path where xml configuration file is located")
   
   contextOpts= OptionGroup(parser, "Service generation stub variables")
   contextOpts.add_option('--task_service', 
@@ -431,55 +447,74 @@ if __name__ == '__main__':
   
   (options, args) = parser.parse_args()
   
-  if options.service_path is None:
-    parser.error("Missing required option: service_path")
+  if options.xml_file is None and options.service_path is None:
+    parser.error("Missing required option: service_path or xml_file")
     parser.print_help()
     
-  if options.task_service is None:
-    parser.error("Missing required option: task_service")
-    parser.print_help()
-    
-  if options.task_file is None:
-    parser.error("Missing required option: task_file")
-    parser.print_help()
-    
-  if options.task_class is None:
-    parser.error("Missing required option: task_class")
-    parser.print_help()
-    
-  if options.task_desc is None:
-    parser.error("Missing required option: task_desc")
-    parser.print_help()
-    
-  if options.context_name is None:
-    parser.error("Missing required option: context_name")
-    parser.print_help()
-    
-  if options.service_name is None:
-    parser.error("Missing required option: service_name")
-    parser.print_help()
-    
-  if options.server_ip is None:
-    parser.error("Missing required option: server_ip")
-    parser.print_help()
-    
-  if options.sub_port is None:
-    parser.error("Missing required option: sub_port")
-    parser.print_help()
-    
-  if options.pub_port is None:
-    parser.error("Missing required option: pub_port")
-    parser.print_help()
-    
-    
-  if options.task_id is None:
-    parser.error("Missing required option: task_id")
-    parser.print_help()
-    
-  if options.device_action is None:
-    parser.error("Missing required option: device_action")
-    parser.print_help()
+  if options.xml_file is not None:
+    ''' '''
+    ## Use if many services are generated at the same time
+    services = ParseXml2Dict(options.xml_file, 'MetaServiceConf')
+    if type(services['Service']) is not type([]):
+      services['Service'] = [services['Service']]
 
-  ## Calling code autogenerator
-  autogenerator = AutoCode(options)
-  autogenerator.CreateFiles()
+    for service in services['Service']:
+      service.update({'context_name':	services['context_name']})
+      service.update({'server_ip': 	services['server_ip']})
+      service.update({'sub_port': 	services['sub_port']})
+      service.update({'pub_port': 	services['pub_port']})
+      service.update({'service_path': 	services['service_path']})
+      
+      ## Calling code autogenerator
+      autogenerator = AutoCode(service)
+      autogenerator.CreateFiles()
+  else:    
+    ''' Checking argument values '''
+    if options.task_service is None:
+      parser.error("Missing required option: task_service")
+      parser.print_help()
+      
+    if options.task_file is None:
+      parser.error("Missing required option: task_file")
+      parser.print_help()
+      
+    if options.task_class is None:
+      parser.error("Missing required option: task_class")
+      parser.print_help()
+      
+    if options.task_desc is None:
+      parser.error("Missing required option: task_desc")
+      parser.print_help()
+      
+    if options.context_name is None:
+      parser.error("Missing required option: context_name")
+      parser.print_help()
+      
+    if options.service_name is None:
+      parser.error("Missing required option: service_name")
+      parser.print_help()
+      
+    if options.server_ip is None:
+      parser.error("Missing required option: server_ip")
+      parser.print_help()
+      
+    if options.sub_port is None:
+      parser.error("Missing required option: sub_port")
+      parser.print_help()
+      
+    if options.pub_port is None:
+      parser.error("Missing required option: pub_port")
+      parser.print_help()
+    
+    if options.task_id is None:
+      parser.error("Missing required option: task_id")
+      parser.print_help()
+      
+    if options.device_action is None:
+      parser.error("Missing required option: device_action")
+      parser.print_help()
+
+    ## Calling code autogenerator
+    options_dict = vars(options)
+    autogenerator = AutoCode(options_dict)
+    autogenerator.CreateFiles()
