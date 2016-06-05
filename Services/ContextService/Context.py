@@ -203,7 +203,6 @@ class ContextGroup:
 	  task		= taskedServices[i]
 	  taskId	= task['id']
 	  taskTopic 	= task['topic']
-	  taskType	= task['type']
 	  taskInstance	= task['instance']
 	  serviceType	= task['serviceType']
 	  message	= task['Task']['message']
