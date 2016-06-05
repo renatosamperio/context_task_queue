@@ -31,15 +31,22 @@ class $TaskClass(threading.Thread):
       self.started	= False
       
       ## Adding local variables
+      self.service	= None
       self.value	= None
+      self.onStart	= True
 
       # Generating instance of strategy
       for key, value in kwargs.iteritems():
 	if "value" == key:
 	  self.value = value
+	elif "service" == key:
+	  self.service = value
+	elif "onStart" == key:
+	  self.onStart = value
 	  
       # Starting action thread
-      self.start()
+      if self.onStart:
+	self.start()
       
       ## Adding monitor thread to the list of references
       self.threads.append(self)
