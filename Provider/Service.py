@@ -77,7 +77,7 @@ class TaskedService(object):
         self.context	= zmq.Context()
 
         # Preparing type of socket communication from arguments
-        self.logger.debug("[%s] Preparing type of socket communication from arguments" % self.threadID)
+        self.logger.debug("[%s] Preparing a pollin subscriber" % self.threadID)
         if len(self.frontend)>0	:
 	  socket = self.context.socket(zmq.SUB)
 	  socket.setsockopt(zmq.SUBSCRIBE, "")
@@ -101,11 +101,11 @@ class TaskedService(object):
       An action is a self contained program with
       an execute method
       '''
-      try:
+      try: 
 	# Creating IPC connections
         self.socket, poller = self.set_ipc()
         self.tid = GetPID()
-        self.logger.debug('[%s] Starting service in thread [%d]'%(self.threadID, self.tid))
+        self.logger.debug('[%s] Starting task service in [%d]'%(self.threadID, self.tid))
 
         # Running service action
         #   NOTE: This action could block message pulling, it should be used as
@@ -116,7 +116,7 @@ class TaskedService(object):
             raise UnboundLocalError('Exception raised, no execute action supplied to Service!')
 
         # Running IPC communication
-        self.logger.debug('[%s] Running IPC communication on backend'%(self.threadID))
+        self.logger.debug('[%s] Running IPC communication on frontend'%(self.threadID))
         while self.tStop.isSet():
           socks = dict(poller.poll(REQUEST_TIMEOUT))
           if socks.get(self.socket) == zmq.POLLIN and len(self.frontend)>0:
@@ -124,7 +124,7 @@ class TaskedService(object):
 	    self.action.deserialize(self, msg)
 
         # Destroying IPC connections and mark process as stopped
-        self.logger.debug("[%s] Stopping thread [%d]"%(self.threadID, self.tid))
+        self.logger.debug("[%s] Stopping task with PID [%d]"%(self.threadID, self.tid))
         self.action.stop()
   
         # Destroying IPC processes
@@ -136,11 +136,17 @@ class TaskedService(object):
 
     def stop(self):
       ''' '''
-      self.logger.debug("  Stopping service remotely from thread [%s]..."%self.threadID)
-      self.action.stop_all_msg()
-      
+      if(self.action):
+	self.logger.debug("  Stopping service remotely with PID [%s]..."%self.tid)
+	self.action.stop_all_msg()
+	
       self.logger.debug( "  Clearing thread event")
       self.tStop.clear()
+      
+    def execute(self):
+      ''' '''
+      self.logger.debug('Caling execute in thread [%d]'%self.tid)
+      
       
 class ThreadTasks(threading.Thread, TaskedService):
   def __init__(self, threadID, **kwargs):
