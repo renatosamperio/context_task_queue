@@ -38,7 +38,7 @@ class Service$ServiceType(ServiceHandler):
       
       if not isRightTransaction:
 	self.logger.debug("Service with different transaction")
-	return false
+	return False
       
       result = (isForDevice and isRightTransaction)
       return result
