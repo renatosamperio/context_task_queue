@@ -21,8 +21,8 @@ class $TaskClass(threading.Thread):
     
     try:
       # Initialising class variables
-      component		= self.__class__.__name__
-      self.logger	= Utilities.GetLogger(component)
+      self.component	= self.__class__.__name__
+      self.logger	= Utilities.GetLogger(self.component)
       
       # Thread action variables
       self.tStop 	= threading.Event()
@@ -46,6 +46,7 @@ class $TaskClass(threading.Thread):
 	  
       # Starting action thread
       if self.onStart:
+	self.logger.debug("  + Process is set to start from the beginning")
 	self.start()
       
       ## Adding monitor thread to the list of references
@@ -63,7 +64,7 @@ class $TaskClass(threading.Thread):
       # Getting thread GetPID
       self.started	= True
       self.tid		= Utilities.GetPID()
-      self.logger.debug('Starting thread [%d]'%self.tid)
+      self.logger.debug('Starting task [%s] with PID [%d]'% (self.component, self.tid))
       
       self.logger.debug('Looping for capture monitoring [%d]'%self.tid)
       while not self.tStop.isSet():
@@ -97,3 +98,6 @@ class $TaskClass(threading.Thread):
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def execute(self, service):
+    ''' Execute $TaskClass task by calling a "run" method in the service'''
