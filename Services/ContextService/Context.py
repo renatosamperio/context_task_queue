@@ -24,7 +24,6 @@ class ContextGroup:
     self.trialTimes 	= 0
     self.threads	= {}
     self.joined		= 0
-    self.endpoint	= ''
     self.frontend	= ''
     self.backend	= ''
     self.tasks 		= None
@@ -43,9 +42,6 @@ class ContextGroup:
 	self.frontend = value
       elif "backend" == key:
 	self.backend = value
-      ## TODO: Remove this option as front and back endpoints are used
-      elif "endpoint" == key:
-	self.endpoint = value
    
   def deserialize(self, service, rec_msg):
     ''' '''
@@ -131,7 +127,7 @@ class ContextGroup:
 
   def execute(self, service):
     ''' '''
-    self.logger.debug("  Calling action in thread [%s]" % service.threadID)
+    self.logger.debug("  Calling execute action in subtask [%s]" % service.threadID)
     # Giving some time for connection
     time.sleep(1)
     

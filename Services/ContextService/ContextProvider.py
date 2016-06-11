@@ -48,7 +48,7 @@ def run_forwarder( id_, *args, **kwargs):
       pass
 
 def CreateSafeFowarder(frontBind, backendBind, logger):
-  logger.debug("  Creating pool with signal handler")
+  logger.debug("  Creating frontend/backend binder with signal handler")
   args = (frontBind, backendBind, logger)
   pool = multiprocessing.Pool(1, init_worker)
   
@@ -88,10 +88,10 @@ def main(filename):
     # Setting up logger
     log_name 	= testConf['TaskLogName']
     logger	= Utilities.GetLogger(logName=log_name)
-    logger.debug( "Parsing tree  ["+rootName+"] in file: "+filename)
+    logger.debug( "Parsing tree ["+rootName+"] in file: "+filename)
 
     # Starting threaded services
-    logger.debug("Creating an context provider")
+    logger.debug("Creating a context provider")
     s1 = MultiProcessTasks(0, frontend	=frontend, 
 			  backend	=backend,
 			  strategy	=ContextGroup,
