@@ -232,16 +232,13 @@ class ServiceHandler:
 	self.actionHandler = self.GetActionHandler(msg)
 	
 	if self.actionHandler == None:
-	  raise Utilities.TaskError("Missing action handler", self.component)
+	  raise Utilities.TaskError(["Missing action handler"], self.component)
 	
 	# Keeping starting values
 	self.service_id    = header["service_id"]
 	
 	if "device_action" in conf.keys():
 	  self.device_action = conf["device_action"]
-	  
-	#if hasattr(self.actionHandler, 'threads'):
-	  #print "=====>actionHandler2.threads:", self.actionHandler.threads
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
   
