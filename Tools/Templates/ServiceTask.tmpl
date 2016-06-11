@@ -78,14 +78,16 @@ class Service$ServiceType(ServiceHandler):
       ## 	if "ITEM_NAME" in itemsKeys:
       ## 	  args.update({'port': conf['ITEM_NAME']})
 
-      # Creating service object and notify      
+      # Creating service object and notify
+      start_state = 'started'
       if state['type'] != 'on_start':
 	self.logger.debug("  - Process is set and start is on demand")
 	args['onStart'] = False
+	start_state = 'created'	
 	
       # Creating service object and notify
       deviceAction = $TaskFile.$TaskClass(**args)
-      self.notify("started", "success")
+      self.notify(start_state, "success")
       
       return deviceAction
 		
