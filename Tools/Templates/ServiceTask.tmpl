@@ -52,10 +52,10 @@ class Service$ServiceType(ServiceHandler):
       status = resp_format["content"]["status"]
       
       ## Adding more parameters
-      ## if items is not None:
-      ## 	itemsKeys = items.keys()
-      ## 	if "ITEM_NAME" in itemsKeys:
-      ## 	  status.update({"ITEM_NAME":items["ITEM_NAME"]})
+      if items is not None:
+      	itemsKeys = items.keys()
+      	if "pid" in itemsKeys:
+      	  status.update({"pid":items["pid"]})
 
       resp_format["content"]["status"] = status 
       return resp_format  
@@ -87,7 +87,14 @@ class Service$ServiceType(ServiceHandler):
 	
       # Creating service object and notify
       deviceAction = $TaskFile.$TaskClass(**args)
-      self.notify(start_state, "success")
+      time.sleep(1)
+      result="failure"
+      if deviceAction.hasStarted():
+	result="success"
+	
+      # Notifying if task was created
+      tid = Utilities.GetPID()
+      self.notify("started", result, items={'pid':tid})
       
       return deviceAction
 		
