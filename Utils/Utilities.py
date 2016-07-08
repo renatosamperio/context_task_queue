@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import psutil
 import ctypes
 import sys, os
 import string
@@ -13,6 +14,13 @@ LOG_FILENAME	= 'context_provider.log'
 ''' Base name for logger'''
 LOG_NAME	= 'ContextProvider'
 
+
+def MemoryUsage(pid):
+  '''Returns the memory usage in MB'''
+  process = psutil.Process(pid)
+  mem = process.get_memory_info()[0] / float(2 ** 20)
+  return mem
+    
 def GetLogger(logName=LOG_NAME, useFile=True):
   ''' Returns an instance of logger '''
   logger = logging.getLogger(logName)

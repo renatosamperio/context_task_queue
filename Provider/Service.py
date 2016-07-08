@@ -60,6 +60,9 @@ class TaskedService(object):
 	  elif "endpoint" == key:
 	    self.endpoint = value
 	    
+	## Alarm time setup
+	self.time_out_alarm = 60
+	self.check_in_time = time.time()+ self.time_out_alarm
       except Exception as inst:
 	Utilities.ParseException(inst, logger=self.logger)
       
@@ -122,6 +125,17 @@ class TaskedService(object):
           if socks.get(self.socket) == zmq.POLLIN and len(self.frontend)>0:
 	    msg = self.socket.recv().strip()
 	    self.action.deserialize(self, msg)
+	  
+	  ## Calculating current process memory
+	  ## NOTE: For the moment is only printed every N seconds
+	  ## TODO: Make a KF for predicting a dangerous case
+	  ## TODO: Publish memory size with process information (name, PID)
+	  
+	  if (self.check_in_time - time.time())<0:
+	    process_memory = Utilities.MemoryUsage(self.tid)
+	    self.logger.debug('[%s] Process [%d] is using [%f] MiB'%
+		      (self.threadID, self.tid, process_memory))
+	    self.check_in_time = time.time()+ self.time_out_alarm
 
         # Destroying IPC connections and mark process as stopped
         self.logger.debug("[%s] Stopping task with PID [%d]"%(self.threadID, self.tid))
