@@ -176,7 +176,7 @@ class ContextGroup:
 	self.logger.debug("Serialise called but no backend endpoint set in service")
 	return 
 	
-      self.logger.debug("Creating context for publisher")
+      self.logger.debug("    Creating context for publisher")
       context = zmq.Context()
       socket = context.socket(zmq.PUB)
       
@@ -184,17 +184,17 @@ class ContextGroup:
       time.sleep(0.1)
       
       # Sending message
-      self.logger.debug("Sending message of [%s] bytes" % len(msg))
+      self.logger.debug("    Sending message of [%s] bytes" % len(msg))
       utfEncodedMsg = msg.encode('utf-8').strip()
       #print "===>",type(utfEncodedMsg), ":", utfEncodedMsg
       socket.send(utfEncodedMsg)
       time.sleep(0.5)
       socket.close()
-      self.logger.debug("Closing socket: %s"%str(socket.closed))
+      self.logger.debug("    Closing socket: %s"%str(socket.closed))
       
-      self.logger.debug("Destroying context for publisher")
+      self.logger.debug("    Destroying context for publisher")
       context.destroy()
-      self.logger.debug("Closing context: %s"%str(context.closed))
+      self.logger.debug("    Closing context: %s"%str(context.closed))
       time.sleep(0.5)
       
     except Exception as inst:
@@ -256,7 +256,7 @@ class ContextGroup:
 	self.joined	= 0
 	taskTopic	= 'process'
 	self.service_id	= header["service_id"]
-	self.logger.debug("=> Message for setting up process [%s] has been received"%
+	self.logger.debug("==> Message for setting up process [%s] has been received"%
 			  (header["service_id"]))
 	
 	# Checking if single task is not list type
@@ -293,66 +293,35 @@ class ContextGroup:
 	  # Starting service and wait give time for connection
 	  if taskStrategy is not None:
 	    try:
-	      self.logger.debug("  => [%s] Creating an [%s] worker of [%s]"%(i, taskInstance, serviceType))
+	      self.logger.debug("==> [%s] Creating an [%s] worker of [%s]"%(i, taskInstance, serviceType))
 	      # Starting threaded services
 	      
 	      if serviceType == 'Process':
-		tService = MultiProcessTasks(i+1, frontend	=frontend, 
+		tService = MultiProcessTasks(i+2, frontend	=frontend, 
 						  backend	=backend, 
 						  strategy	=taskStrategy,
 						  topic		=taskTopic,
 						  transaction	=transaction)
 	      elif serviceType == 'Thread':
-		tService = Process(i+1, frontend	=frontend, 
-					backend	=backend, 
-					#name		=logName, 
+		tService = Process(i+2, frontend	=frontend, 
+					backend		=backend, 
 					strategy	=taskStrategy,
 					topic		=taskTopic,
 					transaction	=transaction)
-	      time.sleep(0.4)
-	      
-	      # Checking if service has been initialised (IPC is ready?)
-	      init_msg	= "is NOT "
-	      tState	= 'started'
-	      ipcReady	= tService.IsIPCReady()
-	      if ipcReady:
-		init_msg= "has been "
-		tState	= 'ready'
-	      self.logger.debug("=> [%d] Service [%s] %sinitialised"%(i, taskInstance, init_msg) )
-
-	      ##TODO: If service has not been initialised retry sending start message...
-	      ##	  Create a retrying thread...
 	      
 	      # Adding transaction to the message
+	      time.sleep(0.75)
 	      task['Task']['message']["header"].update({'transaction' : transaction})
 	      # Preparing message to send
 	      json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
 	      start_msg = "%s @@@ %s" % (taskTopic, json_msg)
 	      # Sending message for starting service
+	      self.logger.debug("==> [%d] Sending message for starting service"%i )
 	      self.serialize(start_msg)
 	      
-	      # Updating transaction in context
-	      self.logger.debug("=> [%d] Updating transaction in context"%i)
-	      # Updating thread data
-	      self.UpdateThreadState( transaction, 
-				      state =tState, 
-				      tid   =tService.tid,
-				      thread=tService)	    
 	    except zmq.error.ZMQError:
 	      self.logger.debug("Message not send in backend endpoint: [%s]"%self.backend)
 	      
-	## TODO: Shall the threads be joined?
-	# Looping service provider
-	#threadSize = len(self.threads[transaction])
-	#while self.joined < threadSize:
-	  #for i in range(threadSize):
-	    #t = self.threads[transaction][i]
-	    #if t['thread'] is not None and t['thread'].isAlive():
-	      #self.logger.debug("  => NOT Joining thread %d..."% (t['tid']))
-	      #t['thread'].join(1)
-	      #self.joined += 1
-	#self.logger.debug("=> Finished with context enquires, [%d] joined threads"%threadSize)
-
       except Exception as inst:
 	Utilities.ParseException(inst, logger=self.logger)
 
