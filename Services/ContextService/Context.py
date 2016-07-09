@@ -79,55 +79,96 @@ class ContextGroup:
    
   def deserialize(self, service, rec_msg):
     ''' '''
-    threadSize 		= 0
-    topic, json_msg 	= rec_msg.split("@@@")
-    topic 		= topic.strip()
-    json_msg 		= json_msg.strip()
-    msg 		= json.loads(json_msg)
-    
-    #print "======================================================"
-    #print "["+topic+"]:", json_msg
-
-    # Processing messages with context enquires for 'context' topic
-    if topic == service.topic:
-      header 		= msg["header"]
-      content		= msg["content"]
-      #print "==> topic:", topic
-      #print "==> header:", header
+    try:
+      threadSize 		= 0
+      topic, json_msg 	= rec_msg.split("@@@")
+      topic 		= topic.strip()
+      json_msg 		= json_msg.strip()
+      msg 		= json.loads(json_msg)
+      msgKeys 		= msg.keys()
       
-      # Blocking request and reply messages
-      if header["action"] == 'start' or header["action"] == 'stop':
-	self.logger.debug("=> Looking for service [%s] in context messages" %
-		      (header["service_id"]))
-      
-	# Looking for service ID
-	if "service_id" in header.keys():
-	  self.resp_format["header"].update({"service_name":header["service_name"]})
-	  self.resp_format["header"].update({"service_id" :header["service_id"]})
-	  self.resp_format["header"].update({"action" : ""})
-	else:
-	  self.logger.debug("No service ID was provided")
+      # Processing messages with context enquires for 'context' topic
+      if topic == service.topic:
+	header 		= msg["header"]
+	content		= msg["content"]
 	
-      # Giving message interpreation within actions
-      if header['service_name'] == 'all' or self.DeserializeAction(msg):
-	json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
-	self.logger.debug("thread [%s] received message of size %d" % 
-			  (service.tid, len(json_msg)))
+	# Blocking request and reply messages
+	if header["action"] == 'start' or header["action"] == 'stop':
+	  self.logger.debug("=> Looking for service [%s] in context messages" %
+			(header["service_id"]))
+	
+	  # Looking for service ID
+	  if "service_id" in header.keys():
+	    self.resp_format["header"].update({"service_name":header["service_name"]})
+	    self.resp_format["header"].update({"service_id" :header["service_id"]})
+	    self.resp_format["header"].update({"action" : ""})
+	  else:
+	    self.logger.debug("No service ID was provided")
 	  
-	#TODO: make a separate thread for starting or stopping a context
-	if header['action'] == 'stop':
-	  #print  "=====>ContextGroup::msg:", msg
-	  self.stop(msg=msg)
-	  
-	#TODO: Set up an action when linger time is expired
-	elif header['action'] == 'start':
-	  #print  "=====>ContextGroup::start", header
-	  self.start(msg=msg)
-	  
-    elif topic == 'state':
-      #print  "=====>ContextGroup::request"
-      self.request(topic)
-      
+	# Giving message interpreation within actions
+	if header['service_name'] == 'all' or self.DeserializeAction(msg):
+	  #json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
+	  self.logger.debug("thread [%s] received message of size %d" % 
+			    (service.tid, len(json_msg)))
+	    
+	  #TODO: make a separate thread for starting or stopping a context
+	  if header['action'] == 'stop':
+	    self.stop(msg=msg)
+	    
+	  #TODO: Set up an action when linger time is expired
+	  elif header['action'] == 'start':
+	    self.start(msg=msg)
+	    
+      elif topic == 'state':
+	self.request(topic)
+	
+      elif topic == 'process':
+	'''Looking for process activities '''
+	
+	## Check if it is a task assignment
+	if 'Task' in msgKeys:
+	  task = msg['Task']
+	  taskKeys = task.keys()
+	  if 'state' in taskKeys and 'message' in taskKeys:
+	    header	= task['message']['header']
+	    action	= header['action']
+	    
+	    if action == 'start':
+	      self.logger.debug("  Collecting process context information")
+	      data = {
+		      'state'	   : action,
+		      'serviceName': header['service_name'],
+		      'instance'   : msg['instance']
+		      }
+	      
+	      ## Updating context info with new data
+	      self.logger.debug("  Updating process context information")
+	      transaction = header['transaction']
+	      serviceId	  = header['service_id']
+	      self.contextInfo.UpdateState( transaction, serviceId, data)
+	    
+      elif topic == 'control':
+	'''Looking for process control activities '''
+	
+	## Check if task has started
+	if 'header' in msgKeys and 'content' in msgKeys:
+	  header = msg['header']
+	  action = header['action'] 
+	  status = msg['content']['status']
+	  result = status['result']
+	  if action == 'started' and result == 'success':
+	    ## Updating context info with new data
+	    serviceId   = header['service_id']
+	    transaction = header['service_transaction']
+	    data = {
+		      'pid'  : status['pid'],
+		      'state': action
+		    }
+	    self.contextInfo.UpdateState( transaction, serviceId, data)
+	    
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+	
   def serialize(self, msg):
     ''' '''
     try:
