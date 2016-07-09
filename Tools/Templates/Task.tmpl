@@ -101,3 +101,8 @@ class $TaskClass(threading.Thread):
 
   def execute(self, service):
     ''' Execute $TaskClass task by calling a "run" method in the service'''
+
+  def stop_all_msg(self):
+    ''' Implement if the service task requires to stop any other running process'''
+
+   
