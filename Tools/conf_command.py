@@ -13,6 +13,13 @@ import string
 import pprint
 
 from optparse import OptionParser, OptionGroup
+from operator import xor
+'''
+python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --context_file='Conf/Context-CaptureTrack.xml' --service_name='context' --service_id='context001' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start'
+python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='stop' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff'
+python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='restart' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff' --result='success' --sniffer_filter='http>0 and ip.addr == 70.42.73.72' --sniffer_header='4.json' --interface='eth0'
+
+'''
 
 '''
 Instructions:
@@ -77,7 +84,6 @@ def message(options):
   # Settting up transaction
   if options.transaction is not None:
     ''' '''
-    #print "====> 3transaction:", options.transaction
     if options.transaction == '':
       transactionID = IdGenerator(size=20)
       header["service_transaction"] = transactionID
@@ -96,16 +102,13 @@ def message(options):
   elif header["service_name"] == 'context':
     header["service_name"] = options.service_name
     options.topic	   = header["service_name"]
-    #print "==>",header
     
     # Adding utils path based on current location
     # TODO: Change this!
     currPath  = os.path.abspath(__file__)
     utilsPath = currPath[:currPath.find("Tools")]+"Utils"
     sys.path.append(utilsPath) 
-    #print "====> 1transaction:", options.transaction
     if options.context_file is not None:
-      #print "====> 2transaction:", options.transaction
       # Importing XML parser
       from XMLParser import ParseXml2Dict
       
@@ -113,27 +116,22 @@ def message(options):
       rootName 		= 'Context'
       testConf 		= ParseXml2Dict(options.context_file, rootName)
       
-      
       # Generating message from file
       configuration = testConf
     
     # If an interface is set
     if options.interface is not None:
       '''' '''
-      #pprint.pprint(testConf)
       # Checking task is a list
       if type(testConf['TaskService']) != type([]):
 	testConf['TaskService'] = [testConf['TaskService']]
       
-      #pprint.pprint(testConf['TaskService'])
-      #print "===", type(testConf['TaskService'])
+      # Overwriting network interface if defined as arguments
       for lTask in testConf['TaskService']:
 	if lTask['instance'] == 'Sniffer':
 	  task = lTask['Task']
-	  #pprint.pprint(task)
 	  conf = task['message']['content']['configuration']
 	  conf['interface'] = options.interface
-	  #pprint.pprint(task)
 	  
     if  header["action"] == 'stop':
       configuration = {}
