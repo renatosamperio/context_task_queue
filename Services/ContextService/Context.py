@@ -16,6 +16,39 @@ from Utils import ModuleLoader
 from Utils.Utilities import *
 from Provider.Service import MultiProcessTasks, ThreadTasks
 
+class ContextInfo:
+  def __init__(self):    
+    component		= self.__class__.__name__
+    self.logger		= Utilities.GetLogger(logName=component)
+    self.info		= {}
+  
+  #def UpdateState(self, transaction, state=None, tid=None, thread=None):
+  def UpdateState(self, transaction, serviceId, data={}):
+    ''' '''
+    try:
+	
+      ## Search for transaction data
+      if transaction not in self.info.keys():
+	## If thread does not exists, create thread's PID
+	self.logger.debug("  Adding transaction [%s] to context info"% transaction)
+	self.info[transaction]={}
+      else:
+	self.logger.debug("  Transaction [%s] already in context"% transaction)
+	
+      ## Search for service ID
+      transactionData = self.info[transaction]
+      if serviceId not in transactionData.keys():
+	self.logger.debug("  Adding data of service ID [%s] to transaction [%s]"% 
+		   (serviceId, transaction))
+	self.info[transaction][serviceId] = data
+      else:
+	self.logger.debug("  Updating data of service ID [%s] to transaction [%s]"% 
+		   (serviceId, transaction))
+	self.info[transaction][serviceId].update(data)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  
 class ContextGroup:
   ''' '''
   def __init__(self, **kwargs):    
@@ -31,6 +64,7 @@ class ContextGroup:
     self.resp_format	= {"header":{}, "content":{}}
     self.service_id	= ''
     self.loader		= ModuleLoader()
+    self.contextInfo	= ContextInfo()
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
