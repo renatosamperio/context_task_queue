@@ -96,7 +96,7 @@ class TaskedService(object):
       # Saying set_ipc is finished from initialisation
       self.ipc_ready = True
       self.tStop.set()
-      time.sleep(0.5)
+      self.logger.debug("[%s] Endpoints had been set" % self.threadID)
       return socket, poller
 
     def run(self):
@@ -106,9 +106,10 @@ class TaskedService(object):
       '''
       try: 
 	# Creating IPC connections
-        self.socket, poller = self.set_ipc()
         self.tid = GetPID()
-        self.logger.debug('[%s] Starting task service in [%d]'%(self.threadID, self.tid))
+        self.logger.debug('[%s] Setting PID [%d]'%(self.threadID, self.tid))
+        self.socket, poller = self.set_ipc()
+        self.logger.debug('[%s] Starting task endpoint service in [%d]'%(self.threadID, self.tid))
 
         # Running service action
         #   NOTE: This action could block message pulling, it should be used as
@@ -196,6 +197,7 @@ class MultiProcessTasks(TaskedService, multiprocessing.Process):
       
       # Starting thread 
       self.start()
+      self.logger.debug("Multiprocessing class initialisation finished")
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
   
