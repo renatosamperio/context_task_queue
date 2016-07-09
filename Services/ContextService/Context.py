@@ -65,6 +65,7 @@ class ContextGroup:
     self.service_id	= ''
     self.loader		= ModuleLoader()
     self.contextInfo	= ContextInfo()
+    self.counter	= 2
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
@@ -125,7 +126,7 @@ class ContextGroup:
       elif topic == 'process':
 	'''Looking for process activities '''
 	
-	## Check if it is a task assignment
+	## Adding process starter in context information
 	if 'Task' in msgKeys:
 	  task = msg['Task']
 	  taskKeys = task.keys()
@@ -150,7 +151,7 @@ class ContextGroup:
       elif topic == 'control':
 	'''Looking for process control activities '''
 	
-	## Check if task has started
+	## Adding process state and PID in context information
 	if 'header' in msgKeys and 'content' in msgKeys:
 	  header = msg['header']
 	  action = header['action'] 
@@ -271,6 +272,7 @@ class ContextGroup:
 	
 	# Looping configured tasks
 	for i in range(sizeTasks):
+	  self.counter += 1
 	  task		= taskedServices[i]
 	  taskId	= task['id']
 	  taskTopic 	= task['topic']
@@ -293,17 +295,20 @@ class ContextGroup:
 	  # Starting service and wait give time for connection
 	  if taskStrategy is not None:
 	    try:
-	      self.logger.debug("==> [%s] Creating an [%s] worker of [%s]"%(i, taskInstance, serviceType))
-	      # Starting threaded services
+	      self.logger.debug("==> [%s] Creating an [%s] worker of [%s]"%
+			 (i, taskInstance, serviceType))
 	      
+	      # Starting threaded services
 	      if serviceType == 'Process':
-		tService = MultiProcessTasks(i+2, frontend	=frontend, 
+		tService = MultiProcessTasks(self.counter, 
+						  frontend	=frontend, 
 						  backend	=backend, 
 						  strategy	=taskStrategy,
 						  topic		=taskTopic,
 						  transaction	=transaction)
 	      elif serviceType == 'Thread':
-		tService = Process(i+2, frontend	=frontend, 
+		tService = Process(self.counter, 
+					frontend	=frontend, 
 					backend		=backend, 
 					strategy	=taskStrategy,
 					topic		=taskTopic,
@@ -312,9 +317,11 @@ class ContextGroup:
 	      # Adding transaction to the message
 	      time.sleep(0.75)
 	      task['Task']['message']["header"].update({'transaction' : transaction})
+	      
 	      # Preparing message to send
 	      json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
 	      start_msg = "%s @@@ %s" % (taskTopic, json_msg)
+	      
 	      # Sending message for starting service
 	      self.logger.debug("==> [%d] Sending message for starting service"%i )
 	      self.serialize(start_msg)
