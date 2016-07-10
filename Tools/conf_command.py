@@ -62,10 +62,75 @@ sUsage =  "usage:\n"\
 def IdGenerator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
 
+def ParseTasks(options):
+  '''Generates JSON task configuration from XML file'''
+  # Adding utils path based on current location
+  # TODO: Change this!
+  currPath  = os.path.abspath(__file__)
+  utilsPath = currPath[:currPath.find("Tools")]+"Utils"
+  sys.path.append(utilsPath) 
+  if options.context_file is not None:
+    # Importing XML parser
+    from XMLParser import ParseXml2Dict
+    
+    # Parsing test file
+    rootName 		= 'Context'
+    testConf 		= ParseXml2Dict(options.context_file, rootName)
+    
+  # If an interface is set
+  if options.interface is not None:
+    '''' '''
+    # Checking task is a list
+    if type(testConf['TaskService']) != type([]):
+      testConf['TaskService'] = [testConf['TaskService']]
+    
+    # Overwriting network interface if defined as arguments
+    for lTask in testConf['TaskService']:
+      if lTask['instance'] == 'Sniffer':
+	task = lTask['Task']
+	conf = task['message']['content']['configuration']
+	conf['interface'] = options.interface
+  return testConf
+
+def GetTask(configuration, options):
+  '''Getting task configuration from XML with an specific service ID'''
+
+  ## Setting header data
+  header    			= {}
+  header['action']		= options.action
+  header['service_id']		= options.service_id
+  header['service_name']	= options.service_name
+  header['service_transaction']	= options.transaction
+  fileTasks			= configuration['TaskService']
+  
+  ## Preparing task configuration message
+  #taskConfMsg = {
+		#'header'	  : header,
+		#'BackendBind'	  : configuration['BackendBind'],
+		#'BackendEndpoint' : configuration['BackendEndpoint'],
+		#'FrontBind'	  : configuration['FrontBind'],
+		#'FrontEndEndpoint': configuration['FrontEndEndpoint'],
+		#'TaskLogName'	  : configuration['TaskLogName'],
+		#'TaskService'	  : {},
+	     #}
+  ## Looking for task service
+  serviceTask = {}
+  for lTask in fileTasks:
+    if lTask['id'] ==  options.task_id:
+      lTask['Task']['message']['header']['action']	= options.action
+      lTask['Task']['message']['header']['service_id']	= options.task_id
+      lTask['Task']['message']['header']['transaction'] = options.transaction
+      #serviceTask = lTask
+      #break
+      return lTask
+      
+  ## Passing task
+  #taskConfMsg['TaskService'] = serviceTask
+  return serviceTask
+
 def message(options):
   ''' '''
   msg = {}
-  #print options
   header = {
     "service_name": 	'' ,
     "action":		'',
@@ -73,6 +138,7 @@ def message(options):
   }
   configuration = {}
   content = {}
+  
     
   if options.action is not None:
     header["action"] = options.action
@@ -99,40 +165,13 @@ def message(options):
       options.topic	   = header["service_name"]
     content = {"content": {"configuration": configuration}}
   
-  elif header["service_name"] == 'context':
+  elif header["service_name"] == 'context' and options.use_file==False:
     header["service_name"] = options.service_name
     options.topic	   = header["service_name"]
     
-    # Adding utils path based on current location
-    # TODO: Change this!
-    currPath  = os.path.abspath(__file__)
-    utilsPath = currPath[:currPath.find("Tools")]+"Utils"
-    sys.path.append(utilsPath) 
-    if options.context_file is not None:
-      # Importing XML parser
-      from XMLParser import ParseXml2Dict
-      
-      # Parsing test file
-      rootName 		= 'Context'
-      testConf 		= ParseXml2Dict(options.context_file, rootName)
-      
-      # Generating message from file
-      configuration = testConf
-    
-    # If an interface is set
-    if options.interface is not None:
-      '''' '''
-      # Checking task is a list
-      if type(testConf['TaskService']) != type([]):
-	testConf['TaskService'] = [testConf['TaskService']]
-      
-      # Overwriting network interface if defined as arguments
-      for lTask in testConf['TaskService']:
-	if lTask['instance'] == 'Sniffer':
-	  task = lTask['Task']
-	  conf = task['message']['content']['configuration']
-	  conf['interface'] = options.interface
-	  
+    ## Getting XML and interface from arguments
+    configuration = ParseTasks(options)
+    	  
     if  header["action"] == 'stop':
       configuration = {}
     content = {"content": {"configuration": configuration}}
@@ -184,7 +223,7 @@ def message(options):
     if options.content_server_id is not None:
       configuration["content_server_id"] = options.content_server_id
     content = {"content": {"configuration": configuration}}
-      
+   
   elif header["service_name"] == 'device':
     configuration = {
       "device_action":	'',
@@ -270,6 +309,15 @@ def message(options):
 	configuration.update({"headerPath": options.sniffer_header})
 	configuration.update({"interface": options.interface})
 	content = {"content": {"configuration": configuration}}
+      elif options.service_name == 'sniffer' and options.action == 'stop':
+	header["action"] = options.action
+	header = {
+	   'service_name':header["service_name"],
+	   'service_id':header["service_id"],
+	   'service_transaction' : header["service_transaction"],
+	   'action' : options.action
+	  }
+	content = {"Task": {"message": {'header':header}}}
 
   elif header["service_name"] == 'music_search':
     configuration = {
@@ -302,6 +350,17 @@ def message(options):
 	configuration['report']['items'].append(item)
     content = {"content": {"status": configuration}}
   
+  elif options.use_file==True:
+    ''''''
+    ## Getting XML and interface from arguments
+    configuration = ParseTasks(options)
+    
+    ## Getting task by service ID
+    msg= GetTask(configuration, options)
+    #content = {"content": {"configuration": taskConf}}
+    #content = taskConf
+    return msg
+    
   msg.update({"header": header})
   msg.update(content)
   #print "===>msg:", msg
@@ -522,6 +581,15 @@ if __name__ == '__main__':
                       action='store',
 		      default=None,
                       help='Overwrites XML configuration interface')
+  contextOpts.add_option('--use_file', 
+			   dest='use_file', 
+			   action='store_true',
+			   default=False,
+			   help='Makes use of configuration file for configuring task services')
+  contextOpts.add_option('--task_id', 
+		    metavar="TASK_ID", 
+		    default=None,
+		    help="Service ID to control found in XML configuration file")
     
   annotatorOpts = OptionGroup(parser, "Song annotation service",
 		      "These options are for handling track annotations in Mongo DB"
@@ -549,7 +617,6 @@ if __name__ == '__main__':
 		      default=None,
                       help='sets report track query. Text to be found in DB record.')
   
-  
   snifferOpts = OptionGroup(parser, "Sniffer service",
 		      "These options are for configuring sniffer command"
 		      "")
@@ -574,13 +641,14 @@ if __name__ == '__main__':
 
   (options, args) = parser.parse_args()
  
-  if options.endpoint is None:
-    parser.error("Missing required option: endpoint")
-    parser.print_help()
-  
-  if options.service_name is None:
-    parser.error("Missing required option: service_name")
-    parser.print_help()
+  if options.use_file==False:
+    if options.endpoint is None:
+      parser.error("Missing required option: endpoint")
+      parser.print_help()
+    
+    if options.service_name is None:
+      parser.error("Missing required option: service_name")
+      parser.print_help()
     
   if options.service_name == 'ftp' and options.ftp_port is not None:
     if options.ftp_port < 1024:
@@ -653,7 +721,6 @@ if __name__ == '__main__':
       if options.interface is None:
 	parser.error("Missing required option: interface")
     
-
   if options.service_name == 'music_search':
     if options.action == 'none':
       parser.error("Missing required option: action")
@@ -705,5 +772,23 @@ if __name__ == '__main__':
   if type(options.track_title) != type([]):
     options.track_title = [options.track_title]
   
+  if options.use_file:
+    if options.context_file is None:
+      parser.error("Missing required option: --context_file")
+    if options.service_id is 'none':
+      parser.error("Missing required option: --service_id")
+    if options.transaction is None:
+      parser.error("Missing required option: --transaction")
+    if options.action is 'none':
+      parser.error("Missing required option: --action")
+    if options.endpoint is None:
+      parser.error("Missing required option: --endpoint")
+    if options.task_id is None:
+      parser.error("Missing required option: --task_id")
+    if options.service_name is None:
+      parser.error("Missing required option: --service_name")
+    #if options.topic != 'context':
+      #parser.error("Missing required option: --topic='context'")
+
   msg = message(options)
   main(msg)
