@@ -363,7 +363,6 @@ def message(options):
 	youtubeId = IdGenerator(size=11)
 	ratio = random.randint(75,101)/100.00
 	item = {'title':track, 'id': youtubeId, 'ratio': ratio}
-	#print '*** item:', item
 	configuration['report']['items'].append(item)
     content = {"content": {"status": configuration}}
   
@@ -374,22 +373,18 @@ def message(options):
     
     ## Getting task by service ID
     msg= GetTask(configuration, options)
-    #content = {"content": {"configuration": taskConf}}
-    #content = taskConf
     return msg
     
   msg.update({"header": header})
   msg.update(content)
-  #print "===>msg:", msg
   return msg
 
 def main(msg):
   ''' '''
-  #topic = "process"
   topic = options.topic
   endpoint = options.endpoint
   print "+ Connecting endpoint ["+endpoint+ "] in topic ["+topic+"]"
-  #endpoint = msg['header']['endpoint']
+
   ctx = zmq.Context()
   socket = ctx.socket(zmq.PUB)
   socket.connect(endpoint)
@@ -397,7 +392,6 @@ def main(msg):
 
   json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
   print "+ Sending message of [%d] bytes"%(len(json_msg))
-  #socket.send_json(msg, zmq.NOBLOCK)
   socket.send("%s @@@ %s" % (topic, json_msg))
   
 if __name__ == '__main__':
@@ -409,7 +403,6 @@ if __name__ == '__main__':
   available_topics		= ['process', 'context', 'control']
   available_results		= ['success', 'failure', 'none']
   
-  #usage = "usage: %prog opt1=arg1 opt2=arg2"
   usage = sUsage
   parser = OptionParser(usage=usage)
   parser.add_option('--endpoint', 
@@ -804,8 +797,6 @@ if __name__ == '__main__':
       parser.error("Missing required option: --task_id")
     if options.service_name is None:
       parser.error("Missing required option: --service_name")
-    #if options.topic != 'context':
-      #parser.error("Missing required option: --topic='context'")
 
   msg = message(options)
   main(msg)
