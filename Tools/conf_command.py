@@ -103,29 +103,46 @@ def GetTask(configuration, options):
   header['service_transaction']	= options.transaction
   fileTasks			= configuration['TaskService']
   
-  ## Preparing task configuration message
-  #taskConfMsg = {
-		#'header'	  : header,
-		#'BackendBind'	  : configuration['BackendBind'],
-		#'BackendEndpoint' : configuration['BackendEndpoint'],
-		#'FrontBind'	  : configuration['FrontBind'],
-		#'FrontEndEndpoint': configuration['FrontEndEndpoint'],
-		#'TaskLogName'	  : configuration['TaskLogName'],
-		#'TaskService'	  : {},
-	     #}
-  ## Looking for task service
   serviceTask = {}
-  for lTask in fileTasks:
-    if lTask['id'] ==  options.task_id:
-      lTask['Task']['message']['header']['action']	= options.action
-      lTask['Task']['message']['header']['service_id']	= options.task_id
-      lTask['Task']['message']['header']['transaction'] = options.transaction
-      #serviceTask = lTask
-      #break
-      return lTask
-      
-  ## Passing task
-  #taskConfMsg['TaskService'] = serviceTask
+  if options.action == 'start':
+    ## Changing topic of message
+    options.topic = 'context'
+    
+    ## Preparing task configuration message
+    taskConfMsg = {
+	'content': 
+	  {'configuration':
+	      {
+		  'BackendBind'	  : configuration['BackendBind'],
+		  'BackendEndpoint' : configuration['BackendEndpoint'],
+		  'FrontBind'	  : configuration['FrontBind'],
+		  'FrontEndEndpoint': configuration['FrontEndEndpoint'],
+		  'TaskLogName'	  : configuration['TaskLogName'],
+		  'TaskService'	  : {}
+	      }
+	},
+	'header':header
+    }
+    
+    for lTask in fileTasks:
+      if lTask['id'] ==  options.task_id:
+	lTask['Task']['message']['header']['action']	  = options.action
+	lTask['Task']['message']['header']['service_id']  = options.task_id
+	lTask['Task']['message']['header']['transaction'] = options.transaction
+	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
+	break
+    return taskConfMsg
+  else:
+    ## Looking for task service
+    for lTask in fileTasks:
+      if lTask['id'] ==  options.task_id:
+	lTask['Task']['message']['header']['action']	  = options.action
+	lTask['Task']['message']['header']['service_id']  = options.task_id
+	lTask['Task']['message']['header']['transaction'] = options.transaction
+	return lTask
+	
+    ## Passing task
+    #taskConfMsg['TaskService'] = serviceTask
   return serviceTask
 
 def message(options):
