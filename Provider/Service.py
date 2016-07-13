@@ -134,8 +134,9 @@ class TaskedService(object):
 	  
 	  if (self.check_in_time - time.time())<0:
 	    process_memory = Utilities.MemoryUsage(self.tid)
-	    self.logger.debug('[%s] Process [%d] is using [%f] MiB'%
-		      (self.threadID, self.tid, process_memory))
+	    self.logger.debug('[%s] Process [%s, %d] is using (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%)'%
+		      (self.threadID, self.action.service_id, self.tid, 
+		      process_memory['rss'], process_memory['vms'], process_memory['percent']))
 	    self.check_in_time = time.time()+ self.time_out_alarm
 
         # Destroying IPC connections and mark process as stopped
