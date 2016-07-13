@@ -22,13 +22,45 @@ class ContextInfo:
     self.logger		= Utilities.GetLogger(logName=component)
     self.info		= {}
   
-  #def UpdateState(self, transaction, state=None, tid=None, thread=None):
+  def ServiceExists(self, transaction, serviceId):
+    ''' Return true if service ID does not exists in current transaction'''
+    if self.TransactionExists(transaction):
+      ## Search for service ID
+      transactionData = self.info[transaction]
+      return serviceId not in transactionData.keys()
+   
+  def TransactionExists(self, transaction):
+    ''' Return true if transaction ID is not already exists'''
+    return transaction not in self.info.keys()
+  
+  def RemoveItem(self, transaction, serviceId):
+    '''Removing item once it has been stopped'''
+    try:
+      
+      ## Search for transaction data
+      if self.TransactionExists(transaction):
+	self.logger.debug("  Found transaction [%s] in context info"% transaction)
+      else:
+	self.logger.debug("  Transaction [%s] already in context"% transaction)
+	
+      ## Search for service ID
+      transactionData = self.info[transaction]
+      if serviceId not in transactionData.keys():
+	self.logger.debug("  Service ID [%s] not found for transaction [%s]"% 
+		   (serviceId, transaction))
+      else:
+	self.logger.debug("  Removing transaction [%s] to context info"% transaction)
+	del transactionData[serviceId]
+	
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+        
   def UpdateState(self, transaction, serviceId, data={}):
     ''' '''
     try:
 	
       ## Search for transaction data
-      if transaction not in self.info.keys():
+      if self.TransactionExists(transaction):
 	## If thread does not exists, create thread's PID
 	self.logger.debug("  Adding transaction [%s] to context info"% transaction)
 	self.info[transaction]={}
@@ -47,7 +79,6 @@ class ContextInfo:
 	self.info[transaction][serviceId].update(data)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-
   
 class ContextGroup:
   ''' '''
