@@ -142,7 +142,12 @@ class TaskedService(object):
         # Destroying IPC connections and mark process as stopped
         self.logger.debug("[%s] Stopping task with PID [%d]"%(self.threadID, self.tid))
         self.action.stop()
-  
+	
+	# Sending last stop notification before closing IPC connection
+        self.logger.debug("[%s] Notifying stopping state for process with PID[%d]"%
+			  (self.threadID, self.tid))
+	self.action.notify("stopped", 'success', items={'pid':self.tid})
+	
         # Destroying IPC processes
         self.logger.debug("[%s] Destroying zmq context"%(self.threadID))
         self.context.destroy()
