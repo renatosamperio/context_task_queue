@@ -18,7 +18,12 @@ LOG_NAME	= 'ContextProvider'
 def MemoryUsage(pid):
   '''Returns the memory usage in MB'''
   process = psutil.Process(pid)
-  mem = process.get_memory_info()[0] / float(2 ** 20)
+  mem_info = process.get_memory_info()
+  mem = {'rss': mem_info[0] / float(2 ** 20)}
+  mem.update({'vms': mem_info[1] / float(2 ** 20)})
+  mem.update({'percent':process.memory_percent()})
+  
+  ##TODO: Add memory_maps, children, open_files, connections
   return mem
     
 def GetLogger(logName=LOG_NAME, useFile=True):
