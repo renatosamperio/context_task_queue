@@ -544,10 +544,18 @@ class ContextGroup:
       ##       If so, the could be started...
       threadKeys = self.threads.keys()
       isStartAction = msg['header']['action'] == 'start'
-      if len(self.threads)>0 and msgTransaction in threadKeys and isStartAction:
-	#print "====> Transaction:", self.threads[msgTransaction]
+      if msgTransaction in threadKeys and isStartAction:
 	contextExist = False
 	self.logger.debug("  - Transaction already exists")
+	
+	## Checking if service also exists
+	tasks = msg['content']['configuration']['TaskService']
+	for lTask in tasks:
+	  serviceId = lTask['id']
+	  if len(serviceId)>0:
+	    self.logger.debug("  + Service ID found")
+	    return not self.contextInfo.ServiceExists(msgTransaction, serviceId)
+	self.logger.debug("  - Valid Service ID not found")
       
     result = contextExist and isServiceNameCorrect
     return result
