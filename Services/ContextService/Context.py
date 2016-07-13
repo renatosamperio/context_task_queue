@@ -182,21 +182,27 @@ class ContextGroup:
       elif topic == 'control':
 	'''Looking for process control activities '''
 	
-	## Adding process state and PID in context information
+	## Checking message components are in the message
 	if 'header' in msgKeys and 'content' in msgKeys:
+	  ## Adding process state and PID in context information
 	  header = msg['header']
 	  action = header['action'] 
 	  status = msg['content']['status']
 	  result = status['result']
+	  
+	  ## Updating context info with new data
+	  serviceId   = header['service_id']
+	  transaction = header['service_transaction']
+	  
+	  ## Adding or removing from data structure according to reported action
 	  if action == 'started' and result == 'success':
-	    ## Updating context info with new data
-	    serviceId   = header['service_id']
-	    transaction = header['service_transaction']
 	    data = {
 		      'pid'  : status['pid'],
 		      'state': action
 		    }
 	    self.contextInfo.UpdateState( transaction, serviceId, data)
+	  elif action == 'stopped' and result == 'success':
+	    self.contextInfo.RemoveItem(transaction, serviceId)
 	    
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
