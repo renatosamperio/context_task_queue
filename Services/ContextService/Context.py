@@ -323,15 +323,26 @@ class ContextGroup:
 	frontend	= configuration['FrontEndEndpoint']
 	backend 	= configuration['BackendEndpoint']
 	logName		= configuration['TaskLogName']
-	transaction	= msg["header"]["service_transaction"]
+	transaction	= header["service_transaction"]
+	self.service_id	= header["service_id"]
 	self.joined	= 0
 	taskTopic	= 'process'
-	self.service_id	= header["service_id"]
 	self.logger.debug("==> Message for setting up process [%s] has been received"%
 			  (header["service_id"]))
 	
 	## Setting up context configuration
-	self.contextInfo.UpdateState( transaction, serviceId, data)
+	data = {
+		  'contextId': self.service_id,
+		  'contextName': header['service_name'],
+		  'configuration':
+		    {
+		      'BackendBind'		: configuration['BackendBind'],
+		      'BackendEndpoint'	: backend,
+		      'FrontBind'		: configuration['FrontBind'],
+		      'FrontEndEndpoint'	: frontend
+		    }
+	       }
+	self.contextInfo.UpdateState(transaction, 'context', data)
 	
 	## Checking if single task is not list type
 	if type(taskedServices) != type([]):
