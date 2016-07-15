@@ -217,7 +217,28 @@ class ContextGroup:
 	    
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-	
+
+  def MakeMessage(self, action, header, msg, contextInfo):
+    try:
+      ## Setting inner message action to task action
+      msg['Task']['message']['header']['action'] = action
+      
+      ## Generating data for update
+      self.logger.debug("  Collecting process context information")
+      data = {
+	      'state'	   : action,
+	      'serviceName': header['service_name'],
+	      'instance'   : msg['instance']
+	      }
+      
+      ## Updating context info with new data
+      self.logger.debug("  Updating process context information")
+      transaction = header['transaction']
+      serviceId	  = header['service_id']
+      contextInfo.UpdateState( transaction, serviceId, data)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+   
   def serialize(self, msg):
     ''' '''
     try:
