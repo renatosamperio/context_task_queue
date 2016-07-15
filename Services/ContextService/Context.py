@@ -167,7 +167,7 @@ class ContextGroup:
 	
       elif topic == 'process':
 	'''Looking for process activities '''
-	
+
 	## Adding process starter in context information
 	if 'Task' in msgKeys:
 	  task = msg['Task']
@@ -177,19 +177,62 @@ class ContextGroup:
 	    action	= header['action']
 	    
 	    if action == 'start':
-	      self.logger.debug("  Collecting process context information")
-	      data = {
-		      'state'	   : action,
-		      'serviceName': header['service_name'],
-		      'instance'   : msg['instance']
-		      }
-	      
 	      ## Updating context info with new data
-	      self.logger.debug("  Updating process context information")
+	      self.logger.debug(" Updating state of context data structure")
+	      self.MakeMessage(action, header, msg, self.contextInfo)
+	    
+	    if action == 'restart':
+	      ''' '''
 	      transaction = header['transaction']
 	      serviceId	  = header['service_id']
-	      self.contextInfo.UpdateState( transaction, serviceId, data)
-	    
+	      if not self.contextInfo.TransactionNotExists(transaction) and \
+		 not self.contextInfo.ServiceExists(transaction, serviceId):
+		self.logger.debug("  Restarting current service task")
+		
+		## Sending a stop message
+		serviceId = msg['Task']['message']['header']['service_id']
+		self.logger.debug("    Stopping service [%s]"%serviceId)
+		msg['Task']['message']['header']['action'] = 'stop'
+		send_msg = "%s @@@ %s" % (topic, \
+			    json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': ')))
+		self.serialize(send_msg)
+		time.sleep(0.75)
+		
+		## Sending a start message
+		self.logger.debug("    Starting service [%s]"%serviceId)
+		msg['Task']['message']['header']['action'] = 'start'
+		
+		## Preparing content configuration
+		contxtMsg = {
+		  "TaskLogName": "Context",
+		  "TaskService": [msg],
+		}
+		conf = self.contextInfo.GetContextConf(transaction)
+		conf['configuration'].update(contxtMsg)
+		
+		## Preparing context message with header
+		ctx_msg = {
+		  'header':{
+		      'action': 'start',
+		      'service_id': conf['contextId'],
+		      'service_name': conf['contextName'],
+		      'service_transaction': transaction,
+		    },
+		  
+		  'content': {'configuration':conf['configuration']}
+		}
+		
+		## If context has a configuration, set it in context message 
+		##   for starting the task service
+		if conf is None:
+		  self.logger.debug("Service [%s] without configuration"%serviceId)
+		  return
+		send_msg = "%s @@@ %s" % ('context', \
+			    json.dumps(ctx_msg, sort_keys=True, indent=4, separators=(',', ': ')))
+		self.serialize(send_msg)
+	      else:
+		self.logger.debug(" No service task to restart")
+
       elif topic == 'control':
 	'''Looking for process control activities '''
 	
