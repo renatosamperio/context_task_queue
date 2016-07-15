@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import time
 import psutil
 import ctypes
 import sys, os
@@ -14,17 +15,45 @@ LOG_FILENAME	= 'context_provider.log'
 ''' Base name for logger'''
 LOG_NAME	= 'ContextProvider'
 
-
-def MemoryUsage(pid):
-  '''Returns the memory usage in MB'''
-  process = psutil.Process(pid)
-  mem_info = process.get_memory_info()
-  mem = {'rss': mem_info[0] / float(2 ** 20)}
-  mem.update({'vms': mem_info[1] / float(2 ** 20)})
-  mem.update({'percent':process.memory_percent()})
   
-  ##TODO: Add memory_maps, children, open_files, connections
-  return mem
+def MemoryUsage(pid, log=None):
+  '''Returns the memory usage in MB'''
+  start = time.time()
+  try:
+    ## Getting process information
+    process = psutil.Process(pid)
+    
+    ## Getting process memory (RSS, VMS and %)
+    mem_info = process.get_memory_info()
+    mem = {'rss': mem_info[0] / float(2 ** 20)}
+    mem.update({'vms': mem_info[1] / float(2 ** 20)})
+    mem.update({'percent':process.memory_percent()})
+    mem.update({'children':[]})
+    mem.update({'total':{'percent':mem['percent'], 'rss':mem['rss'], 'vms':mem['vms']}})
+    
+    ## Getting memory from children processes
+    kids = process.children()
+    for child in kids:
+      ## Double check if pid attribute exists in 
+      ##   process object. May not be useful
+      data = psutil.Process(child.pid)
+      childMem = data.get_memory_info()
+      childData = {'pid':data.pid, 'create_time':data.create_time(),
+		    'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
+		    'percent':data.memory_percent()}
+      mem['children'].append(childData)
+
+      ## Calculating total values with process and children's heap
+      mem['total']['percent'] += childData['percent']
+      mem['total']['rss'] += childData['rss']
+      mem['total']['vms'] += childData['vms']      
+  
+    ##TODO: Add memory_maps, children, open_files, connections
+    elapsed = time.time() - start
+    mem.update({'elapsed':elapsed})
+    return mem
+  except Exception as inst:
+    ParseException(inst, logger=log)
     
 def GetLogger(logName=LOG_NAME, useFile=True):
   ''' Returns an instance of logger '''
