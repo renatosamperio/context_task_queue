@@ -97,7 +97,7 @@ class ContextGroup:
     self.service_id	= ''
     self.loader		= ModuleLoader()
     self.contextInfo	= ContextInfo()
-    self.counter	= 2
+    self.counter	= 1
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
@@ -113,7 +113,6 @@ class ContextGroup:
   def deserialize(self, service, rec_msg):
     ''' '''
     try:
-      threadSize 		= 0
       topic, json_msg 	= rec_msg.split("@@@")
       topic 		= topic.strip()
       json_msg 		= json_msg.strip()
@@ -126,21 +125,19 @@ class ContextGroup:
 	content		= msg["content"]
 	
 	# Blocking request and reply messages
-	if header["action"] == 'start' or header["action"] == 'stop':
-	  self.logger.debug("=> Looking for service [%s] in context messages" %
-			(header["service_id"]))
+	self.logger.debug("=> Looking for service [%s] in context messages" %
+		      (header["service_id"]))
+      
+	# Looking for service ID
+	if "service_id" in header.keys():
+	  self.resp_format["header"].update({"service_name":header["service_name"]})
+	  self.resp_format["header"].update({"service_id" :header["service_id"]})
+	  self.resp_format["header"].update({"action" : ""})
+	else:
+	  self.logger.debug("No service ID was provided")
 	
-	  # Looking for service ID
-	  if "service_id" in header.keys():
-	    self.resp_format["header"].update({"service_name":header["service_name"]})
-	    self.resp_format["header"].update({"service_id" :header["service_id"]})
-	    self.resp_format["header"].update({"action" : ""})
-	  else:
-	    self.logger.debug("No service ID was provided")
-	  
 	# Giving message interpreation within actions
 	if header['service_name'] == 'all' or self.DeserializeAction(msg):
-	  #json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
 	  self.logger.debug("thread [%s] received message of size %d" % 
 			    (service.tid, len(json_msg)))
 	    
@@ -292,23 +289,26 @@ class ContextGroup:
 	frontend	= configuration['FrontEndEndpoint']
 	backend 	= configuration['BackendEndpoint']
 	logName		= configuration['TaskLogName']
+	transaction	= msg["header"]["service_transaction"]
 	self.joined	= 0
 	taskTopic	= 'process'
 	self.service_id	= header["service_id"]
 	self.logger.debug("==> Message for setting up process [%s] has been received"%
 			  (header["service_id"]))
 	
-	# Checking if single task is not list type
+	## Setting up context configuration
+	self.contextInfo.UpdateState( transaction, serviceId, data)
+	
+	## Checking if single task is not list type
 	if type(taskedServices) != type([]):
 	  taskedServices= [taskedServices]
 	sizeTasks	= len(taskedServices)
-	transaction	= msg["header"]["service_transaction"]
 	
-	# Adding transaction context if not defined
+	## Adding transaction context if not defined
 	if sizeTasks>0:
 	  self.AddTaskContext(transaction)
 	
-	# Looping configured tasks
+	## Looping configured tasks
 	for i in range(sizeTasks):
 	  self.counter += 1
 	  task		= taskedServices[i]
@@ -322,11 +322,11 @@ class ContextGroup:
 	  taskStrategy	= self.GetIntance(taskInstance)
 	  
 	  ## TODO: This is a local checking up, should not be here!!!
-	  # Checking if hosts is defined as a list
+	  ## Checking if hosts is defined as a list
 	  if 'hosts' in msg_conf.keys() and not type(msg_conf['hosts']) == type([]):
 	    task['Task']['message']["content"]["configuration"]["hosts"] = [msg_conf['hosts']]
 	    
-	  # Checking if service ID is included in header
+	  ## Checking if service ID is included in header
 	  if 'service_id' not in msg_header.keys():
 	    task['Task']['message']["header"].update({'service_id' : taskId})
 	  
@@ -336,7 +336,7 @@ class ContextGroup:
 	      self.logger.debug("==> [%s] Creating an [%s] worker of [%s]"%
 			 (i, taskInstance, serviceType))
 	      
-	      # Starting threaded services
+	      ## Starting threaded services
 	      if serviceType == 'Process':
 		tService = MultiProcessTasks(self.counter, 
 						  frontend	=frontend, 
@@ -352,11 +352,11 @@ class ContextGroup:
 					topic		=taskTopic,
 					transaction	=transaction)
 	      
-	      # Adding transaction to the message
+	      ## Adding transaction to the message
 	      time.sleep(0.75)
 	      task['Task']['message']["header"].update({'transaction' : transaction})
 	      
-	      # Preparing message to send
+	      ## Preparing message to send
 	      json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
 	      start_msg = "%s @@@ %s" % (taskTopic, json_msg)
 	      
