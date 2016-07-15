@@ -33,6 +33,20 @@ class ContextInfo:
     ''' Return true if transaction ID is not already exists'''
     return transaction not in self.stateInfo.keys()
   
+  def GetContextConf(self, transaction):
+    ''' Returns context configuration'''
+    try:
+      conf = None
+      ## Search for transaction data
+      if self.TransactionNotExists(transaction):
+	self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
+      else:
+	self.logger.debug("  Getting context data from transaction [%s]"% transaction)
+	conf = self.stateInfo[transaction]['context']
+      return conf
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
   def RemoveItem(self, transaction, serviceId):
     '''Removing item once it has been stopped'''
     try:
