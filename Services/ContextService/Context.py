@@ -20,18 +20,18 @@ class ContextInfo:
   def __init__(self):    
     component		= self.__class__.__name__
     self.logger		= Utilities.GetLogger(logName=component)
-    self.info		= {}
+    self.stateInfo	= {}
   
   def ServiceExists(self, transaction, serviceId):
     ''' Return true if service ID does not exists in current transaction'''
     if self.TransactionExists(transaction):
       ## Search for service ID
-      transactionData = self.info[transaction]
+      transactionData = self.stateInfo[transaction]
       return serviceId not in transactionData.keys()
    
   def TransactionExists(self, transaction):
     ''' Return true if transaction ID is not already exists'''
-    return transaction not in self.info.keys()
+    return transaction not in self.stateInfo.keys()
   
   def RemoveItem(self, transaction, serviceId):
     '''Removing item once it has been stopped'''
@@ -44,7 +44,7 @@ class ContextInfo:
 	self.logger.debug("  Transaction [%s] already in context"% transaction)
 	
       ## Search for service ID
-      transactionData = self.info[transaction]
+      transactionData = self.stateInfo[transaction]
       if serviceId not in transactionData.keys():
 	self.logger.debug("  Service ID [%s] not found for transaction [%s]"% 
 		   (serviceId, transaction))
@@ -63,20 +63,21 @@ class ContextInfo:
       if self.TransactionExists(transaction):
 	## If thread does not exists, create thread's PID
 	self.logger.debug("  Adding transaction [%s] to context info"% transaction)
-	self.info[transaction]={}
+	self.stateInfo[transaction]={}
+	
       else:
 	self.logger.debug("  Transaction [%s] already in context"% transaction)
 	
       ## Search for service ID
-      transactionData = self.info[transaction]
+      transactionData = self.stateInfo[transaction]
       if serviceId not in transactionData.keys():
 	self.logger.debug("  Adding data of service ID [%s] to transaction [%s]"% 
 		   (serviceId, transaction))
-	self.info[transaction][serviceId] = data
+	self.stateInfo[transaction][serviceId] = data
       else:
 	self.logger.debug("  Updating data of service ID [%s] to transaction [%s]"% 
 		   (serviceId, transaction))
-	self.info[transaction][serviceId].update(data)
+	self.stateInfo[transaction][serviceId].update(data)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
   
