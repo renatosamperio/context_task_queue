@@ -24,12 +24,12 @@ class ContextInfo:
   
   def ServiceExists(self, transaction, serviceId):
     ''' Return true if service ID does not exists in current transaction'''
-    if self.TransactionExists(transaction):
+    if self.TransactionNotExists(transaction):
       ## Search for service ID
       transactionData = self.stateInfo[transaction]
       return serviceId not in transactionData.keys()
    
-  def TransactionExists(self, transaction):
+  def TransactionNotExists(self, transaction):
     ''' Return true if transaction ID is not already exists'''
     return transaction not in self.stateInfo.keys()
   
@@ -38,7 +38,7 @@ class ContextInfo:
     try:
       
       ## Search for transaction data
-      if self.TransactionExists(transaction):
+      if self.TransactionNotExists(transaction):
 	self.logger.debug("  Found transaction [%s] in context info"% transaction)
       else:
 	self.logger.debug("  Transaction [%s] already in context"% transaction)
@@ -51,16 +51,15 @@ class ContextInfo:
       else:
 	self.logger.debug("  Removing transaction [%s] to context info"% transaction)
 	del transactionData[serviceId]
-	
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
         
-  def UpdateState(self, transaction, serviceId, data={}):
-    ''' '''
+  def UpdateState(self, transaction, serviceId, data={}, context=False):
+    '''Updates context state data structure '''
     try:
-	
+      
       ## Search for transaction data
-      if self.TransactionExists(transaction):
+      if self.TransactionNotExists(transaction):
 	## If thread does not exists, create thread's PID
 	self.logger.debug("  Adding transaction [%s] to context info"% transaction)
 	self.stateInfo[transaction]={}
