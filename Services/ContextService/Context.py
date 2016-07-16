@@ -94,6 +94,44 @@ class ContextInfo:
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
   
+  def GetContextServices(self, transaction):
+    ''' Returns a list of available services ID, otherwise empty list'''
+    try:
+      ## Getting a list of available services from context information
+      lServices = []
+      if not self.TransactionNotExists(transaction):
+	ctxtServices = self.stateInfo[transaction]
+	
+	## Looking for existing services
+	lServices = ctxtServices.keys()
+	if 'context' in lServices:
+	  lServices.remove('context')
+	  
+	## Stopping only services that are started
+	for service in lServices:
+	  serviceDetails =ctxtServices[service]
+	  detailHeaders =ctxtServices[service].keys()
+	  if 'state' in detailHeaders and serviceDetails['state'] == 'started':
+	    self.logger.debug("Service [%s] is currently available in context"%(service))
+	  else:
+	    lServices.remove(service)
+      return lServices
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  def GetServiceData(self, transaction, serviceID):
+    ''' Returns content of a services ID, otherwise empty dictionary'''
+    ## Getting a list of available services from context information
+    serviceData = {}
+    if not self.TransactionNotExists(transaction):
+      ctxtServices = self.stateInfo[transaction]
+      
+      ## Looking for existing services
+      lServices = ctxtServices.keys()
+      if serviceID in lServices:
+	serviceData = ctxtServices[serviceID]
+    return serviceData
+
 class ContextGroup:
   ''' '''
   def __init__(self, **kwargs):    
