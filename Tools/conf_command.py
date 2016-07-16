@@ -193,6 +193,9 @@ def message(options):
       configuration = {}
     content = {"content": {"configuration": configuration}}
 
+  elif header["service_name"] == 'all' and options.use_file==False and header["action"] == 'stop':
+    content = {"content": {}}
+    
   elif header["service_name"] == 'ftp':
     configuration = {
       "bandwith":		'',
@@ -793,7 +796,7 @@ if __name__ == '__main__':
       parser.error("Missing required option: --action")
     if options.endpoint is None:
       parser.error("Missing required option: --endpoint")
-    if options.task_id is None:
+    if options.task_id is None and options.service_name != 'all':
       parser.error("Missing required option: --task_id")
     if options.service_name is None:
       parser.error("Missing required option: --service_name")
