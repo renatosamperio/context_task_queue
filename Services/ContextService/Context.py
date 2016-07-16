@@ -361,37 +361,30 @@ class ContextGroup:
   def stop(self, msg=None):
     ''' This method is called for stopping as a service action'''
     
-    if msg != None:
-      transaction	= msg["header"]["service_transaction"]
-      service_id	= msg["header"]["service_id"]
-      
-      #self.threads[transaction].stop()
-      
-      ## Checking if transaction exists in context 
-      if transaction not in self.threads.keys():
-	self.logger.debug( "Transaction [%s] not in this context"%transaction)
-	return
-      
-      ## Sending message to stop independently logic of processes 
-      ## with the same transaction ID
-      self.stop_family(transaction, service_id=service_id)
-    
-      ## Stopping threads but only the ones from 
-      if len(self.threads)>0:
-	threadSize = len(self.threads[transaction])
-	queuedThreads = deque(self.threads[transaction])
-	newListThreads= []
-	while len(queuedThreads)>0:
-	  thread = queuedThreads.pop()
-	  
-	  self.logger.debug( "Stopping thread [%d] with transaction [%s]" %
-			      (thread['tid'], transaction))
-	  thread['thread'].stop()
-	  thread['state'] = 'stopped'
-	  time.sleep(0.5)
+    try:
+      if msg != None:
+	transaction	= msg["header"]["service_transaction"]
+	service_id	= msg["header"]["service_id"]
 	
-	# Removing stopped context
-	stoppedTransaction = self.threads.pop(transaction)
+	#self.threads[transaction].stop()
+	
+	## Checking if transaction exists in context 
+	if transaction not in self.threads.keys():
+	  self.logger.debug( "Transaction [%s] not in this context"%transaction)
+	  return
+	
+	## Sending message to stop independently logic of processes 
+	## with the same transaction ID
+	lServices = self.contextInfo.GetContextServices(transaction)
+	if lServices is None:
+	  self.logger.debug( "Error: No services in context information data structure")
+	  return
+	
+	for serviceId in lServices:
+	  self.stop_family(transaction, service_id=serviceId)
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
  
   def start(self, msg=None):
     ''' '''
