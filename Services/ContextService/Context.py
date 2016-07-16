@@ -170,13 +170,15 @@ class ContextGroup:
       msg 		= json.loads(json_msg)
       msgKeys 		= msg.keys()
       
+      self.logger.debug("==> Message with topic [%s] and service topic [%s]" %
+			(topic, service.topic))
       # Processing messages with context enquires for 'context' topic
       if topic == service.topic:
 	header 		= msg["header"]
 	content		= msg["content"]
 	
 	# Blocking request and reply messages
-	self.logger.debug("=> Looking for service [%s] in context messages" %
+	self.logger.debug("  - Looking for service [%s] in context messages" %
 		      (header["service_id"]))
       
 	# Looking for service ID
@@ -189,7 +191,7 @@ class ContextGroup:
 	
 	# Giving message interpreation within actions
 	if header['service_name'] == 'all' or self.DeserializeAction(msg):
-	  self.logger.debug("thread [%s] received message of size %d" % 
+	  self.logger.debug("  - Service [%s] received message of size %d" % 
 			    (service.tid, len(json_msg)))
 	    
 	  #TODO: make a separate thread for starting or stopping a context
@@ -292,10 +294,12 @@ class ContextGroup:
 		      'pid'  : status['pid'],
 		      'state': action
 		    }
+	    self.logger.debug("  Updating context information for [%s]"%serviceId)
 	    self.contextInfo.UpdateState( transaction, serviceId, data)
 	  elif action == 'stopped' and result == 'success':
+	    self.logger.debug("  Removing context information for [%s]"%serviceId)
 	    self.contextInfo.RemoveItem(transaction, serviceId)
-	    
+
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
@@ -404,7 +408,7 @@ class ContextGroup:
 	self.logger.debug("==> Message for setting up process [%s] has been received"%
 			  (header["service_id"]))
 	
-	## Setting up context configuration
+	## Setting up context configuration in context state
 	data = {
 		  'contextId': self.service_id,
 		  'contextName': header['service_name'],
@@ -640,7 +644,7 @@ class ContextGroup:
       isStartAction = msg['header']['action'] == 'start'
       if msgTransaction in threadKeys and isStartAction:
 	contextExist = False
-	self.logger.debug("  - Transaction already exists")
+	self.logger.debug("Transaction already exists")
 	
 	## Checking if service also exists
 	tasks = msg['content']['configuration']['TaskService']
@@ -649,7 +653,7 @@ class ContextGroup:
 	  if len(serviceId)>0:
 	    self.logger.debug("  + Service ID found")
 	    return not self.contextInfo.ServiceExists(msgTransaction, serviceId)
-	self.logger.debug("  - Valid Service ID not found")
+	self.logger.debug("Valid Service ID not found")
       
     result = contextExist and isServiceNameCorrect
     return result
