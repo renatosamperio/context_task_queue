@@ -309,7 +309,8 @@ class ContextGroup:
       data = {
 	      'state'	   : action,
 	      'serviceName': header['service_name'],
-	      'instance'   : msg['instance']
+	      'instance'   : msg['instance'],
+	      'task'	   : msg
 	      }
       
       ## Updating context info with new data
