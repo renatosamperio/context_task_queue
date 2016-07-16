@@ -39,7 +39,6 @@ class ServiceHandler:
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
-      #print "===>", key, ":", value
       if "frontend" == key:
 	self.frontend = value
       elif "backend" == key:
@@ -49,7 +48,7 @@ class ServiceHandler:
       ## TODO: Remove this option as front and back endpoints are used
       elif "endpoint" == key:
 	self.endpoint = value
-	
+
   def deserialize(self, service, rec_msg):
     '''Deserialises a JSON message'''
     try:
@@ -70,15 +69,14 @@ class ServiceHandler:
 	
 	# Getting header and configuration content
 	message = msg['Task']['message']
-	header = message['header']
+	header  = message['header'] 
 	
 	# Giving message interpreation within actions
 	if header['service_name'] == 'all' or (self.DeserializeAction(message)):
-					  
 	  json_msg = json.dumps(message, sort_keys=True, indent=4, separators=(',', ': '))
 	  self.logger.debug("[%s] thread [%s] received message of size %d" % 
 			  (self.service_id, service.tid, len(json_msg)))
-	  
+
 	  # Looking for service ID
 	  if "service_id" in header.keys():
 	    if len(header["service_id"])>0:
@@ -93,22 +91,24 @@ class ServiceHandler:
 	  # Stopping service
 	  if header['action'] == 'stop':
 	    if self.stopped == False:
+	      self.logger.debug("Stopping service instances")
 	      self.stop()
+	      self.logger.debug("Stopping service process")
+	      service.stop()
 	    else:
-	      self.logger.debug("Device access is already stopped")
+	      self.logger.debug("Service is already stopped")
 	  
 	  # Starting service
 	  elif header['action'] == 'start':
 	    if self.stopped:
+	      self.logger.debug("Starting service instances")
 	      self.start(msg)
 	    else:
-	      self.logger.debug("Device access service is already started")
+	      self.logger.debug("Service is already started")
 	  
 	  # Restarting service
 	  elif header['action'] == 'restart':
-	    self.logger.debug("  Restarting service handler")
-	    self.stop()	      	
-	    self.start(msg)
+	    self.logger.debug("  Handler for restarting is voided in service side")
       elif topic == 'control':
 	self.ControlAction(msg)
     except ValueError:
@@ -122,7 +122,6 @@ class ServiceHandler:
 
   def stop(self):
     ''' This method is called for stopping as a service action'''
-    #print "====> ServiceHandler::STOPPING!!!", self.transaction
     try: 
       if self.actionHandler is not None:	
 	## Cleaning up environment variables
@@ -133,22 +132,17 @@ class ServiceHandler:
 	# Closing service 
 	self.logger.debug("  Closing service handler")
 	self.actionHandler.close()	
-	
-	#if hasattr(self.actionHandler, 'threads'):
-	  #print "=====>actionHandler1.threads:", self.actionHandler.threads
-	  
 	self.stopped		= True
 	self.actionHandler	= None
 	self.device_action	= None
-	#time.sleep(0.5)
+
       elif self.actionHandler is not None:
-	self.logger.debug("Device access is not available")
+	self.logger.debug("Service action handler is not available")
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
       
   def notify(self, action, result, items=None):
     '''Notifies  '''
-    #print "====> ServiceHandler::notify:!!!", Utilities.GetPID()
     try:
       self.header["service_id"] = self.service_id
       if self.device_action is not None:
@@ -196,7 +190,6 @@ class ServiceHandler:
       utfEncodedMsg = msg.encode('utf-8').strip()
       socket.send(utfEncodedMsg)
       time.sleep(0.5)
-      #socket.close()
       
       # Destroying temporal context for publisher
       context.destroy()
