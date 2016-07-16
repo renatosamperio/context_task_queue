@@ -491,38 +491,24 @@ class ContextGroup:
 
   def stop_family(self, transaction, service_id=''):
     '''Message for stopping group of threads with the same transaction'''
-    msg = {
-      "header": {
-	"action": "stop",
-	"service_id": service_id,
-	"service_name": "all",
-	"service_transaction": transaction
-	},
-      "content": {
-        "configuration": {}
-      }
-    }
-
-    ## Preparing message for stopping services
-    self.logger.debug( "Stopping services in context [%s]..."%transaction)
-    json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
-    msg = "%s @@@ %s" % ("process", json_msg)
-
-    ## Sending message for each task in services
-    self.logger.debug( "Sending stop to all processes in context [%s]..."%transaction)
-    self.serialize(msg)
-    time.sleep(1)
-    
-    ## Stopping threads of tasked service
-    if transaction in self.threads.keys():
-      self.logger.debug( "Stopping threads of context [%s]"%transaction)
-      contextThreads = self.threads[transaction]
+    try:
+      ## Preparing message for stopping each of the available service
+      serviceDetails = self.contextInfo.GetServiceData(transaction, service_id)
       
-      ## Stopping threaded tasked services
-      for t in contextThreads:
-	if 'thread' in t.keys():
-	  t['thread'].stop()
-      
+      msg = serviceDetails['task']
+      msg['Task']['message']['header']['action'] = 'stop'
+
+      ## Preparing message for stopping services
+      json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
+      msg = "%s @@@ %s" % ("process", json_msg)
+
+      ## Sending message for each task in services
+      self.logger.debug( "  Stopping service [%s]..."%(service_id))
+      self.serialize(msg)
+      time.sleep(0.5)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
   def stop_all_msg(self):
     ''' '''
     if len(self.threads)>0:
