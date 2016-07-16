@@ -323,7 +323,6 @@ class ContextGroup:
     ''' This method is called for stopping as a service action'''
     
     if msg != None:
-      #print "====> ?msg *** ", msg
       transaction	= msg["header"]["service_transaction"]
       service_id	= msg["header"]["service_id"]
       
@@ -476,8 +475,7 @@ class ContextGroup:
     self.logger.debug( "Stopping services in context [%s]..."%transaction)
     json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
     msg = "%s @@@ %s" % ("process", json_msg)
-      
-    #self.stop(msg=msg)
+
     ## Sending message for each task in services
     self.logger.debug( "Sending stop to all processes in context [%s]..."%transaction)
     self.serialize(msg)
@@ -487,7 +485,6 @@ class ContextGroup:
     if transaction in self.threads.keys():
       self.logger.debug( "Stopping threads of context [%s]"%transaction)
       contextThreads = self.threads[transaction]
-      #print "=====> ",transaction,": ", self.threads[transaction]
       
       ## Stopping threaded tasked services
       for t in contextThreads:
@@ -572,24 +569,19 @@ class ContextGroup:
 	## Search for thread PID and define a state
 	threadSize = len(self.threads[transaction])
 	
-	#print "=====> threadSize: ", threadSize
 	## If thread exists, update existing information
 	for i in range(threadSize):
 	  t = self.threads[transaction][i]
 	  isNotZero = 'tid' in t.keys() and t['tid'] >0
 	  matchesPID=t['tid'] == tid
-	  #print "=====> [",i,"]isNotZero: ", isNotZero
-	  #print "=====> [",i,"]matchesPID: ", matchesPID
 	  if isNotZero and matchesPID:
 	    self.threads[transaction][i]['state'] = state
-	    #print "=====> thread[",i,"]: ", thread
 	    self.threads[transaction][i]['thread'] = thread
 	    return
 
       ## If thread does not exists, create thread's PID
       tContext = {'tid': tid, 'state': state, 'thread': thread}
       self.threads[transaction].append(tContext)
-      #print "=====> ",transaction,": ", self.threads[transaction]
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
@@ -620,13 +612,8 @@ class ContextGroup:
     contextExist = True
         
     json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
-    #print "====> msg:", json_msg
     if 'service_transaction' in msg['header'].keys():
       msgTransaction = msg['header']['service_transaction']
-      
-      #print "====> msgTransaction:", msgTransaction
-      
-      ## Checking if transaction is already there
       
       ## If transaction is already defined the processes also
       ## TODO: Check state of the processes to see if they all would be stopped.
