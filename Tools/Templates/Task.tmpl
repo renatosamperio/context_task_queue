@@ -48,6 +48,9 @@ class $TaskClass(threading.Thread):
       if self.onStart:
 	self.logger.debug("  + Process is set to start from the beginning")
 	self.start()
+      else:
+	## Setting item started for reporting to device action
+	self.started	= True
       
       ## Adding monitor thread to the list of references
       self.threads.append(self)
