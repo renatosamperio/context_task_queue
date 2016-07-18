@@ -331,6 +331,18 @@ class AutoCode(object):
     data = data.replace('$ServiceName', self.ServiceName)
     data = data.replace('$ServiceType', self.ServiceType)
     data = data.replace('$EntryAction', self.EntryAction)
+    
+    ## Replacing state information
+    confSize  = len(self.StateConf)
+    for i in range(confSize):
+      confData = self.StateConf[i]
+      indexDoc = str(i+1)
+      self.PrintLog("+     [%s] Setting up data for triggering [%s]"%(indexDoc, confData['trigger']))
+      
+      ## Replacing state information: trigger, action and state ID
+      data = data.replace('$Trigger'+indexDoc, confData['trigger'])
+      data = data.replace('$Action'+indexDoc , confData['action'])
+      data = data.replace('$State'+indexDoc  , confData['state_id'])
     return data
     
   def CreateFiles(self):
