@@ -108,6 +108,7 @@ class AutoCode(object):
     self.TaskID		= None
     self.DeviceAction	= None
     self.EntryAction	= None
+    self.StateConf	= []
     
     ## Service configuration location
     self.ServicePath	= options['service_path']
@@ -120,16 +121,22 @@ class AutoCode(object):
     
     ## Service XML configuration options
     self.ServiceName	= options['service_name']
-    self.ServerIP		= options['server_ip']
-    self.SubPort		= options['sub_port']
-    self.PubPort		= options['pub_port']
+    self.ServerIP	= options['server_ip']
+    self.SubPort	= options['sub_port']
+    self.PubPort	= options['pub_port']
     self.ContextName	= options['context_name']
-    self.TaskID			= options['task_id']
+    self.TaskID		= options['task_id']
     self.DeviceAction	= options['device_action']
     self.EntryAction	= options['entry_action']
-    
+    self.StateConf	= options['state']
+  
+    # Validating state values whether they would be incomplete
+    if len(self.StateConf) != 4:
+      raise AutoCodeError('Failure in constructor', 'State transitions are not complete')
+
     servicePathExists = os.path.exists(self.ServicePath+'/Services')
     toolsPathExists   = os.path.exists(self.ServicePath+'/Tools')
+
     if not servicePathExists or not toolsPathExists:
       message = "Error: Context service root path not found"
       reason  = "Given path: ["+self.ServicePath+"]"
