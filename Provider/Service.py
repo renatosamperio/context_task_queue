@@ -171,18 +171,12 @@ class TaskedService(object):
     def execute(self):
       ''' '''
       self.logger.debug('Caling execute in thread [%d]'%self.tid)
-      
-      
+
 class ThreadTasks(threading.Thread, TaskedService):
   def __init__(self, threadID, **kwargs):
     ''' '''
     TaskedService.__init__(self, threadID, **kwargs)
     try:
-      # Initialising task service class
-      component	 = self.__class__.__name__
-      self.logger	= Utilities.GetLogger(component+str(self.threadID))
-
-
       # Initialising thread parent class
       self.logger.debug("Initialising thread parent class")
       threading.Thread.__init__(self)
@@ -197,10 +191,6 @@ class MultiProcessTasks(TaskedService, multiprocessing.Process):
     ''' '''
     TaskedService.__init__(self, threadID, **kwargs)
     try:
-      # Initialising task service class
-      component	 = self.__class__.__name__
-      self.logger	= Utilities.GetLogger(component+str(self.threadID))
-	  
       # Initialising multiprocessing parent class
       self.logger.debug("Initialising multiprocessing parent class")
       multiprocessing.Process.__init__(self)
@@ -210,4 +200,3 @@ class MultiProcessTasks(TaskedService, multiprocessing.Process):
       self.logger.debug("Multiprocessing class initialisation finished")
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-  
