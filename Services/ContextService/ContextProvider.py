@@ -63,7 +63,6 @@ def main(filename):
   joined        = 0
   keepAlive	= True
   threads	= []
-  logger	= Utilities.GetLogger("ContextProvider", useFile=True)
   pool		= None
   
   try: 
@@ -74,9 +73,14 @@ def main(filename):
     backend 		= testConf['BackendEndpoint']
     frontBind 		= testConf['FrontBind']
     backendBind		= testConf['BackendBind']
-    
+    taskedServices	= testConf['TaskService']
+    log_name 		= testConf['TaskLogName']
     testConfKeys	= testConf.keys()
     
+    # Setting up logger
+    logger = Utilities.GetLogger(logName=log_name)
+    logger.debug( "Parsing tree ["+rootName+"] in file: "+filename)
+
     # Running forwarder
     pool = CreateSafeFowarder(frontBind, backendBind, logger)
     
@@ -84,11 +88,6 @@ def main(filename):
     if 'TaskLogName' not in testConfKeys:      
       logger.debug( "Log name not found in file: "+filename)
       return
-    
-    # Setting up logger
-    log_name 	= testConf['TaskLogName']
-    logger	= Utilities.GetLogger(logName=log_name)
-    logger.debug( "Parsing tree ["+rootName+"] in file: "+filename)
 
     # Starting threaded services
     logger.debug("Creating a context provider")
