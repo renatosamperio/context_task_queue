@@ -95,6 +95,7 @@ class AutoCode(object):
   def __init__(self, options):
     ''' Class constructor'''
     self.ServicePath	= None
+    self.HomePath	= None
     self.ServiceType	= None
     self.TaskFile	= None
     self.TaskFile	= None
@@ -112,6 +113,7 @@ class AutoCode(object):
     
     ## Service configuration location
     self.ServicePath	= options['service_path']
+    self.HomePath	= options['home_path']
     
     ## Service generation stub variables
     self.ServiceType	= options['task_service']
@@ -134,13 +136,17 @@ class AutoCode(object):
     if len(self.StateConf) != 4:
       raise AutoCodeError('Failure in constructor', 'State transitions are not complete')
 
-    servicePathExists = os.path.exists(self.ServicePath+'/Services')
-    toolsPathExists   = os.path.exists(self.ServicePath+'/Tools')
+    reason  = "Analysing... ["+self.ServicePath+"]"
+    self.PrintLog("- "+reason)
+    servicesPath = self.ServicePath+'/Services'
+    if not os.path.exists(servicesPath):
+      self.PrintLog("-   Context service root path not found, creating [Services] directory")
+      os.makedirs(servicesPath)
 
-    if not servicePathExists or not toolsPathExists:
-      message = "Error: Context service root path not found"
-      reason  = "Given path: ["+self.ServicePath+"]"
-      raise AutoCodeError(message, reason)
+    toolsPath = self.ServicePath+'/Tools'
+    if not os.path.exists(toolsPath):
+      self.PrintLog("-   Context service root path not found, creating [Tools] directory")
+      os.makedirs(toolsPath)
    
   def PrintLog(self, msg):
     ''' Internal logger method'''
@@ -160,7 +166,7 @@ class AutoCode(object):
       #$TaskFile import $TaskClass
       self.PrintLog("+ Generating init template file")
       initName = '__init__.'
-      initPath = self.ServicePath+'/Tools/Templates/'+initName+'tmpl'
+      initPath = self.HomePath+'/Tools/Templates/'+initName+'tmpl'
       with open(initPath, 'r') as openedFile:
 	data=openedFile.read()
 	data = data.replace('$TaskFile', self.TaskFile)
@@ -186,7 +192,7 @@ class AutoCode(object):
 	return servicePath
       
       ## If directory does not exists, create it 
-      self.PrintLog("+ Creating service directory")
+      self.PrintLog("+ Creating service directory [%s]"%servicePath)
       os.makedirs(servicePath)
 
     except Exception as inst:
@@ -206,9 +212,9 @@ class AutoCode(object):
 
       ## Open service task template
       #$TaskFile import $TaskClass
-      self.PrintLog("+ Generating service stub template file")
+      self.PrintLog("+ Loading task service stub template file")
       fileName = 'Service'+self.ServiceType+'.py'
-      filePath = self.ServicePath+'/Tools/Templates/ServiceTask.tmpl'
+      filePath = self.HomePath+'/Tools/Templates/ServiceTask.tmpl'
       with open(filePath, 'r') as openedFile:
 	data=openedFile.read()
 	data = data.replace('$ServiceType', self.ServiceType)
@@ -233,9 +239,9 @@ class AutoCode(object):
 	return servicePath
 
       ## Open service task template
-      self.PrintLog("+ Generating task strategy template file")
+      self.PrintLog("+ Loading task template file")
       fileName = self.TaskFile+'.py'
-      filePath = self.ServicePath+'/Tools/Templates/Task.tmpl'
+      filePath = self.HomePath+'/Tools/Templates/Task.tmpl'
       with open(filePath, 'r') as openedFile:
 	data=openedFile.read()
 	data = data.replace('$TaskClass', self.TaskClass)
@@ -258,16 +264,21 @@ class AutoCode(object):
       ## Open configuration template file
       self.PrintLog("+ Adapting configuration file")
       fileName = 'Context-'+self.ContextName+'.xml'
-      filePath = self.ServicePath+'/Tools/Templates/Context.tmpl'
+      filePath = self.HomePath+'/Tools/Templates/Context.tmpl'
       
-      ## Checking if file already exists
-      confFilePath = 'Conf/'+fileName
-      if os.path.exists(confFilePath):
-
+      ## Creating conf path
+      confFilePath = self.HomePath+'/Conf/'
+      if not os.path.exists(confFilePath):
+	self.PrintLog("-   Creating configuration directory")
+	os.makedirs(confFilePath)
+	
+      confFileName = confFilePath+fileName
+      if os.path.isfile(confFileName):
+	''' '''
 	## File already exists,
-	existFilePath = self.ServicePath+'/Conf/'+fileName
-	self.PrintLog("+   Configuration file already exists")
-	with open(existFilePath, 'r') as openedFile:
+	self.PrintLog("+   Updating configuration file [%s]"%fileName)
+	with open(confFileName, 'r') as openedFile:
+	  ''''''
 	  ## Loading file content as XML
 	  data=openedFile.read()
 	  root = ET.fromstring(data)
@@ -290,30 +301,31 @@ class AutoCode(object):
 	    templateData = openedFile.read()
 	    templateData = self.SetValues(templateData)
 	    templateRoot = ET.fromstring(templateData)
-	    
+
 	    ## Removing non required items for merging
 	    templateRoot.remove(templateRoot.find('FrontEndEndpoint'))
 	    templateRoot.remove(templateRoot.find('BackendEndpoint'))
 	    templateRoot.remove(templateRoot.find('FrontBind'))
 	    templateRoot.remove(templateRoot.find('BackendBind'))
 	    templateRoot.remove(templateRoot.find('TaskLogName'))
-	    
+
 	    ## Merging XML trees and obtaining merged XML file
 	    self.PrintLog("+   Merging XML processes")
 	    root.append(templateRoot[0]) 
 	    mergedXML = ET.tostring(root, encoding='utf8', method='xml')
 	    
 	    ## Writing new appended file
-	    self.PrintLog("+   Writing merged file: [%s]"%confFilePath)
-	    with open(confFilePath, "w") as init_file:
+	    self.PrintLog("+   Writing on merged file: [%s]"%confFilePath)
+	    with open(confFileName, "w") as init_file:
 	      init_file.write(mergedXML)
       else:
 	## Generating a new file
-	self.PrintLog("+   Creating a new configuration file")
+	self.PrintLog("+   Opening task template file")
 	with open(filePath, 'r') as openedFile:
 	  data = openedFile.read()
 	  data = self.SetValues(data)
-	  with open(confFilePath, "w") as init_file:
+	  self.PrintLog("+   Creating a new [%s] configuration file"%fileName)
+	  with open(confFileName, "w") as init_file:
 	    init_file.write(data)
       
     except Exception as inst:
@@ -378,6 +390,7 @@ sUsage =  "usage:\n"\
 	  "  For sending a message to an annotator service\n"\
 	  "\t  python Tools/create_service.py \n"\
 	  "\t\t--service_path='/abs/path/unix/style' \n"\
+	  "\t\t--home_path='/abs/path/unix/style' \n"\
 	  "\t\t--task_service='instance_type' \n"\
 	  "\t\t--task_file='task_file_name \n" \
 	  "\t\t--task_class='task_class_name' \n"\
@@ -493,6 +506,10 @@ if __name__ == '__main__':
       parser.error("Missing required option: service_path or xml_file")
       parser.print_help()
       
+    if options.xml_file is None and options.home_path is None:
+      parser.error("Missing required option: home_path or xml_file")
+      parser.print_help()
+      
     if options.xml_file is not None:
       ''' '''
       ## Use if many services are generated at the same time
@@ -506,7 +523,8 @@ if __name__ == '__main__':
 	service.update({'server_ip': 	services['server_ip']})
 	service.update({'sub_port': 	services['sub_port']})
 	service.update({'pub_port': 	services['pub_port']})
-	service.update({'service_path': 	services['service_path']})
+	service.update({'service_path': services['service_path']})
+	service.update({'home_path': 	services['home_path']})
 	
 	## Calling code autogenerator
 	autogenerator = AutoCode(service)
