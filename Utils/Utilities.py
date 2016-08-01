@@ -75,21 +75,27 @@ def GetFileLogger(fileLength=100000, numFiles=5):
   return fileHandler
 
 def ParseException(inst, logger=None):
-  exc_type, exc_obj, exc_tb = sys.exc_info()
-  exception_fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-  exception_line = str(exc_tb.tb_lineno) 
-  exception_type = str(type(inst))
-  exception_desc = str(inst)
-  if logger:
-    logger.debug( "  %s: %s in %s:%s"%(exception_type, 
-				    exception_desc, 
-				    exception_fname,  
-				    exception_line ))
+  if type(inst) == type(Exception):
+    exc_type, exc_obj, exc_tb = sys.exc_info()
+    exception_fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+    exception_line = str(exc_tb.tb_lineno) 
+    exception_type = str(type(inst))
+    exception_desc = str(inst)
+    if logger:
+      logger.debug( "  %s: %s in %s:%s"%(exception_type, 
+				      exception_desc, 
+				      exception_fname,  
+				      exception_line ))
+    else:
+      print "  %s: %s in %s:%s"%(exception_type, 
+				      exception_desc, 
+				      exception_fname,  
+				      exception_line )
   else:
-    print "  %s: %s in %s:%s"%(exception_type, 
-				    exception_desc, 
-				    exception_fname,  
-				    exception_line )
+    if logger:
+      logger.debug( "  %s"%str(inst))
+    else:
+      print "  %s"%str(inst)
 
 def IdGenerator(size=6, chars=string.ascii_uppercase + string.digits):
   return ''.join(random.choice(chars) for _ in range(size))
