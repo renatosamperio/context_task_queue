@@ -65,22 +65,22 @@ def main(filename):
   threads	= []
   pool		= None
   
+  rootName 		= 'Context'
+  testConf 		= ParseXml2Dict(filename, rootName)
+  log_name 		= testConf['TaskLogName']
+  
+  # Setting up logger
+  logger = Utilities.GetLogger(logName=log_name)
+  logger.debug( "Parsing tree ["+rootName+"] in file: "+filename)
+
   try: 
-    rootName 		= 'Context'
-    testConf 		= ParseXml2Dict(filename, rootName)
-    
+    # Getting local vairables
     frontend 		= testConf['FrontEndEndpoint']
     backend 		= testConf['BackendEndpoint']
     frontBind 		= testConf['FrontBind']
     backendBind		= testConf['BackendBind']
-    taskedServices	= testConf['TaskService']
-    log_name 		= testConf['TaskLogName']
     testConfKeys	= testConf.keys()
     
-    # Setting up logger
-    logger = Utilities.GetLogger(logName=log_name)
-    logger.debug( "Parsing tree ["+rootName+"] in file: "+filename)
-
     # Running forwarder
     pool = CreateSafeFowarder(frontBind, backendBind, logger)
     
