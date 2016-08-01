@@ -35,6 +35,7 @@ class ContextGroup:
     self.service_id	= ''
     self.loader		= ModuleLoader()
     self.contextInfo	= ContextInfo()
+    self.contextMonitor	= ContextMonitor()
     self.counter	= 1
 
     # Generating instance of strategy
@@ -87,8 +88,13 @@ class ContextGroup:
 	    
 	  #TODO: Set up an action when linger time is expired
 	  elif header['action'] == 'start':
+	    ## Starting context services
 	    self.start(msg=msg)
 	    
+	    ## Store service state control for task service monitoring
+	    self.logger.debug("  - Storing service state control for task service monitoring")
+	    self.contextMonitor.StoreControl(msg)
+
       elif topic == 'state':
 	self.request(topic)
 	
@@ -165,27 +171,11 @@ class ContextGroup:
 	
 	## Checking message components are in the message
 	if 'header' in msgKeys and 'content' in msgKeys:
-	  ## Adding process state and PID in context information
-	  header = msg['header']
-	  action = header['action'] 
-	  status = msg['content']['status']
-	  result = status['result']
+	  ## Updating context state
+	  self.contextInfo.UpdateContextState(msg)
 	  
-	  ## Updating context info with new data
-	  serviceId   = header['service_id']
-	  transaction = header['service_transaction']
-	  
-	  ## Adding or removing from data structure according to reported action
-	  if action == 'started' and result == 'success':
-	    data = {
-		      'pid'  : status['pid'],
-		      'state': action
-		    }
-	    self.logger.debug("  Updating context information for [%s]"%serviceId)
-	    self.contextInfo.UpdateState( transaction, serviceId, data)
-	  elif action == 'stopped' and result == 'success':
-	    self.logger.debug("  Removing context information for [%s]"%serviceId)
-	    self.contextInfo.RemoveItem(transaction, serviceId)
+	  ## Monitor context services
+	  self.contextMonitor.MonitorServices(msg, self)
 
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -256,8 +246,6 @@ class ContextGroup:
       if msg != None:
 	transaction	= msg["header"]["service_transaction"]
 	service_id	= msg["header"]["service_id"]
-	
-	#self.threads[transaction].stop()
 	
 	## Checking if transaction exists in context 
 	if transaction not in self.threads.keys():
