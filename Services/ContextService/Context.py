@@ -317,12 +317,7 @@ class ContextGroup:
 	  message	= task['Task']['message']
 	  msg_conf	= message["content"]["configuration"]
 	  msg_header	= message["header"]
-	  
-	  if not ('Task' in taskKeys and 'state' in task['Task'].keys() and 'type' in task['Task']['state'].keys()):
-	    print "*"*90
-	    self.logger.debug("==> Context message incomplete, no type in task state")
-	    continue
-	  taskType = task['Task']['state']['type']
+	  taskType 	= task['Task']['state']['type']
 	  
 	  #    Skipping context message if not defined as "on_start"
 	  if taskType != 'on_start':
