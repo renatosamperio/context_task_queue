@@ -1,15 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <Context>
-  
-  <!-- Service communication -->
-
   <FrontEndEndpoint>tcp://$ServerIP:$SubPort</FrontEndEndpoint> <!--   SUB -->
   <BackendEndpoint>tcp://$ServerIP:$PubPort</BackendEndpoint>   <!--   PUB -->
-  
   <FrontBind>tcp://*:$PubPort</FrontBind> 
-  <BackendBind>tcp://*:$SubPort</BackendBind>
-  
+  <BackendBind>tcp://*:$SubPort</BackendBind>  
   <TaskLogName>$ContextName</TaskLogName>
  
   <TaskService id='$TaskID' topic='process' instance='$ServiceType' serviceType='Process'>
@@ -32,10 +27,25 @@
       </message>
       
       <state type="$EntryAction">
-	    <$Trigger1 action='$Action1'>$State1</$Trigger1>
-	    <$Trigger2 action='$Action2'>$State2</$Trigger2>
-	    <$Trigger3 action='$Action3'>$State3</$Trigger3>
-	    <$Trigger4 action='$Action4'>$State4</$Trigger4>
+	<$Trigger1>
+	  <action>$Action1'</action>
+	  <call>$State1</call>
+	</$Trigger1>
+	
+	<$Trigger2>
+	  <action>$Action2'</action>
+	  <call>$State2</call>
+	</$Trigger2>
+	
+	<$Trigger3>
+	  <action>$Action3'</action>
+	  <call>$State3</call>
+	</$Trigger3>
+	
+	<$Trigger4>
+	  <action>$Action4'</action>
+	  <call>$State4</call>
+	</$Trigger4>
       </state>
 
     </Task>
