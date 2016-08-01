@@ -126,6 +126,15 @@ class ContextMonitor:
 	  #pprint.pprint(state)
 	  #print "="*n
 	  #print "===>actionName:", actionName
+
+	  if actionName not in state['task_states'].keys():
+	     self.logger.debug(" Action [%s] NOT FOUND for task ID [%s]"%
+			(serviceId, actionName ))
+	  else:
+	     self.logger.debug(" Action [%s] FOUND for task ID [%s]"%
+			(serviceId, actionName ))
+	    
+	  
 	  ## Creating message with action state and state call item
 	  stateAction	= state['task_states'][actionName]['action']
 	  callAction	= state['task_states'][actionName]['call']
@@ -137,7 +146,7 @@ class ContextMonitor:
 	    processMsg = self.MakeProcessMessage(transaction, stateAction, callAction)
 	    if processMsg is None:
 	      errorMsg = "Caller [%s] for action [%s]"%(callAction, stateAction)
-	      raise ContextError('Warning:', errorMsg)
+	      raise ContextError('Warning:'+errorMsg, '')
 	      return
 	    
 	    # Sending message for starting service
