@@ -266,7 +266,7 @@ class ContextGroup:
       Utilities.ParseException(inst, logger=self.logger)
  
   def start(self, msg=None):
-    ''' '''
+    ''' Starts context processing'''
     if msg != None:
       try:
 	header 		= msg["header"]
@@ -317,6 +317,19 @@ class ContextGroup:
 	  message	= task['Task']['message']
 	  msg_conf	= message["content"]["configuration"]
 	  msg_header	= message["header"]
+	  
+	  if not ('Task' in taskKeys and 'state' in task['Task'].keys() and 'type' in task['Task']['state'].keys()):
+	    print "*"*90
+	    self.logger.debug("==> Context message incomplete, no type in task state")
+	    continue
+	  taskType = task['Task']['state']['type']
+	  
+	  #    Skipping context message if not defined as "on_start"
+	  if taskType != 'on_start':
+	    self.logger.debug("==> Task [%s] not required to start yet"%(taskId))
+	    continue
+	  
+	  ## Getting instance if it should be started only
 	  taskStrategy	= self.GetIntance(taskInstance)
 	  
 	  ## TODO: This is a local checking up, should not be here!!!
@@ -331,7 +344,7 @@ class ContextGroup:
 	  # Starting service and wait give time for connection
 	  if taskStrategy is not None:
 	    try:
-	      self.logger.debug("==> [%s] Creating an [%s] worker of [%s]"%
+	      self.logger.debug("==> [%s] Creating worker for [%s] of type [%s]"%
 			 (i, taskInstance, serviceType))
 	      
 	      ## Starting threaded services
