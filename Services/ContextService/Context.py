@@ -58,7 +58,7 @@ class ContextGroup:
       msg 		= json.loads(json_msg)
       msgKeys 		= msg.keys()
       
-      self.logger.debug("==> Message with topic [%s] and service topic [%s]" %
+      self.logger.debug("==> Message with topic [%s] but natively servicing topic [%s]" %
 			(topic, service.topic))
       # Processing messages with context enquires for 'context' topic
       if topic == service.topic:
@@ -179,28 +179,6 @@ class ContextGroup:
 
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-
-  def MakeMessage(self, action, header, msg, contextInfo):
-    try:
-      ## Setting inner message action to task action
-      msg['Task']['message']['header']['action'] = action
-      
-      ## Generating data for update
-      self.logger.debug("  Collecting process context information")
-      data = {
-	      'state'	   : action,
-	      'serviceName': header['service_name'],
-	      'instance'   : msg['instance'],
-	      'task'	   : msg
-	      }
-      
-      ## Updating context info with new data
-      self.logger.debug("  Updating process context information")
-      transaction = header['transaction']
-      serviceId	  = header['service_id']
-      contextInfo.UpdateState( transaction, serviceId, data)
-    except Exception as inst:
-      Utilities.ParseException(inst, logger=self.logger)
    
   def serialize(self, msg):
     ''' '''
@@ -219,7 +197,6 @@ class ContextGroup:
       # Sending message
       self.logger.debug("    Sending message of [%s] bytes" % len(msg))
       utfEncodedMsg = msg.encode('utf-8').strip()
-      #print "===>",type(utfEncodedMsg), ":", utfEncodedMsg
       socket.send(utfEncodedMsg)
       time.sleep(0.5)
       socket.close()
@@ -289,10 +266,10 @@ class ContextGroup:
 		  'contextName': header['service_name'],
 		  'configuration':
 		    {
-		      'BackendBind'		: configuration['BackendBind'],
+		      'BackendBind'	: configuration['BackendBind'],
 		      'BackendEndpoint'	: backend,
-		      'FrontBind'		: configuration['FrontBind'],
-		      'FrontEndEndpoint'	: frontend
+		      'FrontBind'	: configuration['FrontBind'],
+		      'FrontEndEndpoint': frontend
 		    }
 	       }
 	self.contextInfo.UpdateState(transaction, 'context', data)
@@ -421,29 +398,22 @@ class ContextGroup:
     theadKeys = thread.keys()
     for threadKey in theadKeys:
       threadElement = thread[threadKey]
-      #print "  ***[",threadKey,"]", threadElement, "\t", type(threadElement)
       if type(threadElement)==type({}):
 	element = self.thread_copy(threadElement)
       # Remove "thread" element for each context
       elif threadKey == 'thread':
-      #elif type(threadElement)==type(TaskedService):
-	#print "  ***thread",threadElement
 	continue
       elif type(threadElement)==type([]):
 	lElement = []
-	#print "  ***list",threadElement
 	for eList in threadElement:
 	    lElement.append(self.thread_copy(eList))
 	threadCopy[threadKey] = lElement
       else:
 	threadCopy[threadKey] = threadElement
-    #print "  ***copy", threadCopy
     return threadCopy
 
   def request(self, topic):
     ''' Requests information about context state'''
-    
-    #print "===>", self.threads
     # Removing thread instances to serialise message
     threadsCopy = self.thread_copy(self.threads)
     
@@ -541,10 +511,3 @@ class ContextGroup:
     result = contextExist and isServiceNameCorrect
     return result
   
-  def ParseItems(self, items, resp_format):
-    ''' '''
-    return resp_format
-
-  def Threads2Str(self):
-    ''' Preparethreads dictionary for string conversion'''
-    print "===>", self.threads
