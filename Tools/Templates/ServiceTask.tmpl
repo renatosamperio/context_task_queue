@@ -54,8 +54,8 @@ class Service$ServiceType(ServiceHandler):
       ## Adding more parameters
       if items is not None:
       	itemsKeys = items.keys()
-      	if "pid" in itemsKeys:
-      	  status.update({"pid":items["pid"]})
+      	for item in itemsKeys:
+      	  status.update({item:items[item]})
 
       resp_format["content"]["status"] = status 
       return resp_format  
