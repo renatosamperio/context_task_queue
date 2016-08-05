@@ -106,42 +106,16 @@ class ContextGroup:
 	  task = msg['Task']
 	  taskKeys = task.keys()
 	  if 'state' in taskKeys and 'message' in taskKeys:
-	    header	= task['message']['header']
-	    action	= header['action']
+	    taskHeader	= task['message']['header']
+	    action	= taskHeader['action']
+	    transaction = taskHeader['transaction']
 	    
 	    if action == 'start':
-	      ## Updating context info with new data
-	      self.logger.debug(" Updating state of context data structure")
-	      self.MakeMessage(action, header, msg, self.contextInfo)
-	    
-	    if action == 'restart':
-	      ''' '''
-	      transaction = header['transaction']
-	      serviceId	  = header['service_id']
-	      if not self.contextInfo.TransactionNotExists(transaction) and \
-		 not self.contextInfo.ServiceExists(transaction, serviceId):
-		self.logger.debug("  Restarting current service task")
-		
-		## Sending a stop message
-		serviceId = msg['Task']['message']['header']['service_id']
-		self.logger.debug("    Stopping service [%s]"%serviceId)
-		msg['Task']['message']['header']['action'] = 'stop'
-		send_msg = "%s @@@ %s" % (topic, \
-			    json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': ')))
-		self.serialize(send_msg)
-		time.sleep(0.75)
-		
-		## Sending a start message
-		self.logger.debug("    Starting service [%s]"%serviceId)
-		msg['Task']['message']['header']['action'] = 'start'
-		
-		## Preparing content configuration
-		contxtMsg = {
-		  "TaskLogName": "Context",
-		  "TaskService": [msg],
-		}
-		conf = self.contextInfo.GetContextConf(transaction)
-		conf['configuration'].update(contxtMsg)
+	      
+	      ## Check if transaction is defined in context information
+	      if self.contextInfo.TransactionExists(transaction):
+		self.logger.debug(" -> Updating context information based in [process] messages")
+		self.contextInfo.UpdateProcessState(msg)
 		
 		## Preparing context message with header
 		ctx_msg = {
