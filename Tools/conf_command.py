@@ -19,6 +19,8 @@ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --context_file='C
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='stop' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff'
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='restart' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff' --result='success' --sniffer_filter='http>0 and ip.addr == 70.42.73.72' --sniffer_header='4.json' --interface='eth0'
 
+python Tools/conf_command.py --use_file --endpoint='tcp://127.0.0.1:6557' --service_name='context' --context_file='Conf/Context-CaptureTrack.xml' --service_id='ts002' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start'
+
 '''
 
 '''
@@ -69,6 +71,7 @@ def ParseTasks(options):
   currPath  = os.path.abspath(__file__)
   utilsPath = currPath[:currPath.find("Tools")]+"Utils"
   sys.path.append(utilsPath) 
+  testConf = None
   if options.context_file is not None:
     # Importing XML parser
     from XMLParser import ParseXml2Dict
@@ -125,9 +128,9 @@ def GetTask(configuration, options):
     }
     
     for lTask in fileTasks:
-      if lTask['id'] ==  options.task_id:
+      if lTask['id'] ==  options.service_id:
 	lTask['Task']['message']['header']['action']	  = options.action
-	lTask['Task']['message']['header']['service_id']  = options.task_id
+	lTask['Task']['message']['header']['service_id']  = options.service_id
 	lTask['Task']['message']['header']['transaction'] = options.transaction
 	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
 	break
@@ -135,9 +138,9 @@ def GetTask(configuration, options):
   else:
     ## Looking for task service
     for lTask in fileTasks:
-      if lTask['id'] ==  options.task_id:
+      if lTask['id'] ==  options.service_id:
 	lTask['Task']['message']['header']['action']	  = options.action
-	lTask['Task']['message']['header']['service_id']  = options.task_id
+	lTask['Task']['message']['header']['service_id']  = options.service_id
 	lTask['Task']['message']['header']['transaction'] = options.transaction
 	return lTask
 	
@@ -177,7 +180,7 @@ def message(options):
     ''' '''
     # If a request of context is sent, we do not need some of the fields
     if options.action == "request":
-      header["service_transaction"] = ''
+      header["service_transaction"] = options.transaction
       header["service_id"] = ''
       options.topic	   = header["service_name"]
     content = {"content": {"configuration": configuration}}
@@ -188,7 +191,10 @@ def message(options):
     
     ## Getting XML and interface from arguments
     configuration = ParseTasks(options)
-    	  
+    if configuration is None:
+      print "- Task parsing failed..."
+      sys.exit(0)
+      return
     if  header["action"] == 'stop':
       configuration = {}
     content = {"content": {"configuration": configuration}}
@@ -399,9 +405,9 @@ def main(msg):
   
 if __name__ == '__main__':
   ''' '''
-  available_services		= ['ftp', 'portal', 'device', 'local', 'context', 'state', 'sniffer', 'music_search', 'all']
+  available_services		= ['browser', 'ftp', 'portal', 'device', 'local', 'context', 'state', 'sniffer', 'music_search', 'all']
   available_action_cmds		= ['new_songs', 'none']
-  available_device_actions	= ['syslog', 'downloader', 'track_found', 'track_report', 'sniff', 'none']
+  available_device_actions	= ['firefox', 'syslog', 'downloader', 'track_found', 'track_report', 'sniff', 'none']
   available_actions		= ['start', 'stop', 'restart', 'request', 'updated', 'none']
   available_topics		= ['process', 'context', 'control']
   available_results		= ['success', 'failure', 'none']
@@ -599,10 +605,6 @@ if __name__ == '__main__':
 			   action='store_true',
 			   default=False,
 			   help='Makes use of configuration file for configuring task services')
-  contextOpts.add_option('--task_id', 
-		    metavar="TASK_ID", 
-		    default=None,
-		    help="Service ID to control found in XML configuration file")
     
   annotatorOpts = OptionGroup(parser, "Song annotation service",
 		      "These options are for handling track annotations in Mongo DB"
@@ -796,8 +798,6 @@ if __name__ == '__main__':
       parser.error("Missing required option: --action")
     if options.endpoint is None:
       parser.error("Missing required option: --endpoint")
-    if options.task_id is None and options.service_name != 'all':
-      parser.error("Missing required option: --task_id")
     if options.service_name is None:
       parser.error("Missing required option: --service_name")
 
