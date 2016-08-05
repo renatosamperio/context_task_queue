@@ -8,7 +8,9 @@ from Utils import Utilities
 from ContextExceptions import ContextError
 
 class ContextMonitor:
-  ''' '''
+  '''Class that keeps active control of task services. It
+  starts, stops and restarts task services.
+  '''
   ## Structure of task state
   def __init__(self):    
     component		= self.__class__.__name__
@@ -58,16 +60,32 @@ class ContextMonitor:
 	## Creating task data
 	self.logger.debug('Creating state control for [%s] service'%taskId)
 	self.states.append({'task_id': taskId, 'task_states': state})
-	
-      #print "_"*50, 'StoreControl1'
-      #pprint.pprint(self.configuration)
-      #print "_"*50, 'StoreControl2'
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
-  def MonitorServices(self, msg, context):
-    ''' Inteprets context messages for keeping contex service logic'''
+  def MonitorServicesProcess(self, transaction, task, context):
+    ''' Inteprets process messages for keeping contex service logic'''
+    try:
+      
+      taskTopic = task['topic']
+      taskId	= task['id']
+	  
+      ## Adding transaction to the message
+      task['Task']['message']["header"].update({'transaction' : transaction})
+      
+      ## Preparing message to send
+      json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
+      start_msg = "%s @@@ %s" % (taskTopic, json_msg)
+      
+      # Sending message for starting service
+      self.logger.debug("==> [%s] Sending message for starting service"%taskId )
+      context.serialize(start_msg)
+	  
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
     
+  def MonitorServicesControl(self, msg, context):
+    ''' Inteprets control messages for keeping contex service logic'''
     try:
       ## Header and content are already validated
       header 	= msg['header']
@@ -91,18 +109,11 @@ class ContextMonitor:
       if 'action' not in headerKeys:
 	  raise ContextError('Warning:', 'Message header missing "action" in monitoring services')
 	  return
-      if 'status' not in contenKeys:
-	  raise ContextError('Warning:', 'Message content missing "result" in monitoring services')
-	  return
-      if 'result' not in content['status'].keys():
-	  raise ContextError('Warning:', 'Message content missing "result" in monitoring services')
-	  return
       serviceId	 = header['service_id']
       action	 = header['action']
       result	 = content['status']['result']
       transaction= header['service_transaction']
-      
-      print "===>", self.states
+
       ## Searching object state
       ## TODO: Do it with a real state machine and use it as a black box
       for state in self.states:
@@ -117,29 +128,23 @@ class ContextMonitor:
 	  elif action == 'exited':
 	    actionName = 'on_exit'
 	  else:
-	    print "===>  [",serviceId,"]:",action
-	    pprint.pprint(state)
 	    raise ContextError('Warning:', 'Message state action missing in monitoring services')
 	    return
-	  
-	  #print "="*n
-	  #pprint.pprint(state)
-	  #print "="*n
-	  #print "===>actionName:", actionName
 
 	  if actionName not in state['task_states'].keys():
 	     self.logger.debug(" Action [%s] NOT FOUND for task ID [%s]"%
-			(serviceId, actionName ))
+			(actionName, serviceId))
 	  else:
 	     self.logger.debug(" Action [%s] FOUND for task ID [%s]"%
-			(serviceId, actionName ))
+			(actionName, serviceId))
 	    
-	  
 	  ## Creating message with action state and state call item
 	  stateAction	= state['task_states'][actionName]['action']
 	  callAction	= state['task_states'][actionName]['call']
+
 	  if len(stateAction)<1 and len(callAction)<1:
-	    self.logger.debug("Nothing to call for [%s]"%(serviceId))
+	    self.logger.debug(" Nothing to call for [%s]"%(serviceId))
+	    break
 	  else:
 	    self.logger.debug(" (:<>:) [%s] should call [%s] to execute [%s]"%
 		       (serviceId, callAction, stateAction))
@@ -150,15 +155,8 @@ class ContextMonitor:
 	      return
 	    
 	    # Sending message for starting service
-	    self.logger.debug("Sending process message for [%s] with action [%s]"%(callAction, stateAction))
+	    self.logger.debug(" Sending process message for [%s] with action [%s]"%(callAction, stateAction))
 	    context.serialize(processMsg)
-
-      #n=50
-      #print "="*n, "STATE1"
-      #pprint.pprint(self.states)
-      #print "="*n, "STATE2"
-      #pprint.pprint(msg)
-    
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     
@@ -198,17 +196,13 @@ class ContextMonitor:
       
       status 	= content['status']
       result 	= status['result']
-      
-      #if 'TaskService' in msg['']
-      ## Validate message header:
-      ##    - Appropiate transaction
-      
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
   def MakeProcessMessage(self, transaction, stateAction, callAction):
-    ''' Returns JSON message of process configuration'''
+    ''' Returns JSON message of configuration for process topic'''
     
+    ## Check if task is already in configuration, otherwise add task
     if len(self.configuration)<1:
       raise ContextError('Error:', 'Context configuration empty')
       return
@@ -218,12 +212,12 @@ class ContextMonitor:
 	task['Task']['message']['header']['action'] = stateAction
 	task['Task']['message']['header']['transaction'] = transaction
 	task['Task']['message']['header']['service_id'] = callAction
-	
+
 	## Preparing message to send
 	json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
-	start_msg = "%s @@@ %s" % ('process', json_msg)
-	    
-	return start_msg
+	json_msg = "%s @@@ %s" % ('process', json_msg)
+
+	return json_msg
     
     ## Action ID not found
     return None
