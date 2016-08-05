@@ -260,3 +260,18 @@ class ContextInfo:
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def GetContext(self, transaction):
+    ''' Returns context configuration'''
+    try:
+      conf = None
+      ## Search for transaction data
+      if self.TransactionNotExists(transaction):
+	self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
+      else:
+	self.logger.debug("  Getting context data from transaction [%s]"% transaction)
+	conf = self.stateInfo[transaction]
+      return conf
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
