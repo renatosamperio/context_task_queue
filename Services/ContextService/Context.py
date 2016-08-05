@@ -117,39 +117,47 @@ class ContextGroup:
 		self.logger.debug(" -> Updating context information based in [process] messages")
 		self.contextInfo.UpdateProcessState(msg)
 		
-		## Preparing context message with header
-		ctx_msg = {
-		  'header':{
-		      'action': 'start',
-		      'service_id': conf['contextId'],
-		      'service_name': conf['contextName'],
-		      'service_transaction': transaction,
-		    },
+		## Monitor context services if PID does not exists
+		serviceId	= taskHeader['service_id']
+		serviceDetails	= self.contextInfo.GetServiceData(transaction, serviceId)
+		servicePID	= self.contextInfo.GetPID(transaction, serviceId)
+		if servicePID is not None:
+		  self.logger.debug(" -> Task [%s] HAS NOT a valid PID"%(serviceId))
+		  ## Getting contet information for frontend and backend
+		  ctxData = self.contextInfo.GetContextConf(transaction)
+		  if ctxData is not None:
+		    frontend	= ctxData['configuration']['FrontEndEndpoint']
+		    backend 	= ctxData['configuration']['BackendEndpoint']
+		    
+		    ## Setting up service to start now
+		    self.logger.debug(" -> Starting service [%s]..."%(serviceId))
+		    msg['Task']['state']['type'] = 'start_now'
+		    self.StartService(msg, frontend, backend, transaction)
+		else:
+		  self.logger.debug(" -> Task [%s] HAS defined a PID: [%s]"%
+		      (serviceId, servicePID ))
 		  
-		  'content': {'configuration':conf['configuration']}
-		}
-		
-		## If context has a configuration, set it in context message 
-		##   for starting the task service
-		if conf is None:
-		  self.logger.debug("Service [%s] without configuration"%serviceId)
-		  return
-		send_msg = "%s @@@ %s" % ('context', \
-			    json.dumps(ctx_msg, sort_keys=True, indent=4, separators=(',', ': ')))
-		self.serialize(send_msg)
-	      else:
-		self.logger.debug(" No service task to restart")
-
       elif topic == 'control':
 	'''Looking for process control activities '''
 	
 	## Checking message components are in the message
 	if 'header' in msgKeys and 'content' in msgKeys:
 	  ## Updating context state
-	  self.contextInfo.UpdateContextState(msg)
+	  header	= msg["header"]
+	  content	= msg["content"]
+	  transaction	= header["service_transaction"]
+	  serviceId	= header["service_id"]
+	  action	= header["action"]
 	  
-	  ## Monitor context services
-	  self.contextMonitor.MonitorServices(msg, self)
+	  self.logger.debug(" -> Updating context information based in [control] messages")
+	  self.contextInfo.UpdateControlState(msg)
+	  
+	  ## If service is started do not send further messages
+	  if not action.startswith('start'):
+	    self.logger.debug(" -> Monitoring services based in [control] messages")
+	    self.contextMonitor.MonitorServicesControl(msg, self)
+	  else:
+	    self.logger.debug(" -> Service [%s] already started", serviceId)
 
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
