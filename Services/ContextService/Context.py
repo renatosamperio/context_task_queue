@@ -96,7 +96,7 @@ class ContextGroup:
 	    self.contextMonitor.StoreControl(msg)
 
       elif topic == 'state':
-	self.request(topic)
+	self.request(msg)
 	
       elif topic == 'process':
 	'''Looking for process activities '''
@@ -383,48 +383,21 @@ class ContextGroup:
 	self.stop(msg=msg)
 	time.sleep(0.5)
 
-  def thread_copy(self, thread):
-    ''' '''
-    threadCopy = {}
-    theadKeys = thread.keys()
-    for threadKey in theadKeys:
-      threadElement = thread[threadKey]
-      if type(threadElement)==type({}):
-	element = self.thread_copy(threadElement)
-      # Remove "thread" element for each context
-      elif threadKey == 'thread':
-	continue
-      elif type(threadElement)==type([]):
-	lElement = []
-	for eList in threadElement:
-	    lElement.append(self.thread_copy(eList))
-	threadCopy[threadKey] = lElement
-      else:
-	threadCopy[threadKey] = threadElement
-    return threadCopy
-
-  def request(self, topic):
+  def request(self, msg):
     ''' Requests information about context state'''
-    # Removing thread instances to serialise message
-    threadsCopy = self.thread_copy(self.threads)
+    header	= msg["header"]
+    transaction	= header["service_transaction"]
+    contextData = self.contextInfo.GetContext(transaction)
     
-    theadsKey = threadsCopy.keys()
-      
-    msg = {
-      "header": {
-	"action": "reply",
-	"service_name": topic
-	},
-      "content":
-	{
-	  "status": threadsCopy
-	}
-    }
+    ## Getting context data with service transaction
+    if contextData is None:
+      self.logger.debug( "No context data found for transaction [%s]", transaction)
+      return
     
-    json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
+    json_msg	= json.dumps(contextData, sort_keys=True, indent=4, separators=(',', ': '))
     self.logger.debug( "Sending context data in [%d] bytes"%(len(json_msg)))
-    msg = "%s @@@ %s" % (topic, json_msg)
-    self.serialize(msg)
+    message	= "%s @@@ %s" % ('state', json_msg)
+    self.serialize(message)
 
   def UpdateThreadState(self, transaction, state=None, tid=None, thread=None):
     ''' '''
