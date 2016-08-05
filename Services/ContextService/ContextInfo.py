@@ -231,3 +231,32 @@ class ContextInfo:
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def GetServiceValue(self, transaction, serviceId, key):
+    '''Returns a value of service, othewise returns None'''
+    try:
+      
+      ## Search for transaction data
+      if self.TransactionNotExists(transaction):
+	self.logger.debug("  Transaction [%s] is not in context info"% transaction)
+	return None
+	
+      ## Search for service ID
+      transactionData = self.stateInfo[transaction]
+      if serviceId not in transactionData.keys():
+	self.logger.debug("  Service ID [%s] not found for transaction [%s]"% 
+		   (serviceId, transaction))
+	return None
+      
+      ## Validating existance of PID in case is too early in building context state
+      serviceData = transactionData[serviceId]
+      if key not in serviceData.keys():
+	self.logger.debug("  Service ID [%s] not found for transaction [%s]"% 
+		   (serviceId, transaction))
+	return None
+      
+      ## Getting PID
+      return serviceData[key]
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
