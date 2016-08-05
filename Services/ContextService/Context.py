@@ -269,72 +269,81 @@ class ContextGroup:
 	for i in range(sizeTasks):
 	  self.counter += 1
 	  task		= taskedServices[i]
-	  taskId	= task['id']
-	  taskTopic 	= task['topic']
-	  taskInstance	= task['instance']
-	  serviceType	= task['serviceType']
-	  message	= task['Task']['message']
-	  msg_conf	= message["content"]["configuration"]
-	  msg_header	= message["header"]
-	  taskType 	= task['Task']['state']['type']
 	  
-	  #    Skipping context message if not defined as "on_start"
-	  if taskType != 'on_start':
-	    self.logger.debug("==> Task [%s] not required to start yet"%(taskId))
-	    continue
-	  
-	  ## Getting instance if it should be started only
-	  taskStrategy	= self.GetIntance(taskInstance)
-	  
-	  ## TODO: This is a local checking up, should not be here!!!
-	  ## Checking if hosts is defined as a list
-	  if 'hosts' in msg_conf.keys() and not type(msg_conf['hosts']) == type([]):
-	    task['Task']['message']["content"]["configuration"]["hosts"] = [msg_conf['hosts']]
-	    
-	  ## Checking if service ID is included in header
-	  if 'service_id' not in msg_header.keys():
-	    task['Task']['message']["header"].update({'service_id' : taskId})
-	  
-	  # Starting service and wait give time for connection
-	  if taskStrategy is not None:
-	    try:
-	      self.logger.debug("==> [%s] Creating worker for [%s] of type [%s]"%
-			 (i, taskInstance, serviceType))
-	      
-	      ## Starting threaded services
-	      if serviceType == 'Process':
-		tService = MultiProcessTasks(self.counter, 
-						  frontend	=frontend, 
-						  backend	=backend, 
-						  strategy	=taskStrategy,
-						  topic		=taskTopic,
-						  transaction	=transaction)
-	      elif serviceType == 'Thread':
-		tService = Process(self.counter, 
-					frontend	=frontend, 
-					backend		=backend, 
-					strategy	=taskStrategy,
-					topic		=taskTopic,
-					transaction	=transaction)
-	      
-	      ## Adding transaction to the message
-	      time.sleep(0.75)
-	      task['Task']['message']["header"].update({'transaction' : transaction})
-	      
-	      ## Preparing message to send
-	      json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
-	      start_msg = "%s @@@ %s" % (taskTopic, json_msg)
-	      
-	      # Sending message for starting service
-	      self.logger.debug("==> [%d] Sending message for starting service"%i )
-	      self.serialize(start_msg)
-	      
-	    except zmq.error.ZMQError:
-	      self.logger.debug("Message not send in backend endpoint: [%s]"%self.backend)
+	  ## Starting task service from given configuration
+	  self.logger.debug("[\/] Starting task service from given configuration")
+	  self.StartService(task, frontend, backend, transaction)
 	      
       except Exception as inst:
 	Utilities.ParseException(inst, logger=self.logger)
 
+  def StartService(self, task, frontend, backend, transaction):
+    ''' Starts process/thread task from given configuration'''  
+    try:
+      ## Skipping context message if not defined as "on_start"
+      taskType 		= task['Task']['state']['type']
+      taskId		= task['id']
+      taskTopic 	= task['topic']
+      taskInstance	= task['instance']
+      serviceType	= task['serviceType']
+      message		= task['Task']['message']
+      msg_conf		= message["content"]["configuration"]
+      msg_header	= message["header"]
+      self.logger.debug("==> Starting task service [%s]"%(taskId))
+      
+      if not(taskType == 'on_start' or taskType != 'start_now'):
+	self.logger.debug("==> Task [%s] not required to start yet"%(taskId))
+	return
+      
+      ## Getting instance if it should be started only
+      taskStrategy = self.GetIntance(taskInstance)
+      
+      ## TODO: This is a local checking up, should not be here!!!
+      ## Checking if hosts is defined as a list
+      if 'hosts' in msg_conf.keys() and not type(msg_conf['hosts']) == type([]):
+	task['Task']['message']["content"]["configuration"]["hosts"] = [msg_conf['hosts']]
+	
+      ## Checking if service ID is included in header
+      if 'service_id' not in msg_header.keys():
+	task['Task']['message']["header"].update({'service_id' : taskId})
+      
+      # Starting service and wait give time for connection
+      if taskStrategy is not None:
+	try:
+	  self.logger.debug("==> [%s] Creating worker for [%s] of type [%s]"%
+		      (taskId, taskInstance, serviceType))
+	  
+	  ## Starting threaded services
+	  if serviceType == 'Process':
+	    tService = MultiProcessTasks(self.counter, 
+					      frontend	=frontend, 
+					      backend	=backend, 
+					      strategy	=taskStrategy,
+					      topic	=taskTopic,
+					      transaction	=transaction)
+	  elif serviceType == 'Thread':
+	    tService = Process(self.counter, 
+				    frontend	=frontend, 
+				    backend	=backend, 
+				    strategy	=taskStrategy,
+				    topic		=taskTopic,
+				    transaction	=transaction)
+	  time.sleep(0.75)
+	    
+	  ## Generates a task space in context state with empty PID
+	  ##	It is later used to filter whether the task is started
+	  ##	if it has a valid PID
+	  self.contextInfo.SetTaskStart(transaction, taskId)
+	  
+	  ## Managing process services
+	  self.logger.debug("==> Managing process services for task [%s]"%taskId )
+	  self.contextMonitor.MonitorServicesProcess(transaction, task, self)
+
+	except zmq.error.ZMQError:
+	  self.logger.debug("Message not send in backend endpoint: [%s]"%self.backend)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
   def stop_family(self, transaction, service_id=''):
     '''Message for stopping group of threads with the same transaction'''
     try:
