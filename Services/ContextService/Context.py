@@ -296,7 +296,7 @@ class ContextGroup:
 	return
       
       ## Getting instance if it should be started only
-      taskStrategy = self.GetIntance(taskInstance)
+      taskStrategy, taskObj = self.GetIntance(taskInstance)
       
       ## TODO: This is a local checking up, should not be here!!!
       ## Checking if hosts is defined as a list
@@ -320,14 +320,16 @@ class ContextGroup:
 					      backend	=backend, 
 					      strategy	=taskStrategy,
 					      topic	=taskTopic,
-					      transaction	=transaction)
+					      transaction	=transaction,
+					      taskAction=taskObj)
 	  elif serviceType == 'Thread':
 	    tService = Process(self.counter, 
 				    frontend	=frontend, 
 				    backend	=backend, 
 				    strategy	=taskStrategy,
 				    topic		=taskTopic,
-				    transaction	=transaction)
+				    transaction	=transaction,
+					      taskAction=taskObj)
 	  time.sleep(0.75)
 	    
 	  ## Generates a task space in context state with empty PID
@@ -434,11 +436,20 @@ class ContextGroup:
   def GetIntance(self, sObjName):
     ''' Returns an insance of an available service'''
     try:
+      
+      ## Compile task before getting instance
+      taskClassName = "RadioStationBrowser"
+      taskPath = 'Services.'+sObjName+'.'+taskClassName
+      self.logger.debug("  Getting an instance of ["+taskPath+"]")
+      # Returns None because the task is not contained in itself
+      taskObj = self.loader.GetInstance(taskPath) 
+      
+      ## Getting action class instance
       serviceName = "Service"+sObjName
       path = 'Services.'+sObjName+'.'+serviceName
       self.logger.debug("  Getting an instance of ["+path+"]")
       classObj = self.loader.GetInstance(path)
-      return classObj
+      return classObj, taskObj
 
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
