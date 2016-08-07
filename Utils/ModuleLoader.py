@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 import imp
+import py_compile
 import logging
+import sys
 
 from Utils import Utilities
 
@@ -36,19 +38,37 @@ class ModuleLoader:
 	## Getting information from given path
 	f, fileName, description = imp.find_module(moduleName, fileName)
 	importType = self.module_types[description[2]]
-	self.logger.debug("  + Loading [%s]"% ( moduleName))
-	#print "***", self.module_types[description[2]], fileName
+	self.logger.debug("  + Loading [%s] of type [%s]" % ( moduleName, importType))
+	
+	## Loading module
 	loadingObject = imp.load_module(moduleName, f, fileName, description)
-	#print "***", loadingObject
-	  
 	moduleType = self.module_types[description[2]]
 	self.logger.debug("    [%s] is a [%s]"%(moduleName, moduleType))
       
         # If the module is source, get the class, 
         #    will raise AttributeError if class cannot be found
 	if moduleType == 'source':
-	  self.logger.debug("    Getting a class for [%s]"%(moduleName))
-	  classObj = getattr(loadingObject, moduleName)
-	  return classObj
+	  ## Recompiling module
+	  recompiledClass = moduleName+description[0]
+	  self.logger.debug("    Re-compiling class [%s]"%(recompiledClass))
+	  py_compile.compile(fileName)
+	  
+	  ## Reloading class
+	  reloadedClass = fileName+"c"
+	  self.logger.debug("    Re-loading class [%s]"%(recompiledClass))
+	  newLoaded = imp.load_compiled(moduleName, reloadedClass)
+	  
+	  ## Reloading module in case code has been updated
+	  for m in sys.modules:
+	    if moduleName in m and '.' in m:
+	      self.logger.debug("    Re-loading module [%s]"%(moduleName))
+	      imp.reload(sys.modules[m])
+	  
+	  ## Getting class object
+	  if moduleName in newLoaded.__dict__:
+	    self.logger.debug("    Getting a class [%s]"%(moduleName))
+	    classObj = getattr(newLoaded, moduleName)
+	    return classObj
+	  return None
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
