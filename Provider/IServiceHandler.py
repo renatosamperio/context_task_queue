@@ -78,16 +78,23 @@ class ServiceHandler:
 			  (self.service_id, service.tid, len(json_msg)))
 
 	  # Setting service ID if it exists and is not set already
-	  if "service_id" in header.keys():
-	    if len(header["service_id"])>0 and self.service_id is None:
-	      self.resp_format["header"].update({"service_name":header["service_name"]})
-	      self.resp_format["header"].update({"service_id" :header["service_id"]})
-	      self.resp_format["header"].update({"action" : ""})
-	      
-	      self.service_id=header["service_id"]
-	  else:
-	    self.logger.debug("No service ID was provided")
-
+	  if self.service_id is None:
+	    if "service_id" in header.keys() and len(header["service_id"])>0:
+		self.resp_format["header"].update({"service_name":header["service_name"]})
+		self.resp_format["header"].update({"service_id" :header["service_id"]})
+		self.resp_format["header"].update({"action" : ""})
+		
+		self.service_id=header["service_id"]
+		self.logger.debug("Setting service ID [%s] in PID [%s]"
+		  %(self.service_id, service.tid))
+	    else:
+	      self.logger.debug("No service ID was provided in PID[%s]"%service.tid)
+	  ## Checking if it is right service ID, otherwise exit
+	  elif self.service_id != header["service_id"]:
+	      self.logger.debug("Service ID [%s] is different to message's service ID [%s]" %
+			 (self.service_id, header["service_id"]))
+	      return
+	  
 	  # Stopping service
 	  if header['action'] == 'stop':
 	    if self.stopped == False:
