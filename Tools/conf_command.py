@@ -20,7 +20,7 @@ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='s
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='restart' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff' --result='success' --sniffer_filter='http>0 and ip.addr == 70.42.73.72' --sniffer_header='4.json' --interface='eth0'
 
 python Tools/conf_command.py --use_file --endpoint='tcp://127.0.0.1:6557' --service_name='context' --context_file='Conf/Context-CaptureTrack.xml' --service_id='ts002' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start'
-
+python Tools/conf_command.py --use_file --endpoint='tcp://127.0.0.1:5557' --service_name='context' --context_file='Conf/Context-MicroservicesExample.xml' --service_id='context002' --transaction='5HGAHZ3WPZUI71PACRPP' --action='start' --task_id='all'
 '''
 
 '''
@@ -105,44 +105,41 @@ def GetTask(configuration, options):
   header['service_name']	= options.service_name
   header['service_transaction']	= options.transaction
   fileTasks			= configuration['TaskService']
-  
+  options.topic 		= 'context'
+
   serviceTask = {}
-  if options.action == 'start':
-    ## Changing topic of message
-    options.topic = 'context'
-    
-    ## Preparing task configuration message
-    taskConfMsg = {
-	'content': 
-	  {'configuration':
-	      {
-		  'BackendBind'	  : configuration['BackendBind'],
-		  'BackendEndpoint' : configuration['BackendEndpoint'],
-		  'FrontBind'	  : configuration['FrontBind'],
-		  'FrontEndEndpoint': configuration['FrontEndEndpoint'],
-		  'TaskLogName'	  : configuration['TaskLogName'],
-		  'TaskService'	  : {}
-	      }
-	},
-	'header':header
-    }
-    
-    for lTask in fileTasks:
-      if lTask['id'] ==  options.service_id:
-	lTask['Task']['message']['header']['action']	  = options.action
-	lTask['Task']['message']['header']['service_id']  = options.service_id
-	lTask['Task']['message']['header']['transaction'] = options.transaction
-	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
-	break
+  ## Preparing task configuration message
+  taskConfMsg = {
+      'content': 
+	{'configuration':
+	    {
+		'BackendBind'	  : configuration['BackendBind'],
+		'BackendEndpoint' : configuration['BackendEndpoint'],
+		'FrontBind'	  : configuration['FrontBind'],
+		'FrontEndEndpoint': configuration['FrontEndEndpoint'],
+		'TaskLogName'	  : configuration['TaskLogName'],
+		'TaskService'	  : {}
+	    }
+      },
+      'header':header
+  }
+  if options.task_id == 'all':
+    taskConfMsg['content']['configuration']['TaskService'] = configuration['TaskService']
     return taskConfMsg
   else:
-    ## Looking for task service
+    ## Changing topic of message
     for lTask in fileTasks:
-      if lTask['id'] ==  options.service_id:
-	lTask['Task']['message']['header']['action']	  = options.action
-	lTask['Task']['message']['header']['service_id']  = options.service_id
-	lTask['Task']['message']['header']['transaction'] = options.transaction
-	return lTask
+      if lTask['id'] ==  options.task_id:
+	lTask['Task']['message']['header']['action']	 = options.action
+	lTask['Task']['message']['header']['service_id'] = options.task_id
+	lTask['Task']['message']['header']['transaction']= options.transaction
+	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
+	return taskConfMsg
+    
+    print "- Task not found in configuration file..."
+    sys.exit(0)
+    return
+
 	
     ## Passing task
     #taskConfMsg['TaskService'] = serviceTask
@@ -605,7 +602,11 @@ if __name__ == '__main__':
 			   action='store_true',
 			   default=False,
 			   help='Makes use of configuration file for configuring task services')
-    
+  contextOpts.add_option('--task_id', 
+			   metavar="TASK_ID", 
+			   default='all',
+			   help="Service ID to control found in XML configuration file")
+ 
   annotatorOpts = OptionGroup(parser, "Song annotation service",
 		      "These options are for handling track annotations in Mongo DB"
 		      "")
