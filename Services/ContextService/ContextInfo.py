@@ -15,7 +15,30 @@ class ContextInfo:
       transactionData = self.stateInfo[transaction]
       return serviceId in transactionData.keys()
     return False
-   
+  
+  def ContextExists(self, transaction, contextId):
+    ''' Returns context configuration'''
+    try:
+      ## Search for transaction data
+      if self.TransactionNotExists(transaction):
+	self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
+      else:
+	self.logger.debug("  Getting context data from transaction [%s]"% transaction)
+      transactionData = self.stateInfo[transaction]
+
+      storedId = self.GetContextID(transaction)
+      contextExists = contextId == storedId
+      if contextExists:
+	self.logger.debug("  - Context ID [%s] found in transaction [%s]" 
+	      %(contextId, transaction))
+      else:
+	self.logger.debug("  - Context ID [%s] NOT found in transaction [%s]" 
+	      %(contextId, transaction))
+      return contextExists
+	
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+     
   def HasPID(self, transaction, serviceId):
     ''' Returns true if process has a PID property'''
     if self.ServiceExists(transaction, serviceId):
@@ -45,6 +68,26 @@ class ContextInfo:
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     
+  def GetContextID(self, transaction):
+    '''Returns a value of service, othewise returns None'''
+    try:
+      
+      ## Search for transaction data
+      if self.TransactionNotExists(transaction):
+	self.logger.debug("  Transaction [%s] is not in context info"% transaction)
+	return None
+	
+      ## Search for service ID
+      contextData = self.stateInfo[transaction]['context']
+      if 'contextId' not in contextData.keys():
+	self.logger.debug("  Context ID not found for transaction [%s]"% 
+		   (serviceId, transaction))
+	return None
+      
+      return contextData['contextId']
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+      
   def RemoveItem(self, transaction, serviceId):
     '''Removing item once it has been stopped'''
     try:
