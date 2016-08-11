@@ -443,18 +443,18 @@ class ContextGroup:
     try:
       
       ## Compile task before getting instance
-      taskClassName = "RadioStationBrowser"
-      taskPath = 'Services.'+sObjName+'.'+taskClassName
-      self.logger.debug("  Getting an instance of ["+taskPath+"]")
-      # Returns None because the task is not contained in itself
-      taskObj = self.loader.GetInstance(taskPath) 
+      #taskClassName = "RadioStationBrowser"
+      #taskPath = 'Services.'+sObjName+'.'+taskClassName
+      #self.logger.debug("  Getting an instance of ["+taskPath+"]")
+      ## Returns None because the task is not contained in itself
+      #taskObj = self.loader.GetInstance(taskPath) 
       
       ## Getting action class instance
       serviceName = "Service"+sObjName
       path = 'Services.'+sObjName+'.'+serviceName
       self.logger.debug("  Getting an instance of ["+path+"]")
       classObj = self.loader.GetInstance(path)
-      return classObj, taskObj
+      return classObj, None #, taskObj
 
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
