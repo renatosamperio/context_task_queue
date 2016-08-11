@@ -105,16 +105,15 @@ class ContextGroup:
 	self.request(msg)
 	
       elif topic == 'process':
-	'''Looking for process activities '''
-
+	'''Analysing process message'''
 	## Adding process starter in context information
 	if 'Task' in msgKeys:
 	  task = msg['Task']
+	  transaction	= task['message']['header']['transaction']
 	  taskKeys = task.keys()
 	  if 'state' in taskKeys and 'message' in taskKeys:
 	    taskHeader	= task['message']['header']
 	    action	= taskHeader['action']
-	    transaction = taskHeader['transaction']
 	    
 	    if action == 'start':
 	      
@@ -213,19 +212,19 @@ class ContextGroup:
 	service_id	= msg["header"]["service_id"]
 	
 	## Checking if transaction exists in context 
-	if transaction not in self.threads.keys():
-	  self.logger.debug( "Transaction [%s] not in this context"%transaction)
+	if self.contextInfo.TransactionNotExists(transaction):
+	  self.logger.debug( "Transaction [%s] does not exits in this context, stop action"%transaction)
 	  return
 	
 	## Sending message to stop independently logic of processes 
 	## with the same transaction ID
 	lServices = self.contextInfo.GetContextServices(transaction)
 	if lServices is None:
-	  self.logger.debug( "Error: No services in context information data structure")
+	  self.logger.debug( "Error: No services in context information data structure, stop action")
 	  return
 	
 	for serviceId in lServices:
-	  self.stop_family(transaction, service_id=serviceId)
+	  self.StopService(transaction, service_id=serviceId)
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -352,7 +351,7 @@ class ContextGroup:
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     
-  def stop_family(self, transaction, service_id=''):
+  def StopService(self, transaction, service_id=''):
     '''Message for stopping group of threads with the same transaction'''
     try:
       ## Preparing message for stopping each of the available service
