@@ -31,8 +31,7 @@ class ContextGroup:
     self.backend	= ''
     self.tasks 		= None
     self.topic		= None
-    self.resp_format	= {"header":{}, "content":{}}
-    self.service_id	= ''
+    self.service_id	= None
     self.loader		= ModuleLoader()
     self.contextInfo	= ContextInfo()
     self.contextMonitor	= ContextMonitor()
@@ -64,30 +63,37 @@ class ContextGroup:
       if topic == service.topic:
 	header 		= msg["header"]
 	content		= msg["content"]
+	transaction	= header['service_transaction']
 	
 	# Blocking request and reply messages
 	self.logger.debug("  - Looking for service [%s] in context messages" %
 		      (header["service_id"]))
-      
-	# Looking for service ID
-	if "service_id" in header.keys():
-	  self.resp_format["header"].update({"service_name":header["service_name"]})
-	  self.resp_format["header"].update({"service_id" :header["service_id"]})
-	  self.resp_format["header"].update({"action" : ""})
+
+	if "service_id" in header.keys() and len(header["service_id"])>0:
+	  self.logger.debug("Service ID [%s] found"%header["service_id"])
 	else:
 	  self.logger.debug("No service ID was provided")
-	
+
 	# Giving message interpreation within actions
-	if header['service_name'] == 'all' or self.DeserializeAction(msg):
+	if self.DeserializeAction(msg):
 	  self.logger.debug("  - Service [%s] received message of size %d" % 
 			    (service.tid, len(json_msg)))
+	  contextId	= header['service_id']
+	  serviceName	= header['service_name']
+	  serviceAction	= header['action']
 	    
 	  #TODO: make a separate thread for starting or stopping a context
-	  if header['action'] == 'stop':
-	    self.stop(msg=msg)
-	    
+	  if serviceAction == 'stop':
+	    if serviceName == 'all':
+	      self.stop(msg=msg)
+	    else:
+	      ## Go to each task
+	      tasks = content['configuration']['TaskService']
+	      for task in tasks:
+		taskId = task['id']
+		self.StopService( transaction, service_id=taskId)
 	  #TODO: Set up an action when linger time is expired
-	  elif header['action'] == 'start':
+	  elif serviceAction == 'start':
 	    ## Starting context services
 	    self.start(msg=msg)
 	    
