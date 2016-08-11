@@ -462,32 +462,85 @@ class ContextGroup:
       
   def DeserializeAction(self, msg):
     ''' '''
-    self.logger.debug("Validating configured action...")
-    isServiceNameCorrect = msg["header"]['service_name'] == 'context'
-    contextExist = True
-        
-    json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
-    if 'service_transaction' in msg['header'].keys():
-      msgTransaction = msg['header']['service_transaction']
+    try:
+   
+      transaction = msg['header']['service_transaction']
+      if 'service_transaction' not in msg['header'].keys():
+	self.logger.debug("  Transaction [%s] not found in message" %(transaction))
+	return False
+	
+      self.logger.debug("Validating context service name...")
+      serviceName = msg["header"]['service_name']
+      if serviceName == 'context' == False:
+	self.logger.debug("  Service name not for context [%s]" %(serviceName))
+	return False
+
+      ## Check if transaction is already defined the processes 
+      self.logger.debug("Validating service transaction...")
       
-      ## If transaction is already defined the processes also
       ## TODO: Check state of the processes to see if they all would be stopped.
       ##       If so, the could be started...
-      threadKeys = self.threads.keys()
       isStartAction = msg['header']['action'] == 'start'
-      if msgTransaction in threadKeys and isStartAction:
-	contextExist = False
-	self.logger.debug("Transaction already exists")
+      isStopAction = msg['header']['action'] == 'stop'
+      transactionExists = self.contextInfo.TransactionExists(transaction)
+      if not transactionExists and not isStartAction:
+	self.logger.debug( "Transaction [%s] does not exits in this context"%transaction)
+	return False
+      elif transactionExists and isStartAction:
+	self.logger.debug("  - Found transaction with ID [%s]" %(transaction))
 	
+	## Checking if context ID exists
+	self.logger.debug("Validating context ID...")
+	contextId = self.contextInfo.GetContextID(transaction)
+	if contextId != msg['header']['service_id']:
+	  self.logger.debug("  - Context ID [%s] NOT found in transaction [%s]" 
+	      %(contextId, transaction))
+	  return False
+	
+	self.logger.debug("  - Found context ID [%s] in transaction [%s]" 
+	    %(contextId, transaction))
+	  
 	## Checking if service also exists
 	tasks = msg['content']['configuration']['TaskService']
 	for lTask in tasks:
 	  serviceId = lTask['id']
-	  if len(serviceId)>0:
-	    self.logger.debug("  + Service ID found")
-	    return not self.contextInfo.ServiceExists(msgTransaction, serviceId)
-	self.logger.debug("Valid Service ID not found")
-      
-    result = contextExist and isServiceNameCorrect
-    return result
-  
+	  if self.contextInfo.ServiceExists(transaction, serviceId):
+	    self.logger.debug( "  - Not starting, service [%s] already exists in transaction [%s]"
+	      %(serviceId, transaction))
+	    return False
+	return True
+      elif not transactionExists and isStartAction:
+	self.logger.debug( "  - Starting service but transaction [%s] does not exits"%transaction)
+	return True
+      elif transactionExists and isStopAction:
+	self.logger.debug("  - Found transaction with ID [%s]" %(transaction))
+	
+	## Checking if context ID exists
+	contextId = msg['header']['service_id']
+	if not self.contextInfo.ContextExists(transaction, contextId):
+	  return False
+	
+	#contextId = self.contextInfo.GetContextID(transaction)
+	#if contextId != msg['header']['service_id']:
+	  #self.logger.debug("  - Context ID [%s] NOT found in transaction [%s]" 
+	      #%(contextId, transaction))
+	  #return False
+	
+	self.logger.debug("  - Found context ID [%s] in transaction [%s]" 
+	    %(contextId, transaction))
+	  
+	## Checking if service also exists
+	tasks = msg['content']['configuration']['TaskService']
+	for lTask in tasks:
+	  serviceId = lTask['id']
+	  if self.contextInfo.ServiceExists(transaction, serviceId):
+	    self.logger.debug( "  - Service [%s] exists in transaction [%s]"
+	      %(serviceId, transaction))
+	    return True
+	  else:
+	    self.logger.debug( "  - Not stopping, service [%s] does not exists in transaction [%s]"
+	      %(serviceId, transaction))
+	    return False
+
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
