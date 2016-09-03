@@ -57,7 +57,7 @@ class ContextGroup:
       msg 		= json.loads(json_msg)
       msgKeys 		= msg.keys()
       
-      self.logger.debug("==> Message with topic [%s] but natively servicing topic [%s]" %
+      self.logger.debug("==> Message with topic [%s] but natively using topic [%s]" %
 			(topic, service.topic))
       # Processing messages with context enquires for 'context' topic
       if topic == service.topic:
@@ -102,7 +102,9 @@ class ContextGroup:
 	    self.contextMonitor.StoreControl(msg)
 
       elif topic == 'state':
-	self.request(msg)
+	header	= msg["header"]
+	if header['action'] == 'request':
+	  self.request(msg)
 	
       elif topic == 'process':
 	'''Analysing process message'''
@@ -392,19 +394,32 @@ class ContextGroup:
 
   def request(self, msg):
     ''' Requests information about context state'''
-    header	= msg["header"]
-    transaction	= header["service_transaction"]
-    contextData = self.contextInfo.GetContext(transaction)
-    
-    ## Getting context data with service transaction
-    if contextData is None:
-      self.logger.debug( "No context data found for transaction [%s]", transaction)
-      return
-    
-    json_msg	= json.dumps(contextData, sort_keys=True, indent=4, separators=(',', ': '))
-    self.logger.debug( "Sending context data in [%d] bytes"%(len(json_msg)))
-    message	= "%s @@@ %s" % ('state', json_msg)
-    self.serialize(message)
+    try:
+      header	= msg["header"]
+      transaction	= header["service_transaction"]
+      
+      ## Getting all context info
+      contextData = self.contextInfo.GetContext(transaction)
+      
+      ## Getting context data with service transaction
+      if contextData is None:
+	self.logger.debug( "No context data found for transaction [%s]", transaction)
+	return
+      
+      ## Preparing reply/publshed message
+      header['action'] = 'reply'
+      pubMsg = {
+	'header':header,
+	'content':contextData
+	}
+      
+      ## Encapsulating message to reply
+      json_msg	= json.dumps(pubMsg, sort_keys=True, indent=4, separators=(',', ': '))
+      self.logger.debug( "Sending context data in [%d] bytes"%(len(json_msg)))
+      message	= "%s @@@ %s" % ('state', json_msg)
+      self.serialize(message)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
 
   def UpdateThreadState(self, transaction, state=None, tid=None, thread=None):
     ''' '''

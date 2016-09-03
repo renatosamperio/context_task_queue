@@ -15,6 +15,9 @@ import pprint
 from optparse import OptionParser, OptionGroup
 from operator import xor
 '''
+## For getting context information:
+$ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='request'
+
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --context_file='Conf/Context-CaptureTrack.xml' --service_name='context' --service_id='context001' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start'
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='stop' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff'
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='restart' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff' --result='success' --sniffer_filter='http>0 and ip.addr == 70.42.73.72' --sniffer_header='4.json' --interface='eth0'
@@ -699,10 +702,10 @@ if __name__ == '__main__':
     parser.error("Missing required option: patterns")
   
   if options.service_name == 'state':
-    if options.action != "request" and options.transaction is None:
-      parser.error("Missing required option: transaction")
-    elif options.action is None:
+    if options.action == 'none':
       parser.error("Missing required option: action")
+    elif options.action != "request" and options.transaction is None:
+      parser.error("Missing required option: transaction")
 
   if options.service_name == 'sniffer':
     if options.action == 'none':
