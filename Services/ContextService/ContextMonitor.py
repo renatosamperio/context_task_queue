@@ -128,7 +128,7 @@ class ContextMonitor:
 	  elif action == 'exited':
 	    actionName = 'on_exit'
 	  else:
-	    raise ContextError('Warning:', 'Message state action missing in monitoring services')
+	    self.logger.debug("Warning: Message state action missing in monitoring services, exiting...")
 	    return
 
 	  if actionName not in state['task_states'].keys():
