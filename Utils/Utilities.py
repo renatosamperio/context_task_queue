@@ -24,7 +24,7 @@ def GetHumanReadable(size,precision=2):
         size = size/1024.0 #apply the division
     return "%.*f%s"%(precision,size,suffixes[suffixIndex])
   
-def MemoryUsage(pid, log=None):
+def MemoryUsage(pid, log=None, memMap=False, openFiles=False, openConn=False):
   '''Returns the memory usage in MB'''
   start = time.time()
   try:
@@ -38,6 +38,39 @@ def MemoryUsage(pid, log=None):
     mem.update({'percent':process.memory_percent()})
     mem.update({'children':[]})
     mem.update({'total':{'percent':mem['percent'], 'rss':mem['rss'], 'vms':mem['vms']}})
+    
+    ## Getting connections of parent thread
+    if openConn:
+      mem.update({'connections':[]})
+      conns = process.connections()
+      for item in conns:
+	conn = []
+	keys = item._fields
+	for key in keys:
+	  conn.append({ key: item.__dict__[key]})
+	mem['connections'].append(conn)
+      
+    ## Getting opened files of parent thread
+    if openFiles:
+      mem.update({'opened_files':[]})
+      opened_items = process.open_files()
+      for item in opened_items:
+	process_file = []
+	keys = item._fields
+	for key in keys:
+	  process_file.append({ key: item.__dict__[key]})
+	mem['opened_files'].append(process_file)
+      
+    ## Getting memory map of parent thread
+    if memMap:
+      mem.update({'memory_map':[]})
+      mapped_items = process.memory_maps()
+      for item in mapped_items:
+	process_map = []
+	keys = item._fields
+	for key in keys:
+	  process_map.append({ key: item.__dict__[key]})
+	mem['memory_map'].append(process_map)
     
     ## Getting memory from children processes
     kids = process.children()
