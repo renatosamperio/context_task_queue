@@ -44,8 +44,6 @@ class TaskedService(object):
 	# Parsing extra arguments
 	self.logger.debug("[%s] Parsing constructor arguments" % self.threadID)
 	for key, value in kwargs.iteritems():
-	  ''' '''
-	  #print "*** ["+component+"-"+str(threadID)+"] kwargs[%s] = %s" % (key, value)
 	  if "strategy" == key:
 	    self.action = value(**kwargs)
 	  elif "topic" == key:
@@ -126,7 +124,7 @@ class TaskedService(object):
           if socks.get(self.socket) == zmq.POLLIN and len(self.frontend)>0:
 	    msg = self.socket.recv().strip()
 	    self.action.deserialize(self, msg)
-	  
+
 	  ## Calculating current process memory
 	  ## NOTE: For the moment is only printed every N seconds
 	  ## TODO: Make a KF for predicting a dangerous case
@@ -134,7 +132,7 @@ class TaskedService(object):
 	  ##       like missing, growing, not running.
 	  ## TODO: Publish memory size with process information (name, PID)
 	  ## TODO: This has to be done in a separate class
-	  
+
 	  if (self.check_in_time - time.time())<0:
 	    process_memory = Utilities.MemoryUsage(self.tid, log=self.logger)
 	    self.logger.debug('[%s] Total process memory [%s, %d] is using (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%) in %.2fms'%
