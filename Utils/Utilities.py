@@ -89,7 +89,15 @@ def MemoryUsage(pid, log=None, memMap=False, openFiles=False, openConn=False):
       mem['total']['rss'] += childData['rss']
       mem['total']['vms'] += childData['vms']      
   
-    ##TODO: Add memory_maps, children, open_files, connections
+    threads = process.threads()
+    for t in threads:
+      data = psutil.Process(t.id)
+      childMem = data.get_memory_info()
+      childData = {'pid':data.pid, 'create_time':data.create_time(),
+		    'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
+		    'percent':data.memory_percent()}
+      mem['children'].append(childData)
+    
     elapsed = time.time() - start
     mem.update({'elapsed':elapsed})
     return mem
