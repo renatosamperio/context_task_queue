@@ -105,6 +105,8 @@ class ContextGroup:
 	header	= msg["header"]
 	if header['action'] == 'request':
 	  self.request(msg)
+	elif header['action'] == 'top':
+	  self.GetTaskMonitor(msg)
 	
       elif topic == 'process':
 	'''Analysing process message'''
@@ -395,7 +397,8 @@ class ContextGroup:
   def request(self, msg):
     ''' Requests information about context state'''
     try:
-      header	= msg["header"]
+      self.logger.debug("  Getting context information")
+      header		= msg["header"]
       transaction	= header["service_transaction"]
       
       ## Getting all context info
@@ -407,7 +410,7 @@ class ContextGroup:
 	return
       
       ## Preparing reply/publshed message
-      header['action'] = 'reply'
+      header['action'] = 'reply_context'
       pubMsg = {
 	'header':header,
 	'content':contextData
@@ -559,3 +562,59 @@ class ContextGroup:
 
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def GetTaskMonitor(self, msg):
+    ''' Method for replying with monitoring status of all task services'''
+    try:
+      self.logger.debug("  Getting task service monitoring data")
+      memUsage = []
+      
+      ## Collecting task service PID's
+      ##    Getting context data
+      header		= msg["header"]
+      transaction	= header["service_transaction"]
+      contextData	= self.contextInfo.GetContext(transaction)
+      dataKeys		= contextData.keys()
+      
+      for key in dataKeys:
+	if key != 'context':
+	  ## TODO: Validate if there is no valid PID
+	  ##	   Catch exception and continue with other processes
+	  
+	  ## TODO: Parse options for obtaining: memory_maps, 
+	  ##	   children, open_files, connections
+	  
+	  ## TODO: Start publisher if configured
+	  
+	  ##  Obtaining memory usage
+	  pid = int(contextData[key]['pid'])
+	  process_memory = Utilities.MemoryUsage(pid, 
+					  log=self.logger, 
+					  memMap=False, 
+					  openFiles=False, 
+					  openConn=False)
+	
+	  ##  Preparing task service identifiers
+	  memUsage.append({'service_id':key, 
+			  'pid':pid,
+			  'serviceName':contextData[key]['serviceName'],
+			  'instance':contextData[key]['instance'],
+			  'memory':process_memory
+			  })
+      
+      ## Preparing reply/publshed message
+      header['action'] = 'reply_top'
+      pubMsg = {
+	'header':header,
+	'content':memUsage
+	}
+      
+      ## Encapsulating message to reply
+      json_msg	= json.dumps(pubMsg, sort_keys=True, indent=4, separators=(',', ': '))
+      self.logger.debug( "Sending context data in [%d] bytes"%(len(json_msg)))
+      message	= "%s @@@ %s" % ('state', json_msg)
+      self.serialize(message)
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
