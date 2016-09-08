@@ -572,48 +572,67 @@ class ContextGroup:
       ## Collecting task service PID's
       ##    Getting context data
       header		= msg["header"]
+      content		= msg["content"]
+      configuration = content['configuration']
       transaction	= header["service_transaction"]
-      contextData	= self.contextInfo.GetContext(transaction)
-      dataKeys		= contextData.keys()
       
-      for key in dataKeys:
-	if key != 'context':
-	  ## TODO: Validate if there is no valid PID
-	  ##	   Catch exception and continue with other processes
-	  
-	  ## TODO: Parse options for obtaining: memory_maps, 
-	  ##	   children, open_files, connections
-	  
-	  ## TODO: Start publisher if configured
-	  
-	  ##  Obtaining memory usage
-	  pid = int(contextData[key]['pid'])
-	  process_memory = Utilities.MemoryUsage(pid, 
-					  log=self.logger, 
-					  memMap=False, 
-					  openFiles=False, 
-					  openConn=False)
+      memory_maps 	= configuration["memory_maps"]
+      open_connections 	= configuration["open_connections"]
+      opened_files 	= configuration["opened_files"]
 	
-	  ##  Preparing task service identifiers
-	  memUsage.append({'service_id':key, 
-			  'pid':pid,
-			  'serviceName':contextData[key]['serviceName'],
-			  'instance':contextData[key]['instance'],
-			  'memory':process_memory
-			  })
-      
-      ## Preparing reply/publshed message
-      header['action'] = 'reply_top'
-      pubMsg = {
-	'header':header,
-	'content':memUsage
-	}
-      
-      ## Encapsulating message to reply
-      json_msg	= json.dumps(pubMsg, sort_keys=True, indent=4, separators=(',', ': '))
-      self.logger.debug( "Sending context data in [%d] bytes"%(len(json_msg)))
-      message	= "%s @@@ %s" % ('state', json_msg)
-      self.serialize(message)
+      ## Checking if service is required
+      if "service" in configuration.keys():
+	
+	## Validating transaction
+	if self.contextInfo.TransactionNotExists(transaction):
+	  self.logger.debug("  Transaction [%s] does not exists" %(transaction))
+	  return False
+	
+	## Getting service monitoring data
+	service 	= configuration["service"]
+	service_endpoint= service["endpoint"]
+	service_freq	= service["frequency_s"]
+	service_type	= service["type"]
+	self.logger.debug("  Openning [%s] service in [%s] with [%4.2f]s of frequency" 
+	  %(service_type, service_endpoint, service_freq))
+	
+      else:
+	contextData	= self.contextInfo.GetContext(transaction)
+	dataKeys		= contextData.keys()
+	
+	for key in dataKeys:
+	  if key != 'context':
+	    ## TODO: Validate if there is no valid PID
+	    ##	   Catch exception and continue with other processes
+
+	    ##  Obtaining memory usage
+	    pid = int(contextData[key]['pid'])
+	    process_memory = Utilities.MemoryUsage(pid, 
+					    log=self.logger, 
+					    memMap=memory_maps, 
+					    openFiles=opened_files, 
+					    openConn=open_connections)
+	  
+	    ##  Preparing task service identifiers
+	    memUsage.append({'service_id':key, 
+			    'pid':pid,
+			    'serviceName':contextData[key]['serviceName'],
+			    'instance':contextData[key]['instance'],
+			    'memory':process_memory
+			    })
+	
+	## Preparing reply/publshed message
+	header['action'] = 'reply_top'
+	pubMsg = {
+	  'header':header,
+	  'content':memUsage
+	  }
+	
+	## Encapsulating message to reply
+	json_msg	= json.dumps(pubMsg, sort_keys=True, indent=4, separators=(',', ': '))
+	self.logger.debug( "Sending context data in [%d] bytes"%(len(json_msg)))
+	message	= "%s @@@ %s" % ('state', json_msg)
+	self.serialize(message)
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
