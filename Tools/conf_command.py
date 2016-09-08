@@ -18,6 +18,9 @@ from operator import xor
 ## For getting context information:
 $ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='request'
 
+## For obtaining memory usage (top):
+$ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='top'
+
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --context_file='Conf/Context-CaptureTrack.xml' --service_name='context' --service_id='context001' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start'
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='stop' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff'
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='restart' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff' --result='success' --sniffer_filter='http>0 and ip.addr == 70.42.73.72' --sniffer_header='4.json' --interface='eth0'
@@ -183,6 +186,27 @@ def message(options):
       header["service_transaction"] = options.transaction
       header["service_id"] = ''
       options.topic	   = header["service_name"]
+    if options.action == "top":
+      header["service_transaction"] = options.transaction
+      header["service_id"] = ''
+      options.topic	   = header["service_name"]
+      
+      ## Setting up monitoring service configuration
+      ##   options in message
+      configuration = {
+	  "open_connections":options.open_connections,
+	  "memory_maps":options.memory_maps,
+	  "opened_files":options.opened_files
+	  }
+      if options.use_service:
+	service = {
+	  "service":{
+	    "type":options.service_type,
+	    "frequency_s":options.service_freq,
+	    "endpoint":options.service_endpoint,
+	    }
+	  }
+	configuration.update(service)
     content = {"content": {"configuration": configuration}}
   
   elif header["service_name"] == 'context' and options.use_file==False:
@@ -408,7 +432,7 @@ if __name__ == '__main__':
   available_services		= ['browser', 'ftp', 'portal', 'device', 'local', 'context', 'state', 'sniffer', 'music_search', 'all']
   available_action_cmds		= ['new_songs', 'none']
   available_device_actions	= ['firefox', 'syslog', 'downloader', 'track_found', 'track_report', 'sniff', 'none']
-  available_actions		= ['start', 'stop', 'restart', 'request', 'updated', 'none']
+  available_actions		= ['start', 'stop', 'restart', 'request', 'updated', 'none', 'top']
   available_topics		= ['process', 'context', 'control']
   available_results		= ['success', 'failure', 'none']
   
@@ -650,6 +674,45 @@ if __name__ == '__main__':
 		    default=None,
 		    help='path where local files are found')  
   
+  monitorOpts = OptionGroup(parser, "Monitoring services",
+		      "Options for configuring and setting up a memory"
+		      "process monitoring")
+  monitorOpts.add_option('--open_connections', 
+			  dest='open_connections', 
+			  action='store_true',
+			  default=False,
+			  help='Monitors opened connections for parent process')
+  monitorOpts.add_option('--opened_files', 
+			  dest='opened_files', 
+			  action='store_true',
+			  default=False,
+			  help='Monitors opened files for parent process')
+  monitorOpts.add_option('--memory_maps', 
+			  dest='memory_maps', 
+			  action='store_true',
+			  default=False,
+			  help='Monitors memory maps for parent process')
+  monitorOpts.add_option('--use_service', 
+			dest='use_service', 
+			action='store_true',
+			default=False,
+			help='Defines a reporting service for monitoring processes')
+  monitorOpts.add_option('--service_type',
+                      type="string",
+                      action='store',
+		      default='pub',
+                      help='Defines type of service for monitoring service [pub, rep]')  
+  monitorOpts.add_option('--service_endpoint', 
+		    metavar="URL", 
+		    default="tcp://127.0.0.1:6558",
+		    help='Overwrites XML option "MonitorEndpoint" for endpoint of monitoring service')
+  monitorOpts.add_option('--service_freq', 
+		      metavar="NUMBER", 
+		      default=1.0,
+		      dest='service_freq', 
+		      type="float", 
+		      help="Sets frequency for reporting process monitoring")
+  
   parser.add_option_group(deviceOpts)
   parser.add_option_group(ftpOpts)
   parser.add_option_group(localOpts)
@@ -657,6 +720,7 @@ if __name__ == '__main__':
   parser.add_option_group(contextOpts)
   parser.add_option_group(annotatorOpts)
   parser.add_option_group(snifferOpts)
+  parser.add_option_group(monitorOpts)
 
   (options, args) = parser.parse_args()
  
@@ -704,7 +768,7 @@ if __name__ == '__main__':
   if options.service_name == 'state':
     if options.action == 'none':
       parser.error("Missing required option: action")
-    elif options.action != "request" and options.transaction is None:
+    elif options.transaction is None:
       parser.error("Missing required option: transaction")
 
   if options.service_name == 'sniffer':
@@ -764,7 +828,13 @@ if __name__ == '__main__':
       
     if options.query is None:
       parser.error("Missing required option: query")
-      
+
+  if options.service_name == 'state' and options.action == 'top':
+    if options.endpoint is None:
+      parser.error("Missing required option: endpoint")
+    elif options.transaction is None:
+      parser.error("Missing required option: transaction")
+    
   if options.service_name == 'local' and (
          options.dest_path is None or 
          options.source_path is None or 
