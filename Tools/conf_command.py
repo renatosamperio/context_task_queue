@@ -20,6 +20,10 @@ $ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name=
 
 ## For obtaining memory usage (top):
 $ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='top'
+$ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='top' --open_connections --opened_files --memory_maps
+
+## For starting service for memory monitoring
+python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='top' --use_service  --service_type="pub" --service_freq=1 --service_endpoint="tcp://127.0.0.1:6558"
 
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --context_file='Conf/Context-CaptureTrack.xml' --service_name='context' --service_id='context001' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start'
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='stop' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff'
