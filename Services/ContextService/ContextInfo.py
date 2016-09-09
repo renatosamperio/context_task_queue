@@ -23,7 +23,7 @@ class ContextInfo:
       if self.TransactionNotExists(transaction):
 	self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
       else:
-	self.logger.debug("  Getting context data from transaction [%s]"% transaction)
+	self.logger.debug("    |@| Getting context data from transaction [%s]"% transaction)
       transactionData = self.stateInfo[transaction]
 
       storedId = self.GetContextID(transaction)
@@ -62,7 +62,7 @@ class ContextInfo:
       if self.TransactionNotExists(transaction):
 	self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
       else:
-	self.logger.debug("  Getting context data from transaction [%s]"% transaction)
+	self.logger.debug("    |@| Getting context data from transaction [%s]"% transaction)
 	conf = self.stateInfo[transaction]['context']
       return conf
     except Exception as inst:
@@ -304,15 +304,17 @@ class ContextInfo:
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
-  def GetContext(self, transaction):
+  def GetContext(self, transaction, log=False):
     ''' Returns context configuration'''
     try:
       conf = None
       ## Search for transaction data
       if self.TransactionNotExists(transaction):
-	self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
+	if log:
+	  self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
       else:
-	self.logger.debug("  Getting context data from transaction [%s]"% transaction)
+	if log:
+	  self.logger.debug("    |@| Getting context data from transaction [%s]"% transaction)
 	conf = self.stateInfo[transaction]
       return conf
     except Exception as inst:
