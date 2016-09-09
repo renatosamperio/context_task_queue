@@ -191,16 +191,16 @@ class ServiceHandler:
       socket = context.socket(zmq.PUB)
       
       socket.connect(self.backend)
-      time.sleep(0.3)
+      time.sleep(0.2)
 	    
       self.logger.debug("Sending message of [%s] bytes" % len(msg))
       utfEncodedMsg = msg.encode('utf-8').strip()
       socket.send(utfEncodedMsg)
-      time.sleep(0.5)
+      time.sleep(0.3)
       
       # Destroying temporal context for publisher
       context.destroy()
-      time.sleep(0.5)
+      time.sleep(0.3)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     
