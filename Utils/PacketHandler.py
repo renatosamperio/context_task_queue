@@ -35,7 +35,6 @@ class PacketHandler(threading.Thread):
       
       # Variables for thread management
       self.tStop 	= threading.Event()
-      self.threads	= []
       self.tid		= None
       
       # Variables for configuration
@@ -57,10 +56,7 @@ class PacketHandler(threading.Thread):
 
       # Starting action thread
       self.start()
-      
-      ## Adding monitor thread to the list of references
-      self.threads.append(self)
-      
+            
       ## Joining thread
       self.logger.debug( "  Joining thread...")
       self.join(1)
@@ -86,10 +82,7 @@ class PacketHandler(threading.Thread):
 	##   with data within child class
 	self.SearchData()
       self.logger.debug("Ending DB packet capture [%d]"%(self.tid))
-      
-    except KeyboardInterrupt:
-      print "Bye1"
-      sys.exit()
+
     except Exception as inst:
       Utilities.ParseException(inst)
 
@@ -99,7 +92,6 @@ class PacketHandler(threading.Thread):
       t1.start()
       
       ## Adding capturing thread to the list of references
-      self.threads.append(t1)
       self.logger.debug("Capture started in thread [%d]", self.tid)
       
     except Exception as inst:
