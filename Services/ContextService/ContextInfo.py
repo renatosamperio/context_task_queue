@@ -67,7 +67,7 @@ class ContextInfo:
       return conf
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-    
+
   def GetContextID(self, transaction):
     '''Returns a value of service, othewise returns None'''
     try:
@@ -319,4 +319,48 @@ class ContextInfo:
       return conf
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def GetProcessMessage(self, transaction, serviceId, action):
+    ''' Makes a process message for managing services'''
     
+    try:
+      if not self.ServiceExists(transaction, serviceId):
+	self.logger.debug("  Service [%s] does not exists in transaction [%s]"% (serviceId, transaction) )
+	return
+      
+      ## Getting context and process data
+      serviceData  = self.GetServiceData(transaction, serviceId)
+      contextConf  = self.stateInfo[transaction]['context']
+      configuration= contextConf['configuration']
+    
+      ## Preparing header and content for process message
+      header = {
+		"header": 
+		  {
+		    "action": action,
+		    "service_id": contextConf['contextId'],
+		    "service_name": contextConf['contextName'],
+		    "service_transaction": transaction
+		  }
+		}
+
+      content = {
+	"content": {
+	    "configuration": {
+		"BackendBind":  configuration['BackendBind'],
+		"BackendEndpoint": configuration['BackendEndpoint'],
+		"FrontBind": configuration['FrontBind'],
+		"FrontEndEndpoint": configuration['FrontEndEndpoint'],
+		"TaskLogName": contextConf['contextLogName'],
+		"TaskService": [ serviceData['task'] ]
+	    }
+	}
+      }
+	    
+      ## Generating process message
+      processMessage = {}
+      processMessage.update(header)
+      processMessage.update(content)
+      return processMessage
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
