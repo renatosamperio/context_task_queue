@@ -255,6 +255,7 @@ class ContextGroup:
 	data = {
 		  'contextId': self.service_id,
 		  'contextName': header['service_name'],
+		  'contextLogName': configuration['TaskLogName'],
 		  'configuration':
 		    {
 		      'BackendBind'	: configuration['BackendBind'],
