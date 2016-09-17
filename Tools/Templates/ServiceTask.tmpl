@@ -66,6 +66,8 @@ class Service$ServiceType(ServiceHandler):
   def GetActionHandler(self, msg):
     ''' '''    
     self.logger.debug("Creating a $TaskDescription")
+    result	="failure"
+    deviceAction= None
     
     try:
       message = msg['Task']['message']
@@ -97,11 +99,14 @@ class Service$ServiceType(ServiceHandler):
       tid = Utilities.GetPID()
       self.notify("started", result, items={'pid':tid})
       
-      return deviceAction
-		
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-
+    finally:
+      # Notifying if task was created
+      tid = Utilities.GetPID()
+      self.notify("started", result, items={'pid':tid})
+      return deviceAction
+    
   def close(self):
     ''' Ends process inside the service'''
     self.logger.debug("Stopping $TaskDescription service")
