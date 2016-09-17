@@ -157,6 +157,7 @@ class ContextGroup:
 	  transaction	= header["service_transaction"]
 	  serviceId	= header["service_id"]
 	  action	= header["action"]
+	  result	= content["status"]['result']
 	  
 	  self.logger.debug(" -> Updating context information based in [control] messages")
 	  self.contextInfo.UpdateControlState(msg)
@@ -165,6 +166,9 @@ class ContextGroup:
 	  if not action.startswith('start'):
 	    self.logger.debug(" -> Monitoring services based in [control] messages")
 	    self.contextMonitor.MonitorServicesControl(msg, self)
+	  elif action.startswith('start') and result == 'failure':
+	      self.logger.debug("  - Service failed to start, stopping service [%s]"%serviceId)
+	      self.StopService( transaction, service_id=serviceId)
 	  else:
 	    self.logger.debug(" -> Service [%s] already started", serviceId)
 
