@@ -126,7 +126,7 @@ class ContextInfo:
     if action == 'started' and result == 'success':
       data = {
 		'pid'  : status['pid'],
-		'state': action
+		'state': result
 	      }
       self.logger.debug("  Updating context information for [%s]"%serviceId)
       self.UpdateState( transaction, serviceId, data)
