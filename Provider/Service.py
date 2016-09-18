@@ -34,12 +34,15 @@ class TaskedService(object):
 	self.tStop 	= threading.Event()
 	self.frontend	= None
 	self.backend	= None
-	self.endpoint	= None
 	self.topic     	= None
 	self.context  	= None
 	self.action	= None
 	self.tid      	= None
 	self.transaction= None
+	
+	## Variables for process monitor
+	self.contextInfo= None
+	self.isMonitor	= False
 
 	# Parsing extra arguments
 	self.logger.debug("[%s] Parsing constructor arguments" % self.threadID)
@@ -54,10 +57,14 @@ class TaskedService(object):
 	    self.frontend = value
 	  elif "backend" == key:
 	    self.backend = value
-	  ## TODO: Remove this option as front and back endpoints are used
-	  elif "endpoint" == key:
-	    self.endpoint = value
-	    
+	  elif "contextInfo" == key:
+	    self.contextInfo = value
+	    self.isMonitor = True
+
+	## Including context information in local service
+	if self.isMonitor:
+	  self.action.SetMonitor(self.contextInfo)
+
 	## Alarm time setup
 	self.time_out_alarm = 60
 	self.check_in_time = time.time()+ self.time_out_alarm
