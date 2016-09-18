@@ -369,3 +369,27 @@ class ContextInfo:
       return processMessage
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def GetServicePID(self, transaction, log=False):
+    ''' Returns context configuration'''
+    try:
+      listPID = []
+      ## Search for transaction data
+      if self.TransactionNotExists(transaction):
+	if log:
+	  self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
+      else:
+	if log:
+	  self.logger.debug("    |@| Getting service PID from transaction [%s]"% transaction)
+	
+	## Getting PIDs
+	#listPID = []
+	state = self.stateInfo[transaction]
+	stateKeys = state.keys()
+	for serviceName in stateKeys:
+	  if 'context' != serviceName:
+	    listPID.append(state[serviceName]['pid'])
+	#conf = listPID
+      return listPID
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
