@@ -53,6 +53,11 @@ class ContextGroup:
     try:
       topic, json_msg 	= rec_msg.split("@@@")
       topic 		= topic.strip()
+      
+      if len(json_msg)<1:
+	self.logger.debug("Error: Empty message received")
+	return
+	
       json_msg 		= json_msg.strip()
       msg 		= json.loads(json_msg)
       msgKeys 		= msg.keys()
