@@ -43,6 +43,7 @@ class PacketHandler(threading.Thread):
       self.filter	= None
       self.started	= False
       self.db_record	= Queue()
+      self.onStart	= True
       
       # Configurable items
       self.db_watermark	= 2
@@ -53,10 +54,17 @@ class PacketHandler(threading.Thread):
 	  self.interface = value
 	elif "filter" == key:
 	  self.filter = value
+	elif "onStart" == key:
+	  self.onStart = value
 
       # Starting action thread
-      self.start()
-            
+      if self.onStart:
+	self.logger.debug("  + Process is set to start from the beginning")
+	self.start()
+      else:
+	## Setting item started for reporting to device action
+	self.started	= True
+
       ## Joining thread
       self.logger.debug( "  Joining thread...")
       self.join(1)
