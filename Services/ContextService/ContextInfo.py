@@ -211,13 +211,18 @@ class ContextInfo:
     ''' Returns content of a services ID, otherwise empty dictionary'''
     ## Getting a list of available services from context information
     serviceData = {}
-    if self.TransactionExists(transaction):
-      ctxtServices = self.stateInfo[transaction]
+    ## Search for transaction data
+    if not self.TransactionExists(transaction):
+      self.logger.debug("  Transaction [%s] found in context"% transaction)
+      return serviceData
       
-      ## Looking for existing services
-      lServices = ctxtServices.keys()
-      if serviceID in lServices:
-	serviceData = ctxtServices[serviceID]
+    self.logger.debug("  Transaction [%s] found in context"% transaction)
+    ctxtServices = self.stateInfo[transaction]
+    
+    ## Looking for existing services
+    lServices = ctxtServices.keys()
+    if serviceID in lServices:
+      serviceData = ctxtServices[serviceID]
     return serviceData
 
   def SetTaskStart(self, transaction, serviceId):
