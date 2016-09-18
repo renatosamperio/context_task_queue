@@ -375,18 +375,20 @@ class ContextGroup:
     try:
       ## Preparing message for stopping each of the available service
       serviceDetails = self.contextInfo.GetServiceData(transaction, service_id)
+      serviceDetailsKeys = serviceDetails.keys()
       
-      msg = serviceDetails['task']
-      msg['Task']['message']['header']['action'] = 'stop'
+      if 'task' in serviceDetailsKeys:
+	msg = serviceDetails['task']
+	msg['Task']['message']['header']['action'] = 'stop'
 
-      ## Preparing message for stopping services
-      json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
-      msg = "%s @@@ %s" % ("process", json_msg)
+	## Preparing message for stopping services
+	json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
+	msg = "%s @@@ %s" % ("process", json_msg)
 
-      ## Sending message for each task in services
-      self.logger.debug( "  Stopping service [%s]..."%(service_id))
-      self.serialize(msg)
-      time.sleep(0.5)
+	## Sending message for each task in services
+	self.logger.debug( "  Stopping service [%s]..."%(service_id))
+	self.serialize(msg)
+	time.sleep(0.5)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
