@@ -308,12 +308,27 @@ class ContextGroup:
       message		= task['Task']['message']
       msg_conf		= message["content"]["configuration"]
       msg_header	= message["header"]
-      self.logger.debug("==> Starting task service [%s]"%(taskId))
+      serviceName 	= msg_header['service_name']
+      args 		= {}
       
-      if not(taskType == 'on_start' or taskType != 'start_now'):
+      args.update({'topic': taskTopic})
+      args.update({'transaction': transaction})
+      args.update({'backend': backend})
+      args.update({'frontend': frontend})
+      
+      ## TODO: Before committing this change, test with coreography
+      self.logger.debug("==> Starting task service [%s]"%(taskId))
+      if (taskType != 'on_start' and taskType != 'start_now'):
 	self.logger.debug("==> Task [%s] not required to start yet"%(taskId))
 	return
       
+      ## Preparing action task if it is a process monitor
+      serviceName 	= msg_header['service_name']
+      self.logger.debug("==> Preparing action task [%s]"%(taskInstance))
+      if serviceName == 'monitor':
+	self.logger.debug("     [%s]: Adding context info objecto to arguments"%(serviceName))
+	args.update({'contextInfo': self.contextInfo})
+
       ## Getting instance if it should be started only
       taskStrategy, taskObj = self.GetIntance(taskInstance)
       
@@ -329,26 +344,16 @@ class ContextGroup:
       # Starting service and wait give time for connection
       if taskStrategy is not None:
 	try:
+	  ## Starting threaded services
 	  self.logger.debug("==> [%s] Creating worker for [%s] of type [%s]"%
 		      (taskId, taskInstance, serviceType))
+	  args.update({'strategy': taskStrategy})
+	  #args.update({'taskAction': taskObj})
 	  
-	  ## Starting threaded services
 	  if serviceType == 'Process':
-	    tService = MultiProcessTasks(self.counter, 
-					      frontend	=frontend, 
-					      backend	=backend, 
-					      strategy	=taskStrategy,
-					      topic	=taskTopic,
-					      transaction	=transaction,
-					      taskAction=taskObj)
+	    tService = MultiProcessTasks(self.counter, **args)
 	  elif serviceType == 'Thread':
-	    tService = Process(self.counter, 
-				    frontend	=frontend, 
-				    backend	=backend, 
-				    strategy	=taskStrategy,
-				    topic		=taskTopic,
-				    transaction	=transaction,
-					      taskAction=taskObj)
+	    tService = ThreadTasks(self.counter,**args)
 	  time.sleep(0.75)
 	    
 	  ## Generates a task space in context state with empty PID
@@ -592,7 +597,6 @@ class ContextGroup:
 	
       ## Checking if service is required
       if "service" in configuration.keys():
-	
 	## Validating transaction
 	if self.contextInfo.TransactionNotExists(transaction):
 	  self.logger.debug("  Transaction [%s] does not exists" %(transaction))
@@ -646,4 +650,4 @@ class ContextGroup:
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-    
+
