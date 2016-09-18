@@ -127,7 +127,7 @@ class PacketHandler(threading.Thread):
     self.logger.debug("  Stopping monitoring thread...")
     self.tStop.set()
     time.sleep(0.5)
-    
+  
     self.logger.debug("  Stopping packet capture...")
     if self.tStop.isSet() and self.cap is not None:
       self.cap.close()
@@ -137,6 +137,9 @@ class PacketHandler(threading.Thread):
 	self.logger.debug( "  Stopping the thread and wait for it to end")
 	threading.Thread.join(self, 1)  
       self.logger.debug( "  Thread [%d] stopped"%self.tid)
+      
+    ## Unsetting started flag
+    self.started	= False
 
   def FilterCapture(self, pkt):
     '''Function defined in child class'''
