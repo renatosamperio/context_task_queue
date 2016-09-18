@@ -91,14 +91,9 @@ class Service$ServiceType(ServiceHandler):
       # Creating service object and notify
       deviceAction = $TaskFile.$TaskClass(**args)
       time.sleep(1)
-      result="failure"
       if deviceAction.hasStarted():
 	result="success"
-	
-      # Notifying if task was created
-      tid = Utilities.GetPID()
-      self.notify("started", result, items={'pid':tid})
-      
+
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     finally:
