@@ -119,7 +119,7 @@ class TaskedService(object):
         # Running service action
         #   NOTE: This action could block message pulling, it should be used as
         #	  preparation task before subscribing for messages
-        if(self.action):
+        if(self.action is not None):
             self.action.execute(self)
         else:
             raise UnboundLocalError('Exception raised, no execute action supplied to Service!')
