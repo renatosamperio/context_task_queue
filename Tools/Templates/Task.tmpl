@@ -32,14 +32,11 @@ class $TaskClass(threading.Thread):
       
       ## Adding local variables
       self.service	= None
-      self.value	= None
       self.onStart	= True
 
       # Generating instance of strategy
       for key, value in kwargs.iteritems():
-	if "value" == key:
-	  self.value = value
-	elif "service" == key:
+	if "service" == key:
 	  self.service = value
 	elif "onStart" == key:
 	  self.onStart = value
