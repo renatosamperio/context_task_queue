@@ -3,9 +3,7 @@ This package is for organising and monitoring sets of transactional processes. T
 
 In the scope of this module, each process is called **Task Service** as it is managed as a Unix-based service (_e. g. start/stop/restarted_) and performs a very specific and simple task (or action). Similarly, a task service has a life and usage that is monitored and represented in a context. Therefore, a context has allocated and controls a set of task services.
 
-![ContextSample](https://github.com/renatosamperio/context_task_queue/blob/master/doc/ContextSample.png "Sample of context processes"){ 
-  width:  50%; 
-}
+![ContextSample](https://github.com/renatosamperio/context_task_queue/blob/master/doc/ContextSample.png "Sample of context processes")
 
 
 ## Definitions
