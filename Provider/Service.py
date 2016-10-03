@@ -9,6 +9,7 @@ import time
 import random
 import ctypes
 import json
+import psutil
 
 from zmq.devices import ProcessDevice
 
@@ -22,6 +23,30 @@ class TaskedService(object):
       A service is an interface for executing self contained
       programs within different logic
     '''
+  
+    ## Process state variables
+    STOPPED_STATUS = [
+			  psutil.STATUS_IDLE, 
+			  psutil.STATUS_STOPPED,
+			  #psutil.STATUS_SUSPENDED,
+			  psutil.STATUS_WAITING
+			  ]
+    
+    FAILED_STATUS = [
+			  psutil.STATUS_DEAD,
+			  psutil.STATUS_ZOMBIE
+			  ]
+
+    BUSY_STATUS = [psutil.STATUS_DISK_SLEEP, 
+			    psutil.STATUS_LOCKED,
+			    psutil.STATUS_TRACING_STOP, 
+			    #psutil.STATUS_WAKE_KILL
+			    ]
+
+    STARTED_STATUS = [psutil.STATUS_WAKING, 
+		      psutil.STATUS_RUNNING,
+		      psutil.STATUS_SLEEPING]
+      
     def __init__(self, threadID, **kwargs):
       ''' '''
       try:
