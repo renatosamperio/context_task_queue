@@ -129,6 +129,63 @@ class TaskedService(object):
       self.logger.debug("[%s] Endpoints had been set" % self.threadID)
       return socket, poller
 
+    def is_process_running(self, proc_data):
+      ''' Identifies non-running states in current and children processses'''
+      try: 
+  
+	def ReduceProcessStatus(status):
+	  '''' Reduces all process status into four stages'''
+	  is_working = ''
+	  try: 
+	    ## Checking if process status matches any of non working states
+	    if status in self.STOPPED_STATUS:
+	      self.logger.debug(' ')
+	      is_working = 'stopped'
+	      
+	    ## Checking if process status matches any of non working states
+	    elif status in self.FAILED_STATUS:
+	      self.logger.debug(' ')
+	      is_working = 'failed'
+	      
+	    ## Checking if process status matches any of working states
+	    elif status in self.STARTED_STATUS:
+	      is_working = 'started'
+	    
+	    ## Checking if process status matches any of special cases
+	    elif status in self.BUSY_STATUS:
+	      is_working = 'busy'
+	    
+	    ## Checking if process status does NOT match any status
+	    else:
+	      is_working = 'unkown'
+	    return is_working
+	  except Exception as inst:
+	    Utilities.ParseException(inst, logger=self.logger)
+	
+	## Getting main process state
+	has_failed = False
+	main_state = ReduceProcessStatus(proc_data['status'])
+	
+	## Reporting parent state description and only failing children
+	state = {"ppid":self.tid, "status":proc_data['status'], "children":[]}
+	
+	if main_state != 'started':
+	  self.logger.debug('  Process [%d] is [%s]'%(self.tid, main_state))
+	  has_failed = True
+	  
+	## Getting children state
+	for child in proc_data['children']:
+	  child_state = ReduceProcessStatus(child['status'])
+	  if child_state != 'started':
+	    state["children"].append({"pid":child['pid'], "status":child['status']})
+	    self.logger.debug('    Child [%d] of [%d] is [%s]'%
+		       (child['pid'], self.tid, child_state))
+	    has_failed = True
+
+	return has_failed, state
+      except Exception as inst:
+	Utilities.ParseException(inst, logger=self.logger)
+
     def run(self):
       '''
       An action is a self contained program with
