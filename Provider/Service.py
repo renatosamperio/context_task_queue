@@ -167,6 +167,16 @@ class TaskedService(object):
 
 	  if (self.check_in_time - time.time())<0:
 	    process_memory = Utilities.MemoryUsage(self.tid, log=self.logger)
+	    
+	    ## Getting process state and notifying if something is wrong
+	    has_failed, state = self.is_process_running(process_memory)
+	    if has_failed:
+	      self.logger.debug("[%s] Notifying failed state for process with PID[%d]"%
+				(self.threadID, self.tid))
+	      ## TODO: Report why is it failing!
+	      self.action.notify("failed", 'success', items={'pid':self.tid})
+	
+	    ## Logging simplified process monitoring information
 	    self.logger.debug('[%s] Total process memory [%s, %d] is using (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%) in %.2fms'%
 		      (self.threadID, self.action.service_id, self.tid, 
 		      process_memory['total']['vms'], process_memory['total']['vms'], 
