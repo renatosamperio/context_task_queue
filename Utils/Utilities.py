@@ -33,7 +33,9 @@ def MemoryUsage(pid, log=None, memMap=False, openFiles=False, openConn=False):
     
     ## Getting process memory (RSS, VMS and %)
     mem_info = process.get_memory_info()
-    mem = {'rss': mem_info[0] / float(2 ** 20)}
+    status = process.status()
+    mem = {'status': status}
+    mem.update({'rss': mem_info[0] / float(2 ** 20)})
     mem.update({'vms': mem_info[1] / float(2 ** 20)})
     mem.update({'percent':process.memory_percent()})
     mem.update({'children':[]})
@@ -79,7 +81,9 @@ def MemoryUsage(pid, log=None, memMap=False, openFiles=False, openConn=False):
       ##   process object. May not be useful
       data = psutil.Process(child.pid)
       childMem = data.get_memory_info()
-      childData = {'pid':data.pid, 'create_time':data.create_time(),
+      child_status = data.status()
+      
+      childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
 		    'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
 		    'percent':data.memory_percent()}
       mem['children'].append(childData)
@@ -93,7 +97,8 @@ def MemoryUsage(pid, log=None, memMap=False, openFiles=False, openConn=False):
     for t in threads:
       data = psutil.Process(t.id)
       childMem = data.get_memory_info()
-      childData = {'pid':data.pid, 'create_time':data.create_time(),
+      child_status = data.status()
+      childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
 		    'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
 		    'percent':data.memory_percent()}
       mem['children'].append(childData)
