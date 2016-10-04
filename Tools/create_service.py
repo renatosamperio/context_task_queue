@@ -98,7 +98,6 @@ class AutoCode(object):
     self.HomePath	= None
     self.ServiceType	= None
     self.TaskFile	= None
-    self.TaskFile	= None
     self.TaskClass	= None
     self.TaskDescription= None
     self.ServiceName	= None
@@ -117,7 +116,7 @@ class AutoCode(object):
     
     ## Service generation stub variables
     self.ServiceType	= options['task_service']
-    self.TaskFile	= options['task_file']
+    self.TaskFile	= options['task_service']
     self.TaskClass	= options['task_class']
     self.TaskDescription= options['task_desc']
     
@@ -392,7 +391,6 @@ sUsage =  "usage:\n"\
 	  "\t\t--service_path='/abs/path/unix/style' \n"\
 	  "\t\t--home_path='/abs/path/unix/style' \n"\
 	  "\t\t--task_service='instance_type' \n"\
-	  "\t\t--task_file='task_file_name \n" \
 	  "\t\t--task_class='task_class_name' \n"\
 	  "\t\t--service_name='service_name' \n"\
 	  "\t\t--task_desc='task_description' \n"\
@@ -426,13 +424,6 @@ if __name__ == '__main__':
 		      default=None,
 		      help="Service instance is the type of created service as defined "
 		      "in task service parameters in the configuration file")
-    contextOpts.add_option('--task_file', 
-		      metavar="TASK_FILE", 
-		      default=None,
-		      help="Task file name is for defining specific operations from "
-		      "task class. It will be imported from created directory and "
-		      "used to instance a task class in task service parameters in "
-		      "the configuration file")
     contextOpts.add_option('--task_class', 
 		      metavar="TASK_CLASS", 
 		      default=None,
@@ -534,11 +525,7 @@ if __name__ == '__main__':
       if options.task_service is None:
 	parser.error("Missing required option: task_service")
 	parser.print_help()
-	
-      if options.task_file is None:
-	parser.error("Missing required option: task_file")
-	parser.print_help()
-	
+		
       if options.task_class is None:
 	parser.error("Missing required option: task_class")
 	parser.print_help()
