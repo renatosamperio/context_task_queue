@@ -116,8 +116,12 @@ def GetTask(configuration, options):
   header['service_transaction']	= options.transaction
   fileTasks			= configuration['TaskService']
   options.topic 		= 'context'
+  serviceTask 			= {}
 
-  serviceTask = {}
+  ## If configuration file has only one task it will not be a list
+  if not isinstance(fileTasks, list):
+    fileTasks = [fileTasks]
+  
   ## Preparing task configuration message
   taskConfMsg = {
       'content': 
@@ -146,7 +150,7 @@ def GetTask(configuration, options):
 	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
 	return taskConfMsg
     
-    print "- Task not found in configuration file..."
+    print "- Task ID not found in configuration file..."
     sys.exit(0)
     return
 
