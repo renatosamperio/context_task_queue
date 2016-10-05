@@ -41,6 +41,10 @@ class Service$ServiceType(ServiceHandler):
 	return False
       
       result = (isForDevice and isRightTransaction)
+      if result:
+	self.logger.debug("   Validation [PASSED]")
+      else:
+	self.logger.debug("   Validation [FAILED]")
       return result
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -90,7 +94,6 @@ class Service$ServiceType(ServiceHandler):
 	
       # Creating service object and notify
       deviceAction = $TaskFile.$TaskClass(**args)
-      time.sleep(1)
       if deviceAction.hasStarted():
 	result="success"
 
