@@ -6,6 +6,7 @@ import ctypes
 import sys, os
 import string
 import random
+import pycurl
 import logging
 import logging.handlers
 
@@ -15,7 +16,54 @@ LOG_FILENAME	= 'context_provider.log'
 ''' Base name for logger'''
 LOG_NAME	= 'ContextProvider'
 
+def GetUnicode(line):
+  if isinstance(line, unicode) == False:
+    line = unicode(line, 'utf-8')
+  return u''.join(line).encode('utf-8').strip()
+
+def GetHTML(url_):
+  ''' '''
+  try:
+    buffer = StringIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, url_)
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+    c.close()
+
+    body = buffer.getvalue()
+    return body.decode('utf8')
+  except Exception as inst:
+    ParseException(inst)
+
+def FindChilden(pid, logger=None):
+  try:
   
+    ## Getting process information
+    process = psutil.Process(pid)
+    
+    children = process.children()
+    if logger:
+      logger.debug("   Found [%d] children processes"%(len(children)))    
+      for child in children:
+	state = "alive" if child.is_alive() else "dead"
+	logger.debug("   Found process with PID [%d] is [%s]"%(child.pid, state))  
+      
+    threads = process.threads()
+    if logger:
+      logger.debug("   Found [%d] threads processes"%(len(threads))) 
+      for t in threads:
+	data = psutil.Process(t.id)
+	#print "====>", len(process.threads())
+	#print "===>", t.__dict__
+	#print "===>", t
+	#print "===>", type(t)
+	status = data.status()
+	logger.debug("     Thread with PID [%d] is [%s]"%(t.id, status))
+      
+  except Exception as inst:
+    ParseException(inst, logger=logger)
+    
 def GetHumanReadable(size,precision=2):
     suffixes=['B','KB','MB','GB','TB']
     suffixIndex = 0
@@ -161,3 +209,9 @@ class TaskError(RuntimeError):
    def __init__(self, arg, name):
     self.args = arg
     self.name = name
+
+class HTMLParseException(Exception):
+  def __init__(self, transition, state):
+    self.value = "transition [%s] failed in state [%s]"%(transition, state)
+  def __str__(self):
+    return repr(self.value)
