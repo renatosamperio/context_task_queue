@@ -29,7 +29,6 @@ class PacketHandler(threading.Thread):
     
     try:
       ''' # Initialising class variables '''
-      #signal.signal(signal.SIGINT, self.signal_handler)
       component		= self.__class__.__name__
       self.logger	= Utilities.GetLogger(component)
       
@@ -120,12 +119,11 @@ class PacketHandler(threading.Thread):
       if self.cap is not None:
 	## Calling filtering function from child class
 	self.cap.apply_on_packets(self.FilterCapture)
+      
+      self.logger.debug("Closing packet capturer")
+      self.close()
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-  
-  def signal_handler(self, signum, frame):
-    '''Activating INT signal '''
-    self.close()
     
   def close(self):
     '''Closing capture service'''
