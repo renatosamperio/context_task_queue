@@ -181,9 +181,10 @@ def message(options):
   # Settting up transaction
   if options.transaction is not None:
     ''' '''
-    if options.transaction == '':
+    if len(options.transaction) < 1:
       transactionID = IdGenerator(size=20)
       header["service_transaction"] = transactionID
+      options.transaction = transactionID
     else:
       header["service_transaction"] = options.transaction
 	
