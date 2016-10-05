@@ -96,11 +96,8 @@ def main(filename):
 			  strategy	=ContextGroup,
 			  topic		='context')
     threads.append(s1)
-    
     time.sleep(0.5)
-    #if s1.isDevice:
-      #threads.append(s1.forwarder)
-    
+
     # Looping service provider
     threadSize = len(threads)
     while keepAlive:
@@ -110,7 +107,6 @@ def main(filename):
 	    logger.debug("Joining thread %d..."%i)
 	    threads[i].join(1)
 	    joined += 1
-      #time.sleep()
       else:
 	# Doing nothing while other threads do their work
 	time.sleep(1)
