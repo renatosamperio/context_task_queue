@@ -86,7 +86,7 @@ class $TaskClass(threading.Thread):
       # ...
       
       # Stop thread and give some time to do whatever it has to do
-      self.logger.debug("  Stopping network monitoring thread...")
+      self.logger.debug("  Stopping task thread...")
       self.tStop.set()
       time.sleep(0.75)
       
