@@ -277,12 +277,15 @@ class TaskedService(object):
 
     def stop(self):
       ''' '''
-      if(self.action):
-	self.logger.debug("  Stopping service remotely with PID [%s]..."%self.tid)
-	self.action.stop_all_msg()
-	
-      self.logger.debug( "  Clearing thread event")
-      self.tStop.clear()
+      try:
+	if(self.action):
+	  self.logger.debug(" Stopping service ...")
+	  self.action.stop_all_msg()
+	  
+	self.logger.debug( " Clearing thread event")
+	self.tStop.clear()
+      except Exception as inst:
+	Utilities.ParseException(inst, logger=self.logger)
       
     def execute(self):
       ''' '''
