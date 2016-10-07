@@ -36,6 +36,7 @@ class ContextGroup:
     self.contextInfo	= ContextInfo()
     self.contextMonitor	= ContextMonitor()
     self.counter	= 1
+    self.lThreads	= []
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
@@ -198,14 +199,13 @@ class ContextGroup:
       self.logger.debug("    Sending message of [%s] bytes" % len(msg))
       utfEncodedMsg = msg.encode('utf-8').strip()
       socket.send(utfEncodedMsg)
-      time.sleep(0.5)
       socket.close()
       self.logger.debug("    Closing socket: %s"%str(socket.closed))
       
       self.logger.debug("    Destroying context for publisher")
       context.destroy()
       self.logger.debug("    Closing context: %s"%str(context.closed))
-      time.sleep(0.5)
+      time.sleep(0.1)
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -354,7 +354,11 @@ class ContextGroup:
 	    tService = MultiProcessTasks(self.counter, **args)
 	  elif serviceType == 'Thread':
 	    tService = ThreadTasks(self.counter,**args)
-	  time.sleep(0.75)
+	  time.sleep(0.1)
+	  
+	  self.logger.debug("==> [%s] Adding process [%s] for contexst to join"%
+		      (taskId, taskInstance))
+	  self.lThreads.append(tService)
 	    
 	  ## Generates a task space in context state with empty PID
 	  ##	It is later used to filter whether the task is started
@@ -388,7 +392,6 @@ class ContextGroup:
 	## Sending message for each task in services
 	self.logger.debug( "  Stopping service [%s]..."%(service_id))
 	self.serialize(msg)
-	time.sleep(0.5)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
@@ -409,7 +412,7 @@ class ContextGroup:
 	
 	self.logger.debug( "Stopping services...")
 	self.stop(msg=msg)
-	time.sleep(0.5)
+	time.sleep(0.1)
 
   def request(self, msg):
     ''' Requests information about context state'''
