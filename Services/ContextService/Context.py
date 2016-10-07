@@ -88,7 +88,8 @@ class ContextGroup:
 	  serviceName	= header['service_name']
 	  serviceAction	= header['action']
 	    
-	  #TODO: make a separate thread for starting or stopping a context
+	  ## Managing thread actions start/stop
+	  ##   TODO: Add restart action
 	  if serviceAction == 'stop':
 	    if serviceName == 'all':
 	      self.stop(msg=msg)
@@ -212,9 +213,7 @@ class ContextGroup:
 
   def execute(self, service):
     ''' '''
-    self.logger.debug("  Calling execute action in subtask [%s]" % service.threadID)
-    # Giving some time for connection
-    time.sleep(1)
+    self.logger.debug("  Starting context functionlity")
     
   def stop(self, msg=None):
     ''' This method is called for stopping as a service action'''
@@ -330,6 +329,7 @@ class ContextGroup:
 	args.update({'contextInfo': self.contextInfo})
 
       ## Getting instance if it should be started only
+      self.logger.debug("==> [%s] Getting instance of action [%s]"%(taskId, taskInstance))
       taskStrategy, taskObj = self.GetIntance(taskInstance)
       
       ## TODO: This is a local checking up, should not be here!!!
@@ -341,7 +341,7 @@ class ContextGroup:
       if 'service_id' not in msg_header.keys():
 	task['Task']['message']["header"].update({'service_id' : taskId})
       
-      # Starting service and wait give time for connection
+      ## Create task with configured strategy
       if taskStrategy is not None:
 	try:
 	  ## Starting threaded services
@@ -373,7 +373,7 @@ class ContextGroup:
 	  self.logger.debug("Message not send in backend endpoint: [%s]"%self.backend)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-    
+
   def StopService(self, transaction, service_id=''):
     '''Message for stopping group of threads with the same transaction'''
     try:
@@ -400,7 +400,6 @@ class ContextGroup:
     if len(self.threads)>0:
       threadKeys = self.threads.keys()
       for key in threadKeys:
-      
 	msg = {
 	  "header": {
 	    "action": "stop",
@@ -556,6 +555,8 @@ class ContextGroup:
 	## Checking if context ID exists
 	contextId = msg['header']['service_id']
 	if not self.contextInfo.ContextExists(transaction, contextId):
+	  self.logger.debug("  Validation failed, context not found [%s]" %(contextId))
+	  #print "===> False: 6"
 	  return False
 	
 	#contextId = self.contextInfo.GetContextID(transaction)
