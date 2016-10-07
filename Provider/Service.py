@@ -222,37 +222,56 @@ class TaskedService(object):
 	  ## TODO: Publish memory size with process information (name, PID)
 	  ## TODO: This has to be done in a separate class
 
+	  ## Look for new threads to add
+	  start_context_timer = time.time()
+	  ##   Check if variable exists in service
+	  value = [value for key, value in self.action.__dict__.items() if 'lThreads' == key]
+	  if len(value)>0 and len(self.action.lThreads):
+	    for proc in self.action.lThreads:
+	      self.logger.debug("["+str(self.tid)+"] @ Joining process [%d]"%proc.pid)
+	      proc.join(0.0001)
+	    
+	    ## Clean up list of threads after adding threads
+	    self.action.lThreads = []
+	  context_timer = time.time() - start_context_timer
+	  
+	  ## Log processing time if it was too long!
+	  if context_timer > 0.00025:
+	    self.logger.debug("["+str(self.tid)+"] @ Context operations done in [%8.4f]"% context_timer)
+
+	  ## Check if it is time for looking into memory usage state
 	  if (self.check_in_time - time.time())<0:
 	    process_memory = Utilities.MemoryUsage(self.tid, log=self.logger)
 	    
-	    ## Getting process state and notifying if something is wrong
+	    ## Getting current process state 
 	    has_failed, state = self.is_process_running(process_memory)
+	    
+	    ## If process state is failed and it is because there are zombie
+	    ##    processes, remove them and notify
 	    if has_failed:
-	      self.logger.debug("[%s] Notifying failed state for process with PID[%d]"%
-				(self.threadID, self.tid))
+	      
+	      ## Cleaning up zombie processes
+	      self.logger.debug("[%s] Cleaning up zombie processes"%
+				(self.threadID))
+	      active = multiprocessing.active_children()
+	      self.logger.debug("[%s] Notifying failed state [%s] for process with PID [%d]"%
+				(self.threadID, state, self.tid))
+
+	      ## Notifying failure
 	      ## TODO: Report why is it failing!
 	      self.action.notify("failed", 'success', items={'pid':self.tid})
-	
+
 	    ## Logging simplified process monitoring information
 	    self.logger.debug('[%s] Total process memory [%s, %d] is using (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%) in %.2fms'%
 		      (self.threadID, self.action.service_id, self.tid, 
 		      process_memory['total']['vms'], process_memory['total']['vms'], 
 		      process_memory['total']['percent'], process_memory['elapsed']*1000))
 	    self.check_in_time = time.time()+ self.time_out_alarm
-
-        # Destroying IPC connections and mark process as stopped
-        self.logger.debug("[%s] Stopping task with PID [%d]"%(self.threadID, self.tid))
-        self.action.stop()
-	
-	# Sending last stop notification before closing IPC connection
-        self.logger.debug("[%s] Notifying stopping state for process with PID[%d]"%
-			  (self.threadID, self.tid))
-	self.action.notify("stopped", 'success', items={'pid':self.tid})
 	
         # Destroying IPC processes
         self.logger.debug("[%s] Destroying zmq context"%(self.threadID))
         self.context.destroy()
-        time.sleep(0.35)
+        self.tStop.wait(0.1)
       except KeyboardInterrupt:
 	self.logger.debug("Ignoring keyboard interrupt")
 
