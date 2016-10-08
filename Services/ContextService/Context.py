@@ -37,7 +37,10 @@ class ContextGroup:
     self.contextInfo	= ContextInfo()
     self.contextMonitor	= ContextMonitor()
     self.counter	= 1
+    
+    ## Variables for thread management
     self.lThreads	= []
+    self.lock 		= multiprocessing.Lock()
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
@@ -358,9 +361,9 @@ class ContextGroup:
 	    tService = ThreadTasks(self.counter,**args)
 	  time.sleep(0.1)
 	  
-	  self.logger.debug("==> [%s] Adding process [%s] for contexst to join"%
+	  self.logger.debug("==> [%s] Adding process [%s] for joining context"%
 		      (taskId, taskInstance))
-	  self.lThreads.append(tService)
+	  self.AddJoiner(tService, taskId)
 	    
 	  ## Generates a task space in context state with empty PID
 	  ##	It is later used to filter whether the task is started
@@ -658,4 +661,24 @@ class ContextGroup:
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+      
+  def JoinToContext(self): 
+    '''Joins processes available in list of threads'''
+    try:
+      with self.lock:
+	while len(self.lThreads)>0:
+	  proc = self.lThreads.pop(0)
+	  self.logger.debug("  @ Joining process [%d]"%proc.pid)
+	  proc.join(0.0001)
+	  
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
 
+  def AddJoiner(self, tService, tName):
+    ''' '''
+    try:
+      with self.lock:
+	self.logger.debug("  -> Adding [%s] process/thread"%tName)
+	self.lThreads.append(tService)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
