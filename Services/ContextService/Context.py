@@ -6,6 +6,7 @@ import zmq
 import threading
 import pprint
 import imp
+import multiprocessing
 
 from threading import Thread
 from collections import deque
@@ -348,6 +349,7 @@ class ContextGroup:
 	  self.logger.debug("==> [%s] Creating worker for [%s] of type [%s]"%
 		      (taskId, taskInstance, serviceType))
 	  args.update({'strategy': taskStrategy})
+	  args.update({'context': self})
 	  #args.update({'taskAction': taskObj})
 	  
 	  if serviceType == 'Process':

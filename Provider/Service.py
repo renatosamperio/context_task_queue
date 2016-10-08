@@ -64,6 +64,7 @@ class TaskedService(object):
 	self.action	= None
 	self.tid      	= None
 	self.transaction= None
+	self.context	= None
 	
 	## Variables for process monitor
 	self.contextInfo= None
@@ -74,6 +75,8 @@ class TaskedService(object):
 	for key, value in kwargs.iteritems():
 	  if "strategy" == key:
 	    self.action = value(**kwargs)
+	  elif "context" == key:
+	    self.context = value
 	  elif "topic" == key:
 	    self.topic = value
 	  elif "transaction" == key:
@@ -224,20 +227,16 @@ class TaskedService(object):
 
 	  ## Look for new threads to add
 	  start_context_timer = time.time()
-	  ##   Check if variable exists in service
-	  value = [value for key, value in self.action.__dict__.items() if 'lThreads' == key]
-	  if len(value)>0 and len(self.action.lThreads):
-	    for proc in self.action.lThreads:
-	      self.logger.debug("["+str(self.tid)+"] @ Joining process [%d]"%proc.pid)
-	      proc.join(0.0001)
-	    
-	    ## Clean up list of threads after adding threads
-	    self.action.lThreads = []
+	  
+	  ## Joining process into context if:
+	  ##   1) The action is a context
+	  ##   2) There are elements to join
+	  self.action.JoinToContext()
 	  context_timer = time.time() - start_context_timer
 	  
 	  ## Log processing time if it was too long!
 	  if context_timer > 0.00025:
-	    self.logger.debug("["+str(self.tid)+"] @ Context operations done in [%8.4f]"% context_timer)
+	    self.logger.debug("  @ Context operations done in [%.4f]"% context_timer)
 
 	  ## Check if it is time for looking into memory usage state
 	  if (self.check_in_time - time.time())<0:
@@ -290,6 +289,13 @@ class TaskedService(object):
     def execute(self):
       ''' '''
       self.logger.debug('Caling execute in thread [%d]'%self.tid)
+
+    def AddContext(self, tService, tName):
+      ''' '''
+      if self.context is None:
+	self.logger.debug("[%s] Context is not defined" % self.threadID)
+	return
+      self.context.AddJoiner(tService, tName)
 
 class ThreadTasks(threading.Thread, TaskedService):
   def __init__(self, threadID, **kwargs):
