@@ -60,7 +60,7 @@ class TaskedService(object):
 	self.frontend	= None
 	self.backend	= None
 	self.topic     	= None
-	self.context  	= None
+	self.socketCtxt = None
 	self.action	= None
 	self.tid      	= None
 	self.transaction= None
@@ -107,12 +107,12 @@ class TaskedService(object):
       if len(self.frontend) > 0:
         self.logger.debug("[%s] Creating Backend ZMQ endpoint %s"%
 			  (self.threadID, self.frontend))
-        self.context	= zmq.Context()
+        self.socketCtxt	= zmq.Context()
 
         # Preparing type of socket communication from arguments
         self.logger.debug("[%s] Preparing a pollin subscriber" % self.threadID)
         if len(self.frontend)>0	:
-	  socket = self.context.socket(zmq.SUB)
+	  socket = self.socketCtxt.socket(zmq.SUB)
 	  socket.setsockopt(zmq.SUBSCRIBE, "")
 	  socket.connect(self.frontend)
 	  time.sleep(0.1)
@@ -270,7 +270,7 @@ class TaskedService(object):
 	
         # Destroying IPC processes
         self.logger.debug("[%s] Destroying zmq context"%(self.threadID))
-        self.context.destroy()
+        self.socketCtxt.destroy()
         self.tStop.wait(0.1)
       except KeyboardInterrupt:
 	self.logger.debug("Ignoring keyboard interrupt")
