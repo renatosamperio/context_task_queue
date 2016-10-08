@@ -267,3 +267,6 @@ class ServiceHandler:
       return isRightTransaction
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def JoinToContext(self): 
+    return 
