@@ -57,7 +57,7 @@ def CreateSafeFowarder(frontBind, backendBind, logger):
   return pool
 
 def main(filename):
-  myFormat = '%(asctime)s|%(name)25s|%(message)s'
+  myFormat = '%(asctime)s|%(process)6d|%(name)25s|%(message)s'
   logging.basicConfig(format=myFormat, level=logging.DEBUG)
 
   joined        = 0
