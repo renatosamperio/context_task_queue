@@ -10,6 +10,8 @@ import pycurl
 import logging
 import logging.handlers
 
+from StringIO import StringIO
+
 ''' Base name for file logger'''
 LOG_FILENAME	= 'context_provider.log'
 
