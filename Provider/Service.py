@@ -142,12 +142,10 @@ class TaskedService(object):
 	  try: 
 	    ## Checking if process status matches any of non working states
 	    if status in self.STOPPED_STATUS:
-	      self.logger.debug(' ')
 	      is_working = 'stopped'
 	      
 	    ## Checking if process status matches any of non working states
 	    elif status in self.FAILED_STATUS:
-	      self.logger.debug(' ')
 	      is_working = 'failed'
 	      
 	    ## Checking if process status matches any of working states
@@ -195,21 +193,21 @@ class TaskedService(object):
       an execute method
       '''
       try: 
-	# Creating IPC connections
+	## Creating IPC connections
         self.tid = GetPID()
         self.logger.debug('[%s] Setting PID [%d]'%(self.threadID, self.tid))
         self.socket, poller = self.set_ipc()
         self.logger.debug('[%s] Starting task endpoint service in [%d]'%(self.threadID, self.tid))
 
-        # Running service action
-        #   NOTE: This action could block message pulling, it should be used as
-        #	  preparation task before subscribing for messages
+        ## Running service action
+        ##   NOTE: This action could block message pulling, it should be used as
+        ##	  preparation task before subscribing for messages
         if(self.action is not None):
             self.action.execute(self)
         else:
             raise UnboundLocalError('Exception raised, no execute action supplied to Service!')
 
-        # Running IPC communication
+        ## Running IPC communication
         self.logger.debug('[%s] Running IPC communication on frontend'%(self.threadID))
         while self.tStop.isSet():
           socks = dict(poller.poll(REQUEST_TIMEOUT))
