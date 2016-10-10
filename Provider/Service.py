@@ -242,23 +242,27 @@ class TaskedService(object):
 	  if (self.check_in_time - time.time())<0:
 	    process_memory = Utilities.MemoryUsage(self.tid, log=self.logger)
 	    
-	    ## Getting current process state 
-	    has_failed, state = self.is_process_running(process_memory)
+	    ## Getting current service and action task states 
+	    service_has_failed, type_state = self.is_process_running(process_memory)
+	    action_is_context = self.action is not None and self.action.context is None
 	    
 	    ## If process state is failed and it is because there are zombie
 	    ##    processes, remove them and notify
-	    if has_failed:
+	    if service_has_failed:
 	      
 	      ## Cleaning up zombie processes
-	      self.logger.debug("[%s] Cleaning up zombie processes"%
-				(self.threadID))
+	      self.logger.debug("[%s] Cleaning up zombie processes"%self.threadID)
 	      active = multiprocessing.active_children()
-	      self.logger.debug("[%s] Notifying failed state [%s] for process with PID [%d]"%
-				(self.threadID, state, self.tid))
+	      
+	      ## Send failure notification if it happens in service
+	      ##   TODO: What would happen if failure occurs in context?
+	      if self.action.actionHandler is not None:
+		self.logger.debug("[%s] Notifying failed state [%s] for process with PID [%d]"%
+				  (self.threadID, type_state, self.tid))
 
-	      ## Notifying failure
-	      ## TODO: Report why is it failing!
-	      self.action.notify("failed", 'success', items={'pid':self.tid})
+		## Notifying failure
+		## TODO: Report why is it failing!
+		self.action.notify("failed", 'success', items={'pid':self.tid})
 
 	    ## Logging simplified process monitoring information
 	    self.logger.debug('[%s] Total process memory [%s, %d] is using (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%) in %.2fms'%
