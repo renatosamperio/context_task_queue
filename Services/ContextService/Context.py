@@ -41,6 +41,8 @@ class ContextGroup:
     ## Variables for thread management
     self.lThreads	= []
     self.lock 		= multiprocessing.Lock()
+    self.context	= None
+    self.actionHandler	= None
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
