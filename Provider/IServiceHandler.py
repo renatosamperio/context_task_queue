@@ -32,10 +32,11 @@ class ServiceHandler:
     self.tStop 		= threading.Event()
     self.resp_format	= {"header":{}, "content":{}}
     self.threads	= []
+    self.task		= None
 
     # Setting up response message
     self.header 	= {"service_name": "", "action": "", "service_id": ""}
-    self.content	= {"status": {"result":""}}    
+    self.content	= {"status": {"result":""}}
 
     # Generating instance of strategy
     for key, value in kwargs.iteritems():
@@ -52,6 +53,10 @@ class ServiceHandler:
   def deserialize(self, service, rec_msg):
     '''Deserialises a JSON message'''
     try:
+      if self.task is None:
+	self.logger.debug("Setting service instance locally")
+	self.task = service
+
       topic, json_msg = rec_msg.split("@@@")
       topic = topic.strip()
       json_msg = json_msg.strip()
