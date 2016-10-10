@@ -271,21 +271,29 @@ class TaskedService(object):
 		      process_memory['total']['percent'], process_memory['elapsed']*1000))
 	    self.check_in_time = time.time()+ self.time_out_alarm
 	
-        # Destroying IPC processes
+        ## Destroying IPC connections and mark process as stopped
+        self.logger.debug("[%s] Loop finished, stopping action task"%self.threadID)
+        self.action.stop()
+        
+        ## Stopping service
+        self.logger.debug("[%s] Stopping service"%self.threadID)
+        self.stop()
+        
+        ## Destroying IPC processes
         self.logger.debug("[%s] Destroying zmq context"%(self.threadID))
         self.socketCtxt.destroy()
         self.tStop.wait(0.1)
-      except KeyboardInterrupt:
-	self.logger.debug("Ignoring keyboard interrupt")
+      except Exception as inst:
+	Utilities.ParseException(inst, logger=self.logger)
 
     def stop(self):
       ''' '''
       try:
 	if(self.action):
-	  self.logger.debug(" Stopping service ...")
+	  self.logger.debug("   Stopping service ...")
 	  self.action.stop_all_msg()
 	  
-	self.logger.debug( " Clearing thread event")
+	self.logger.debug( "   Clearing thread event")
 	self.tStop.clear()
       except Exception as inst:
 	Utilities.ParseException(inst, logger=self.logger)
@@ -299,6 +307,7 @@ class TaskedService(object):
       if self.context is None:
 	self.logger.debug("[%s] Context is not defined" % self.threadID)
 	return
+      self.logger.debug("[%s] Preparing a joiner" % self.threadID)
       self.context.AddJoiner(tService, tName)
 
 class ThreadTasks(threading.Thread, TaskedService):
