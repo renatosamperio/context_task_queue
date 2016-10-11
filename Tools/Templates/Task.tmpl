@@ -43,7 +43,7 @@ class $TaskClass(threading.Thread):
 	  
       # Starting action thread
       if self.onStart:
-	self.logger.debug("  + Process is set to start from the beginning")
+	self.logger.debug("  + Process is starting immediately")
 	self.start()
       else:
 	## Setting item started for reporting to device action
@@ -61,8 +61,14 @@ class $TaskClass(threading.Thread):
   def run(self):
     '''Threaded action '''
     try:
-      # Getting thread GetPID
+      ## Setting process as started
       self.started	= True
+      
+      ## Setting thread for joining service list
+      self.logger.debug('  + Adding thread for joining context')
+      self.service.task.AddContext(self, self.component)
+      
+      # Getting thread GetPID
       self.tid		= Utilities.GetPID()
       self.logger.debug('Starting task [%s] with PID [%d]'% (self.component, self.tid))
       
