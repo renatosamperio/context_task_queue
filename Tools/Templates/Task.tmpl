@@ -91,16 +91,22 @@ class $TaskClass(threading.Thread):
       # Do additional stopping routines here
       # ...
       
-      # Stop thread and give some time to do whatever it has to do
-      self.logger.debug("  Stopping task thread...")
-      self.tStop.set()
-      time.sleep(0.75)
+      if not self.tStop.isSet():
+	# Stop thread and give some time to do whatever it has to do
+	self.logger.debug(" Stopping task thread, setting event...")
+	self.tStop.set()
+	time.sleep(0.75)
+      else:
+	self.logger.debug(" Event loop is already interrupted")
       
       # Force to stop before leaving
       if self.is_alive(): 
 	self.logger.debug( "  Stopping the thread and wait for it to end")
 	threading.Thread.join(self, 1)  
-      self.logger.debug( "  Thread [%d] stopped"%self.tid)
+      else:
+	self.logger.debug(" Thread is not alive")
+	
+      self.logger.debug( "  Thread stopped")
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
