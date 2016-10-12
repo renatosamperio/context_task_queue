@@ -253,7 +253,8 @@ class ServiceHandler:
     ''' Sends a stop notification'''
     # Sending last stop notification before closing IPC connection
     self.logger.debug("   Notifying stopping state for process")
-    self.notify("stopped", 'success', items={'pid':self.tid})
+    tid		= Utilities.GetPID()
+    self.notify("stopped", 'success', items={'pid':tid})
   
   def ControlAction(self, msg):
     ''' '''
