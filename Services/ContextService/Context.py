@@ -82,9 +82,10 @@ class ContextGroup:
 		      (header["service_id"]))
 
 	if "service_id" in header.keys() and len(header["service_id"])>0:
-	  self.logger.debug("Service ID [%s] found"%header["service_id"])
+	  self.logger.debug("Received service ID [%s]"%header["service_id"])
 	else:
 	  self.logger.debug("No service ID was provided")
+	  return
 
 	# Giving message interpreation within actions
 	if self.DeserializeAction(msg):
