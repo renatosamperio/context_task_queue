@@ -32,6 +32,7 @@ class ServiceHandler:
     self.tStop 		= threading.Event()
     self.resp_format	= {"header":{}, "content":{}}
     self.threads	= []
+    self.context	= None
     
     ## Added for being used by non-looped actions
     self.task		= None
