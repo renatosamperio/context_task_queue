@@ -15,13 +15,14 @@ class ContextInfo:
       transactionData = self.stateInfo[transaction]
       return serviceId in transactionData.keys()
     return False
-  
+
   def ContextExists(self, transaction, contextId):
     ''' Returns context configuration'''
     try:
       ## Search for transaction data
       if self.TransactionNotExists(transaction):
 	self.logger.debug("  Not getting context data from transaction [%s]"% transaction)
+	return False
       else:
 	self.logger.debug("    |@| Getting context data from transaction [%s]"% transaction)
       transactionData = self.stateInfo[transaction]
