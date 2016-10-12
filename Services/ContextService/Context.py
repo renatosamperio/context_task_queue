@@ -391,7 +391,10 @@ class ContextGroup:
       serviceDetails = self.contextInfo.GetServiceData(transaction, service_id)
       serviceDetailsKeys = serviceDetails.keys()
       
-      if 'task' in serviceDetailsKeys:
+      if 'task' not in serviceDetailsKeys:
+	self.logger.debug( "  Task key not found in context's service details...")
+	
+      else:
 	msg = serviceDetails['task']
 	msg['Task']['message']['header']['action'] = 'stop'
 
