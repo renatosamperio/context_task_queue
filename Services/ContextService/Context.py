@@ -354,8 +354,11 @@ class ContextGroup:
 	  self.logger.debug("==> [%s] Creating worker for [%s] of type [%s]"%
 		      (taskId, taskInstance, serviceType))
 	  args.update({'strategy': taskStrategy})
-	  args.update({'context': self})
 	  #args.update({'taskAction': taskObj})
+	  args.update({'context': self})
+	  
+	  ## Setting context instance in action task
+	  taskStrategy.context = self
 	  
 	  if serviceType == 'Process':
 	    tService = MultiProcessTasks(self.counter, **args)
