@@ -148,8 +148,6 @@ class ServiceHandler:
 	self.logger.debug("  Closing service handler")
 	self.actionHandler.close()	
 	self.stopped		= True
-	self.actionHandler	= None
-	self.device_action	= None
 
       elif self.actionHandler is not None:
 	self.logger.debug("Service action handler is not available")
