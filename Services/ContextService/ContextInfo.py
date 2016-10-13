@@ -112,29 +112,30 @@ class ContextInfo:
 
   def UpdateControlState(self, msg):
     '''Updates context state data structure '''
-    
-    ## Adding process state and PID in context information
-    header = msg['header']
-    action = header['action'] 
-    status = msg['content']['status']
-    result = status['result']
-    
-    ## Updating context info with new data
-    serviceId   = header['service_id']
-    transaction = header['service_transaction']
-    
-    ## Adding or removing from data structure according to reported action
-    if action == 'started' and result == 'success':
-      data = {
-		'pid'  : status['pid'],
-		'state': result
-	      }
-      self.logger.debug("  Updating context information for [%s]"%serviceId)
-      self.UpdateState( transaction, serviceId, data)
-    elif action == 'stopped' and result == 'success':
-      self.logger.debug("  Removing context information for [%s]"%serviceId)
-      self.RemoveItem(transaction, serviceId)
+    try:
+      ## Adding process state and PID in context information
+      header = msg['header']
+      action = header['action'] 
+      status = msg['content']['status']
+      result = status['result']
+      
+      ## Updating context info with new data
+      serviceId   = header['service_id']
+      transaction = header['service_transaction']
+      
+      ## Adding or removing from data structure according to reported action
+      if result == 'success':
+	data = {
+		  'pid'  : status['pid'],
+		  'state': result,
+		  'action': action
+		}
+	self.logger.debug("  Updating context information for [%s]"%serviceId)
+	self.UpdateState( transaction, serviceId, data)
 
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
   def UpdateProcessState(self, msg):
     ''' Updates context state based in process messages'''
     try:
