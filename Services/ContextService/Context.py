@@ -115,6 +115,30 @@ class ContextGroup:
 	    self.logger.debug("  - Storing service state control for task service monitoring")
 	    self.contextMonitor.StoreControl(msg)
 
+	  # Restarting service
+	  elif header['action'] == 'restart':
+	    ## First stopping the service task
+	    if serviceName == 'all':
+	      self.stop(msg=msg)
+	    else:
+	      ## Go to each task
+	      tasks = content['configuration']['TaskService']
+	      for task in tasks:
+		taskId = task['id']
+		self.logger.debug("  Stopping service [%s]"%header["service_id"])
+		self.StopService( transaction, service_id=taskId)
+	      
+	    ## Second start the service task
+	    self.logger.debug("  Starting service [%s]"%header["service_id"])
+	    self.start(msg=msg)
+	    
+	    ## Store service state control for task service monitoring
+	    self.logger.debug("  - Storing service state control for task service monitoring")
+	    self.contextMonitor.StoreControl(msg)
+	     
+	else:
+	  self.logger.debug("Warning: Message was deserialized but not validated!")
+	  
       elif topic == 'state':
 	header	= msg["header"]
 	if header['action'] == 'request':
