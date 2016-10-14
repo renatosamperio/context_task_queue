@@ -124,6 +124,22 @@ class ServiceHandler:
 	  # Restarting service
 	  elif header['action'] == 'restart':
 	    self.logger.debug("  Handler for restarting is voided in service side")
+	    
+	    ## First stopping the service task
+	    if self.stopped == False:
+	      self.logger.debug("Restarting, stop service instances")
+	      self.stop()
+	      self.logger.debug("Restarting, stop service process")
+	      service.stop()
+	    else:
+	      self.logger.debug("Restarting, service is already stopped")
+	      
+	    ## Second start the service task
+	    if self.stopped:
+	      self.logger.debug("Restarting, start service instances")
+	      self.start(msg)
+	    else:
+	      self.logger.debug("Restarting, service is already started")
       elif topic == 'control':
 	self.ControlAction(msg)
     except ValueError:
