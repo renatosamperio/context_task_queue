@@ -40,7 +40,7 @@ class PacketHandler(threading.Thread):
       self.cap		= None
       self.interface	= None
       self.filter	= None
-      self.started	= False
+      self.running	= False
       self.db_record	= Queue()
       self.onStart	= True
       
@@ -62,7 +62,7 @@ class PacketHandler(threading.Thread):
 	self.start()
       else:
 	## Setting item started for reporting to device action
-	self.started	= True
+	self.running	= True
 
       ## Joining thread
       self.logger.debug( "  Joining thread...")
@@ -110,7 +110,7 @@ class PacketHandler(threading.Thread):
     try:
       ## Marking thread as started
       self.logger.debug("Starting to capture tracks from network interface [%s]"%self.interface)
-      self.started = True
+      self.running = True
       
       ## Creating sniffer
       #self.capture_tracks_sniff(self.interface, self.filter)
@@ -130,7 +130,7 @@ class PacketHandler(threading.Thread):
     ## Stop frame capturing
     self.CloseCapturer()
     
-    self.logger.debug("  Stopping monitoring thread...")
+    self.logger.debug("  Stopping packet handling thread...")
     self.tStop.set()
     time.sleep(0.5)
   
@@ -145,7 +145,7 @@ class PacketHandler(threading.Thread):
       self.logger.debug( "  Thread [%d] stopped"%self.tid)
       
     ## Unsetting started flag
-    self.started	= False
+    self.running	= False
 
   def FilterCapture(self, pkt):
     '''Function defined in child class'''
@@ -180,4 +180,8 @@ class PacketHandler(threading.Thread):
       Utilities.ParseException(inst, logger=self.logger)
 
   def hasStarted(self):
-    return self.started and not self.tStop.isSet()
+    return self.running and not self.tStop.isSet()
+
+  def hasFinished(self):
+    ''' Reports task thread status'''
+    return not self.running and self.tStop.isSet()
