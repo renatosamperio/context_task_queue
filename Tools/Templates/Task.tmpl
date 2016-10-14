@@ -28,7 +28,7 @@ class $TaskClass(threading.Thread):
       self.tStop 	= threading.Event()
       self.threads	= []
       self.tid		= None
-      self.started	= False
+      self.running	= False
       
       ## Adding local variables
       self.service	= None
@@ -47,7 +47,7 @@ class $TaskClass(threading.Thread):
 	self.start()
       else:
 	## Setting item started for reporting to device action
-	self.started	= True
+	self.running	= True
       
       ## Adding monitor thread to the list of references
       self.threads.append(self)
@@ -56,13 +56,17 @@ class $TaskClass(threading.Thread):
 
   def hasStarted(self):
     ''' Reports task thread status'''
-    return self.started and not self.tStop.isSet()
+    return self.running and not self.tStop.isSet()
 
+  def hasFinished(self):
+    ''' Reports task thread status'''
+    return not self.running and self.tStop.isSet()
+  
   def run(self):
     '''Threaded action '''
     try:
       ## Setting process as started
-      self.started	= True
+      self.running	= True
       
       ## Setting thread for joining service list
       self.logger.debug('  + Adding thread for joining context')
@@ -79,8 +83,8 @@ class $TaskClass(threading.Thread):
 	self.tStop.wait(5)
 	
       # Ending thread routine
+      self.running = False
       self.logger.debug('Ending thread [%d]'%self.tid)
-      self.started = False
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
