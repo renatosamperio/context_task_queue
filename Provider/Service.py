@@ -274,8 +274,9 @@ class TaskedService(object):
         self.action.stop()
         
         ## Stopping service
-        self.logger.debug("[%s] Stopping service"%self.threadID)
-        self.stop()
+        if self.action.actionHandler is not None and self.action.actionHandler.hasFinished():
+	  self.logger.debug("[%s] Stopping service"%self.threadID)
+	  self.stop()
         
         ## Destroying IPC processes
         self.logger.debug("[%s] Destroying zmq context"%(self.threadID))
