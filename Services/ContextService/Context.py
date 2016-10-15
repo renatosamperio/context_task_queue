@@ -536,7 +536,18 @@ class ContextGroup:
       return None
       
   def DeserializeAction(self, msg):
-    ''' '''
+    ''' 
+    The validation for context desearilisation conisderes the following table:
+				Start	Stop	Restart
+    Transaction Exists		OK	OK	OK
+    Transaction NOT Exists	OK	FAIL	OK
+    Context ID Exists		OK	OK	OK
+    Context ID NOT Exists	OK	FAIL	OK
+    Service ID Exists		FAIL	OK	OK
+    Service ID NOT Exists	OK	FAIL	OK
+    Service STATE started	FAIL	OK	OK
+
+    '''
     try:
    
       transaction = msg['header']['service_transaction']
