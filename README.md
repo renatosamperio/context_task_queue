@@ -270,8 +270,6 @@ To generate skeleton services for multiple services, is easier to prepare a serv
       </Service>
     </MetaServiceConf>
 
-__TODO: Explain the states section:__
-
 This configuration includes information for generating skeleton code of four services. To generate the service environment execute the command:
 
     $ python Tools/create_service.py --xml_file=Conf/Services-StateMachine.xml
@@ -302,3 +300,70 @@ Then, the environment has to be loaded by the service context
 And the service has to be informed to start:
     
     $ python conf_command.py --endpoint='tcp://127.0.0.1:5557' --context_file='Conf/Context-StateMachine.xml' --service_name='context' --service_id='context001' --transaction='5HGAHZ3WPZUI71PACRPP' --action='start'
+    
+##Autonomous process states 
+Each task service has a configurable set of triggered actions for "**start**", "**stop**", "**fail**" and "**update**" states. All triggered actions are operations that could be defined as expected action for happening state. In specific, the triggered actions are for:
+
+* **start**: Automatic call of another task service ID when current service notifies a _started_ action.
+* **stop**: Automatic call of another task service ID when current service notifies a _stopped_ action.
+* **fail**: Automatic call of another task service ID when current service notifies a _failed_ action.
+* **updat**: Automatic call of another task service ID when current service notifies a _updated_ action.
+
+# Advanced components
+## Monitoring service
+The configurable actions are maintained by a monitor service which it is also included in context configuration. The default monitor service configuration is described below:
+
+      <Service>
+        <task_service>Monitor</task_service>
+        <task_file>ContextMonitor</task_file>
+        <task_class>ContextMonitor</task_class>
+        <task_desc>Monitors memory and process for context task services</task_desc>
+        <service_name>monitor</service_name>
+        <task_id>ts000</task_id>
+        <task_topic>monitor</task_topic>
+        <device_action>task_monitor</device_action>
+    
+        <entry_action>on_start</entry_action>
+        <state>
+          <trigger>on_start</trigger>
+          <action></action>
+          <state_id></state_id>
+        </state>
+        <state>
+          <trigger>on_update</trigger>
+          <action></action>
+          <state_id></state_id>
+        </state>
+        <state>
+          <trigger>on_fail</trigger>
+          <action></action>
+          <state_id></state_id>
+        </state>
+        <state>
+          <trigger>on_exit</trigger>
+          <action></action>
+          <state_id></state_id>
+        </state>
+      </Service>
+
+TODO: Explain two types of monitoring calling
+
+## Publishing context information
+The available context information can be published on the **state** topic or channel. The provided information is a JSON representation of the context information data structure. This data structure is maintained by the context and contains the available configuration, names, states and service  identifiers such as: ID, name, PID, instance name and current state action.  
+
+* **ID**: It is the given ID. It should be unique.
+* **Name**: It is a human readable name for the service task.
+* **PID**: It is the current process ID.
+* **Instance**: It is the task class name that should be the same as its module.
+* **State**: It is the last reported action.
+
+The context information is published by executing the following command:
+
+    $ python conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='request'
+ 
+That requires the following input configuration:
+
+* __endpoint__: States an IP address of server endpoint. It is used in both front and back endpoint.
+* __service_name__: Defines a service name and it identifies its service in a public process messages. It should be configured with *'state'* service name.
+* __transaction__: It looks for information related to each context has a unique transaction ID.
+* __action__: It provides the action to publish the context information. It should be configured wiht *'request'* action.
