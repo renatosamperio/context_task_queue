@@ -214,39 +214,58 @@ class ServiceHandler:
     
   def start(self, msg):
     '''Start specific service implementation'''
-    self.logger.debug("  Starting service handler")
+    self.logger.debug("    Starting service handler")
     message = msg['Task']['message']
+    reason = ''
     try:
       msgKeys = message.keys()
       
+      ## Validating process starting based on message content
       if 'header' not in msgKeys:
-	self.logger.debug("  - Inactive process, received message without header")
-	return
+	reason = 'Error: Handler not made because received message without header'
+	self.logger.debug("    - %s"%reason)
+	return False, reason
       header = message['header']
       
       if 'content' not in msgKeys:
-	self.logger.debug("  - Inactive process, received message without content")
-	return
+	reason = 'Error: Handler not made because received message without content'
+	self.logger.debug("    - %s"%reason)
+	return False, reason
       
       contentKeys = message['content'].keys()
       if 'configuration' not in contentKeys:
-	self.logger.debug("  - Inactive process, received message without content configuration")
-	return
+	reason = 'Error: Handler not made because received message without content configuration'
+	self.logger.debug("    - %s"%reason)
+	return False, reason
       conf   = message['content']['configuration']
 	
-      if self.actionHandler is None:
-	self.stopped = False
-	self.logger.debug("  Getting action handler")
-	self.actionHandler = self.GetActionHandler(msg)
-	
-	if self.actionHandler == None:
-	  raise Utilities.TaskError(["Missing action handler"], self.component)
-	
-	# Keeping starting values
-	self.service_id    = header["service_id"]
-	
-	if "device_action" in conf.keys():
-	  self.device_action = conf["device_action"]
+      ## NOTE: Before it was setting the handler to None in the closing,
+      ##       now it leaves it will reset to None here.
+      if self.actionHandler is not None:
+	self.logger.debug("    Action handler already exists, replacing for new one...")
+	self.actionHandler = None
+
+      ## Getting action handler
+      self.stopped = False
+      self.logger.debug("    Getting action handler")
+      self.actionHandler = self.GetActionHandler(msg)
+      
+      ## Something went wrong, lets inform it...
+      if self.actionHandler == None:
+	reason = 'Error: Handler not made properly'
+	self.logger.debug("    - %s"%reason)
+	raise Utilities.TaskError(["Missing action handler"], self.component)
+	return False, reason
+      
+      ## Keeping starting values
+      self.logger.debug("    Keeping starting values")
+      self.service_id    = header["service_id"]
+      if "device_action" in conf.keys():
+	self.device_action = conf["device_action"]
+
+      ## Ending successfully
+      self.logger.debug("    Ending start of task successfully")
+      return True, reason
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
   
