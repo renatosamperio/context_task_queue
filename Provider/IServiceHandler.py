@@ -92,9 +92,9 @@ class ServiceHandler:
 		self.resp_format["header"].update({"service_id" :header["service_id"]})
 		self.resp_format["header"].update({"action" : ""})
 		
-		self.service_id=header["service_id"]
 		self.logger.debug("Setting service ID [%s] in PID [%s]"
 		  %(self.service_id, service.tid))
+		self.service_id=header["service_id"]
 	    else:
 	      self.logger.debug("No service ID was provided in PID[%s]"%service.tid)
 	  ## Checking if it is right service ID, otherwise exit
@@ -106,20 +106,20 @@ class ServiceHandler:
 	  # Stopping service
 	  if header['action'] == 'stop':
 	    if self.stopped == False:
-	      self.logger.debug("Stopping service instances")
+	      self.logger.debug("    Stopping service instances")
 	      self.stop()
-	      self.logger.debug("Stopping service process")
+	      self.logger.debug("    Stopping service process")
 	      service.stop()
 	    else:
-	      self.logger.debug("Service is already stopped")
+	      self.logger.debug("    Service is already stopped")
 	  
 	  # Starting service
 	  elif header['action'] == 'start':
 	    if self.stopped:
-	      self.logger.debug("Starting service instances")
+	      self.logger.debug("    Starting service instances")
 	      self.start(msg)
 	    else:
-	      self.logger.debug("Service is already started")
+	      self.logger.debug("    Service is already started")
 	  
 	  # Restarting service
 	  elif header['action'] == 'restart':
