@@ -150,38 +150,45 @@ class ContextGroup:
 	## Adding process starter in context information
 	if 'Task' in msgKeys:
 	  task = msg['Task']
-	  transaction	= task['message']['header']['transaction']
+	  
+	  transaction	= task['message']["header"]['transaction']
+	  message 	= task['message']
+	  header 	= message["header"]
+	  content	= message["content"]
+	  serviceAction	= header['action']
+	  serviceId	= header['service_id']
+	  serviceName	= header['service_name']
+	
+	  ## Check if transaction is defined in context information
+	  if self.contextInfo.TransactionExists(transaction):
+	    self.logger.debug(" -> Updating context information based in [process] messages")
+	    self.contextInfo.UpdateProcessState(msg)
+	      
 	  taskKeys = task.keys()
 	  if 'state' in taskKeys and 'message' in taskKeys:
 	    taskHeader	= task['message']['header']
 	    action	= taskHeader['action']
-	    
-	    if action == 'start':
+
+	    if serviceAction == 'restart':
+	      self.logger.debug("  - Should do a RE-START here in [%s]!!!"%serviceId)
+	      self.logger.debug("  -    Needs: service_id, frontend, backend, task, transaction")
 	      
-	      ## Check if transaction is defined in context information
-	      if self.contextInfo.TransactionExists(transaction):
-		self.logger.debug(" -> Updating context information based in [process] messages")
-		self.contextInfo.UpdateProcessState(msg)
+	      ## Stopping service as in context topic
+	      self.logger.debug("    Restarting, stopping services with process message")
+	      serviceId	= taskHeader['service_id']
+	      self.StopService( transaction, service_id=serviceId)
 		
-		## Monitor context services if PID does not exists
-		serviceId	= taskHeader['service_id']
-		serviceDetails	= self.contextInfo.GetServiceData(transaction, serviceId)
-		servicePID	= self.contextInfo.GetPID(transaction, serviceId)
-		if servicePID is not None:
-		  self.logger.debug(" -> Task [%s] HAS NOT a valid PID"%(serviceId))
-		  ## Getting contet information for frontend and backend
-		  ctxData = self.contextInfo.GetContextConf(transaction)
-		  if ctxData is not None:
-		    frontend	= ctxData['configuration']['FrontEndEndpoint']
-		    backend 	= ctxData['configuration']['BackendEndpoint']
-		    
-		    ## Setting up service to start now
-		    self.logger.debug(" -> Starting service [%s]..."%(serviceId))
-		    msg['Task']['state']['type'] = 'start_now'
-		    self.StartService(msg, frontend, backend, transaction)
-		else:
-		  self.logger.debug(" -> Task [%s] HAS defined a PID: [%s]"%
-		      (serviceId, servicePID ))
+	      ## Gathering data for starting a service
+	      ##    Getting context info for front and back ends
+	      ctxData = self.contextInfo.GetContextConf(transaction)
+	      if ctxData is not None:
+		frontend	= ctxData['configuration']['FrontEndEndpoint']
+		backend 	= ctxData['configuration']['BackendEndpoint']
+	      
+	      ##    Starting context services
+	      self.logger.debug("    Restarting, starting service with process message")
+	      self.StartService(msg, frontend, backend, transaction)
+	      
 		  
       elif topic == 'control':
 	'''Looking for process control activities '''
