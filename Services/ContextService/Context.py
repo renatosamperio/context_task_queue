@@ -621,7 +621,7 @@ class ContextGroup:
 	  
 	  ## Checking service state not to be started
 	  serviceState = self.contextInfo.GetServiceValue( transaction, serviceId, 'state')
-	  if 'stop' in service:
+	  if serviceState is not None and 'stop' in serviceState:
 	      self.logger.debug("  - Service [%s] in transaction [%s] state is [%s], failed exiting" 
 		  %(serviceId, transaction, serviceState))
 	      self.logger.debug(" => Validation [FAILED]")
