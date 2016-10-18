@@ -73,6 +73,9 @@ class ContextMonitor:
       ## Adding transaction to the message
       task['Task']['message']["header"].update({'transaction' : transaction})
       
+      ## Setting message for starting a task service
+      task['Task']['message']["header"].update({'action' : 'start'})
+      
       ## Preparing message to send
       json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
       start_msg = "%s @@@ %s" % (taskTopic, json_msg)
