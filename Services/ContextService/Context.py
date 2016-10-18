@@ -76,7 +76,10 @@ class ContextGroup:
 	header 		= msg["header"]
 	content		= msg["content"]
 	transaction	= header['service_transaction']
-	
+	serviceAction	= header['action']
+	contextId	= header['service_id']
+	serviceName	= header['service_name']
+	  
 	# Blocking request and reply messages
 	self.logger.debug("  - Looking for service [%s] in context messages" %
 		      (header["service_id"]))
@@ -91,12 +94,8 @@ class ContextGroup:
 	if self.DeserializeAction(msg):
 	  self.logger.debug("  - Service [%s] received message of size %d" % 
 			    (service.tid, len(json_msg)))
-	  contextId	= header['service_id']
-	  serviceName	= header['service_name']
-	  serviceAction	= header['action']
-	    
+
 	  ## Managing thread actions start/stop
-	  ##   TODO: Add restart action
 	  if serviceAction == 'stop':
 	    if serviceName == 'all':
 	      self.stop(msg=msg)
@@ -125,7 +124,7 @@ class ContextGroup:
 	      tasks = content['configuration']['TaskService']
 	      for task in tasks:
 		taskId = task['id']
-		self.logger.debug("  Stopping service [%s]"%header["service_id"])
+		self.logger.debug("  Stopping service [%s]"%taskId)
 		self.StopService( transaction, service_id=taskId)
 	      
 	    ## Second start the service task
@@ -410,7 +409,7 @@ class ContextGroup:
       Utilities.ParseException(inst, logger=self.logger)
 
   def StopService(self, transaction, service_id=''):
-    '''Message for stopping group of threads with the same transaction'''
+    '''Message for stopping services with process message'''
     try:
       ## Preparing message for stopping each of the available service
       serviceDetails = self.contextInfo.GetServiceData(transaction, service_id)
