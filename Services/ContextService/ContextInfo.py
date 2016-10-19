@@ -42,10 +42,14 @@ class ContextInfo:
      
   def HasPID(self, transaction, serviceId):
     ''' Returns true if process has a PID property'''
-    if self.ServiceExists(transaction, serviceId):
-      service = self.stateInfo[transaction][serviceId]
-      return 'pid' in service.keys() #and service['pid'] is not None
-    return False
+    try:
+      if self.ServiceExists(transaction, serviceId):
+	service = self.stateInfo[transaction][serviceId]
+	return 'pid' in service.keys() #and service['pid'] is not None
+      return False
+
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
     
   def TransactionNotExists(self, transaction):
     ''' Return true if transaction ID does not exists'''
@@ -125,8 +129,11 @@ class ContextInfo:
       
       ## Adding or removing from data structure according to reported action
       if result == 'success':
+	pid = ''
+	if 'pid' in status.keys():
+	  pid = status['pid']
 	data = {
-		  'pid'  : status['pid'],
+		  'pid'  : pid,
 		  'state': result,
 		  'action': action
 		}
@@ -178,7 +185,7 @@ class ContextInfo:
 		   (serviceId, transaction))
 	self.stateInfo[transaction][serviceId] = data
       else:
-	self.logger.debug("  Updating data of service ID [%s] to transaction [%s]"% 
+	self.logger.debug("  Updating data of service ID [%s] in transaction [%s]"% 
 		   (serviceId, transaction))
 	self.stateInfo[transaction][serviceId].update(data)
     except Exception as inst:
@@ -211,21 +218,24 @@ class ContextInfo:
 
   def GetServiceData(self, transaction, serviceID):
     ''' Returns content of a services ID, otherwise empty dictionary'''
-    ## Getting a list of available services from context information
-    serviceData = {}
-    ## Search for transaction data
-    if not self.TransactionExists(transaction):
+    try:
+      ## Getting a list of available services from context information
+      serviceData = {}
+      ## Search for transaction data
+      if not self.TransactionExists(transaction):
+	self.logger.debug("  Transaction [%s] found in context"% transaction)
+	return serviceData
+	
       self.logger.debug("  Transaction [%s] found in context"% transaction)
-      return serviceData
+      ctxtServices = self.stateInfo[transaction]
       
-    self.logger.debug("  Transaction [%s] found in context"% transaction)
-    ctxtServices = self.stateInfo[transaction]
-    
-    ## Looking for existing services
-    lServices = ctxtServices.keys()
-    if serviceID in lServices:
-      serviceData = ctxtServices[serviceID]
-    return serviceData
+      ## Looking for existing services
+      lServices = ctxtServices.keys()
+      if serviceID in lServices:
+	serviceData = ctxtServices[serviceID]
+      return serviceData
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
 
   def SetTaskStart(self, transaction, serviceId):
     '''Setting PID value as None into state data structure '''
