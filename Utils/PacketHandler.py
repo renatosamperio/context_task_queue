@@ -24,10 +24,11 @@ import Utilities
 class PacketHandler(threading.Thread):
   def __init__(self, **kwargs):
     '''Class for filtering packets for finding track information from live streaming '''   
-    ## Initialising thread parent class
-    threading.Thread.__init__(self)
     
     try:
+      ## Initialising thread parent class
+      threading.Thread.__init__(self)
+    
       ''' # Initialising class variables '''
       component		= self.__class__.__name__
       self.logger	= Utilities.GetLogger(component)
@@ -43,6 +44,7 @@ class PacketHandler(threading.Thread):
       self.running	= False
       self.db_record	= Queue()
       self.onStart	= True
+      self.service	= None
       
       # Configurable items
       self.db_watermark	= 2
@@ -55,6 +57,8 @@ class PacketHandler(threading.Thread):
 	  self.filter = value
 	elif "onStart" == key:
 	  self.onStart = value
+	elif "service" == key:
+	  self.service = value
 
       # Starting action thread
       if self.onStart:
