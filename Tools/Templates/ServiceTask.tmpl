@@ -80,9 +80,12 @@ class Service$ServiceType(ServiceHandler):
       confKeys 	= conf.keys()
       args 	= {'onStart': True, 'service': self}
 
-      ## Adding expected arguments to args
-      ## 	if "ITEM_NAME" in itemsKeys:
-      ## 	  args.update({'port': conf['ITEM_NAME']})
+      ## Parsing parameters
+      self.logger.debug("   Parsing message parameters")
+      for key in confKeys:
+	if key in confKeys:
+	  value = message['content']['configuration'][key]
+	  args.update({key: value})
 
       # Creating service object and notify
       start_state = 'started'
