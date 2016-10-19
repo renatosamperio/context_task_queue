@@ -292,11 +292,14 @@ class TaskedService(object):
     def stop(self):
       ''' '''
       try:
-	if(self.action):
-	  self.logger.debug("   Stopping service ...")
+	if not self.tStop.isSet():
+	  self.logger.debug("   Service event is already set, stop is not required")
+	  return
+	if self.action:
+	  self.logger.debug("   Stopping action in service ...")
 	  self.action.stop_all_msg()
 	  
-	self.logger.debug( "   Clearing thread event")
+	self.logger.debug( "   Clearing thread event in service")
 	self.tStop.clear()
       except Exception as inst:
 	Utilities.ParseException(inst, logger=self.logger)
