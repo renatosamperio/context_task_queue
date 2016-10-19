@@ -123,9 +123,7 @@ class PacketHandler(threading.Thread):
       if self.cap is not None:
 	## Calling filtering function from child class
 	self.cap.apply_on_packets(self.FilterCapture)
-      
-      self.logger.debug("Closing packet capturer")
-      self.close()
+
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     
