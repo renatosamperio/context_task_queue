@@ -131,20 +131,20 @@ class ContextGroup:
 	    self.logger.debug("  Starting service [%s]"%header["service_id"])
 	    self.start(msg=msg)
 	    
-	    ## Store service state control for task service monitoring
-	    self.logger.debug("  - Storing service state control for task service monitoring")
-	    self.contextMonitor.StoreControl(msg)
+	  ## Store service state control for task service monitoring
+	  self.logger.debug("  - Storing service state control for task service monitoring")
+	  self.contextMonitor.StoreControl(msg)
 	     
 	else:
 	  self.logger.debug("Warning: Message was deserialized but not validated!")
-	  
+
       elif topic == 'state':
 	header	= msg["header"]
 	if header['action'] == 'request':
 	  self.request(msg)
 	elif header['action'] == 'top':
 	  self.GetTaskMonitor(msg)
-	
+
       elif topic == 'process':
 	'''Analysing process message'''
 	## Adding process starter in context information
@@ -188,8 +188,7 @@ class ContextGroup:
 	      ##    Starting context services
 	      self.logger.debug("    Restarting, starting service with process message")
 	      self.StartService(msg, frontend, backend, transaction)
-	      
-		  
+
       elif topic == 'control':
 	'''Looking for process control activities '''
 	
@@ -198,6 +197,7 @@ class ContextGroup:
 	  ## Updating context state
 	  header	= msg["header"]
 	  content	= msg["content"]
+	  
 	  transaction	= header["service_transaction"]
 	  serviceId	= header["service_id"]
 	  action	= header["action"]
@@ -407,7 +407,7 @@ class ContextGroup:
 	  self.contextInfo.SetTaskStart(transaction, taskId)
 	  
 	  ## Managing process services
-	  self.logger.debug("==> Managing process services for task [%s]"%taskId )
+	  self.logger.debug("==> Monitoring service process for task [%s]"%taskId )
 	  self.contextMonitor.MonitorServicesProcess(transaction, task, self)
 
 	except zmq.error.ZMQError:
@@ -549,7 +549,7 @@ class ContextGroup:
     Transaction NOT Exists	OK	FAIL	OK
     Context ID Exists		OK	OK	OK
     Context ID NOT Exists	OK	FAIL	OK
-    Service ID Exists		FAIL	OK	OK
+    Service ID Exists		OK	OK	OK
     Service ID NOT Exists	OK	FAIL	OK
     Service STATE started	FAIL	OK	OK
 
