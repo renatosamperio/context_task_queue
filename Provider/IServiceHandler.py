@@ -156,7 +156,7 @@ class ServiceHandler:
 	self.logger.debug("Service action handler is not available")
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-      
+
   def notify(self, action, result, items=None):
     '''Notifies  '''
     try:
