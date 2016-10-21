@@ -75,6 +75,7 @@ class TaskedService(object):
 	for key, value in kwargs.iteritems():
 	  if "strategy" == key:
 	    self.action = value(**kwargs)
+	    self.logger.debug("[%s]   Setting up action task" % self.threadID)
 	  elif "context" == key:
 	    self.context = value
 	  elif "topic" == key:
