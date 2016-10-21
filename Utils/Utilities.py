@@ -74,7 +74,7 @@ def GetHumanReadable(size,precision=2):
         size = size/1024.0 #apply the division
     return "%.*f%s"%(precision,size,suffixes[suffixIndex])
   
-def MemoryUsage(pid, log=None, memMap=False, openFiles=False, openConn=False):
+def MemoryUsage(pid, serviceId='', log=None, memMap=False, openFiles=False, openConn=False):
   '''Returns the memory usage in MB'''
   start = time.time()
   try:
@@ -154,7 +154,7 @@ def MemoryUsage(pid, log=None, memMap=False, openFiles=False, openConn=False):
       mem['children'].append(childData)
     
     elapsed = time.time() - start
-    mem.update({'elapsed':elapsed})
+    mem.update({'elapsed':elapsed, 'serviceId':serviceId, 'timestamp':time.time()})
     return mem
   except Exception as inst:
     ParseException(inst, logger=log)
