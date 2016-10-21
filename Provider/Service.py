@@ -269,11 +269,11 @@ class TaskedService(object):
 			  'pid':self.tid,
 			  'reason':type_state
 			 }
-		self.action.notify("updated", 'failed', items=items)
+		self.action.notify("failed", 'sucess', items=items)
 
 	    ## Logging simplified process monitoring information
-	    self.logger.debug('[%s] Total process memory [%s, %d] is using (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%) in %.2fms'%
-		      (self.threadID, self.action.service_id, self.tid, 
+	    self.logger.debug('[%s] Service [%s, %d] has (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%) in %.2fms'%
+		      (self.threadID, service_id, self.tid, 
 		      process_memory['total']['vms'], process_memory['total']['vms'], 
 		      process_memory['total']['percent'], process_memory['elapsed']*1000))
 	    self.check_in_time = time.time()+ self.time_out_alarm
