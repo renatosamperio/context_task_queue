@@ -239,7 +239,11 @@ class TaskedService(object):
 
 	  ## Check if it is time for looking into memory usage state
 	  if (self.check_in_time - time.time())<0:
-	    process_memory = Utilities.MemoryUsage(self.tid, log=self.logger)
+	    #TODO: Include additional values from configuration (mem values, etc)
+	    service_id = self.action.service_id
+	    process_memory = Utilities.MemoryUsage( self.tid, 
+						    serviceId=service_id, 
+						    log=self.logger)
 	    
 	    ## Getting current service and action task states 
 	    service_has_failed, type_state = self.is_process_running(process_memory)
