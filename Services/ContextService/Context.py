@@ -608,11 +608,9 @@ class ContextGroup:
 	for lTask in tasks:
 	  serviceId = lTask['id']
 	  serviceExists = self.contextInfo.ServiceExists(transaction, serviceId)
-	  if serviceExists and isStartAction:
+	  if serviceExists:
 	      self.logger.debug("  - Found service ID [%s] in transaction [%s], failed exiting" 
 		  %(serviceId, transaction))
-	      self.logger.debug(" => Validation [FAILED]")
-	      return False
 	  elif not serviceExists and isStopAction:
 	      self.logger.debug("  - Not found service ID [%s] in transaction [%s], failed exiting" 
 		  %(serviceId, transaction))
