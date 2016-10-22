@@ -269,8 +269,6 @@ class ServiceHandler:
       ## Keeping starting values
       self.logger.debug("    Keeping starting values")
       self.service_id    = header["service_id"]
-      if "device_action" in conf.keys():
-	self.device_action = conf["device_action"]
 
       ## Ending successfully
       self.logger.debug("    Ending start of task successfully")
