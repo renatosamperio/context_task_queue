@@ -52,6 +52,8 @@ class ServiceHandler:
       ## TODO: Remove this option as front and back endpoints are used
       elif "endpoint" == key:
 	self.endpoint = value
+      elif "device_action" == key:
+	self.device_action = value
 
   def deserialize(self, service, rec_msg):
     '''Deserialises a JSON message'''
