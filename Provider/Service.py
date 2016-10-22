@@ -88,7 +88,8 @@ class TaskedService(object):
 	    self.backend = value
 	  elif "contextInfo" == key:
 	    self.contextInfo = value
-	    self.isMonitor = True
+	  elif "isMonitor" == key:
+	    self.isMonitor = value
 
 	## Including context information in local service
 	if self.isMonitor:
