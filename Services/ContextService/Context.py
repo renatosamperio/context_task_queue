@@ -378,6 +378,12 @@ class ContextGroup:
       if 'service_id' not in msg_header.keys():
 	task['Task']['message']["header"].update({'service_id' : taskId})
       
+      ## Checking if device action exists in content configuration
+      ##   and passing it as arguments
+      if 'device_action' in msg_conf.keys():
+	self.logger.debug("==> [%s] Setting device action in class arguments")
+	args.update({'device_action': msg_conf['device_action']})
+	
       ## Create task with configured strategy
       if taskStrategy is not None:
 	try:
