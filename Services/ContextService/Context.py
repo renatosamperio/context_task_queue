@@ -351,6 +351,10 @@ class ContextGroup:
       args.update({'transaction': transaction})
       args.update({'backend': backend})
       args.update({'frontend': frontend})
+      args.update({'isMonitor': False})
+      
+      if taskInstance == 'Monitor':
+	args.update({'isMonitor': True})      
       
       ## TODO: Before committing this change, test with coreography
       self.logger.debug("==> Starting task service [%s]"%(taskId))
