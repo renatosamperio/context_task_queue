@@ -162,19 +162,26 @@ class ServiceHandler:
   def notify(self, action, result, items=None):
     '''Notifies  '''
     try:
+      ## Preparing header service ID
       self.header["service_id"] = self.service_id
-      if self.device_action is not None:
-	self.content["status"]["device_action"] = self.device_action
-      resp_format = {"header":self.header, "content":self.content}
       
+      ## Preparing response message
+      resp_format = {"header":self.header, "content":self.content}
       resp_format["header"]["action"] = action
       resp_format["header"]["service_transaction"] = self.transaction
       resp_format["header"]["service_name"] = self.resp_format["header"]["service_name"]
       resp_format["content"]["status"]["result"] = result
       
+      ## Getting device action
+      if self.device_action is not None:
+	self.content["status"]["device_action"] = self.device_action
+      else:
+	resp_format["content"]["status"]["device_action"] = ''
+
       if items != None:
 	resp_format = self.ParseItems(items, resp_format)
       
+      ## Preparing JSON message
       json_msg = json.dumps(resp_format, sort_keys=True, indent=4, separators=(',', ': '))
       send_msg = "%s @@@ %s" % ("control", json_msg)
       self.serialize(send_msg)    
