@@ -56,10 +56,6 @@ def FindChilden(pid, logger=None):
       logger.debug("   Found [%d] threads processes"%(len(threads))) 
       for t in threads:
 	data = psutil.Process(t.id)
-	#print "====>", len(process.threads())
-	#print "===>", t.__dict__
-	#print "===>", t
-	#print "===>", type(t)
 	status = data.status()
 	logger.debug("     Thread with PID [%d] is [%s]"%(t.id, status))
       
