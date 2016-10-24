@@ -251,22 +251,30 @@ class ContextMonitor:
   def MakeProcessMessage(self, transaction, stateAction, callAction):
     ''' Returns JSON message of configuration for process topic'''
     
-    ## Check if task is already in configuration, otherwise add task
-    if len(self.configuration)<1:
-      raise ContextError('Error:', 'Context configuration empty')
-      return
-    
-    for task in self.configuration:
-      if task['id'] == callAction:
-	task['Task']['message']['header']['action'] = stateAction
-	task['Task']['message']['header']['transaction'] = transaction
-	task['Task']['message']['header']['service_id'] = callAction
+    try:
+      ## Check if task is already in configuration, otherwise add task
+      if len(self.configuration)<1:
+	raise ContextError('Error:', 'Context configuration empty')
+	return
+      
+      self.logger.debug("  Looking into existing configuration")
+      for task in self.configuration:
+	if task['id'] == callAction:
+	  task['Task']['message']['header']['action'] = stateAction
+	  task['Task']['message']['header']['transaction'] = transaction
+	  task['Task']['message']['header']['service_id'] = callAction
 
-	## Preparing message to send
-	json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
-	json_msg = "%s @@@ %s" % ('process', json_msg)
+	  ## Preparing message to send
+	  json_msg = json.dumps(task, sort_keys=True, indent=4, separators=(',', ': '))
+	  json_msg = "%s @@@ %s" % ('process', json_msg)
 
-	return json_msg
+	  self.logger.debug("  Making JSON message for state [%s] in transaction [%s] and call action [%s]"%
+		    (stateAction, transaction, callAction))
+	  return json_msg
+      
+      ## Action ID not found
+      self.logger.debug("Error: Configuration without valid tasks")
+      return None
     
-    ## Action ID not found
-    return None
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
