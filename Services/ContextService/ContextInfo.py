@@ -138,10 +138,12 @@ class ContextInfo:
 		  'action': action
 		}
 	self.logger.debug("  Updating context information for [%s]"%serviceId)
-	self.UpdateState( transaction, serviceId, data)
-
+	ret = self.UpdateState( transaction, serviceId, data)
+	return ret
+      return False
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+      return False
     
   def UpdateProcessState(self, msg):
     ''' Updates context state based in process messages'''
@@ -161,12 +163,15 @@ class ContextInfo:
       self.logger.debug("  Updating process context information")
       transaction	= taskHeader['transaction']
       serviceId		= taskHeader['service_id']
-      self.UpdateState(transaction, serviceId, data)
+      ret =  self.UpdateState(transaction, serviceId, data)
+      return ret
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+      return False
       
   def UpdateState(self, transaction, serviceId, data={}):
     '''Updates context state data structure '''
+    ret = False
     try:
       
       ## Search for transaction data
@@ -184,12 +189,16 @@ class ContextInfo:
 	self.logger.debug("  Adding data of service ID [%s] to transaction [%s]"% 
 		   (serviceId, transaction))
 	self.stateInfo[transaction][serviceId] = data
+	return True
       else:
 	self.logger.debug("  Updating data of service ID [%s] in transaction [%s]"% 
 		   (serviceId, transaction))
 	self.stateInfo[transaction][serviceId].update(data)
+	return True
+      return False
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+      return False
   
   def GetContextServices(self, transaction):
     ''' Returns a list of available services ID, otherwise empty list'''
