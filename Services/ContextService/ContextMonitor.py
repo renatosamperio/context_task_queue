@@ -43,7 +43,8 @@ class ContextMonitor:
 	taskService = [taskService]
       
       ## Storing context configuration
-      self.configuration = taskService
+      self.logger.debug('Storing context configuration')
+      self.StoreCxtConf(taskService)
       
       ## At this point the list of task services is available
       ## TODO: Validate inner content of task? Maybe with a general grammar-based validation
@@ -60,6 +61,51 @@ class ContextMonitor:
 	## Creating task data
 	self.logger.debug('Creating state control for [%s] service'%taskId)
 	self.states.append({'task_id': taskId, 'task_states': state})
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  def StoreCxtConf(self, taskServices):
+    '''	Stores context configuration and
+	check task by task and add if different
+    '''
+    try:
+      self.logger.debug('  Validating task services')
+      # Check if it is a list
+      if type(taskServices) != type([]):
+	taskServices = [taskServices]
+
+      ## Find task in existing conviguration
+      for tService in taskServices:
+	## Validating ID exists in message received configuration
+	if 'id' not in tService.keys():
+	  self.logger.debug('  Warning: service [%s] without ID'%str(tService))
+	  continue
+	
+	## Looing for configured task
+	configuredTask = filter(lambda task: task['id'] == tService['id'], self.configuration)
+	
+	## Task does not exists, adding it
+	if len(configuredTask) < 1:
+	  self.logger.debug('  Adding non-existing task to current configuration')
+	  self.configuration.append(tService)
+	
+	## There are two task with that ID
+	elif len(configuredTask) > 1:
+	  self.logger.debug('  Task [%s] has more than one configured task, not adding it...'
+	    %tService['id'])
+	  
+	## It already exists, update it...
+	else:
+	  self.logger.debug('  Task [%s] exists in configuration, updating current configuration'
+	    %tService['id'])
+	  taskID = configuredTask[0]['id']
+	  index = [i for i in range(len(self.configuration)) if self.configuration[i]['id'] == taskID]
+	  if len(index)<1:
+	    raise ContextError('Warning:', 'Task if [%s] not found in configuration'%taskID)
+	    return
+	  self.logger.debug('  Updating task [%s] in existing configuration'%index[0])
+	  self.configuration[index[0]] = tService
+	
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
