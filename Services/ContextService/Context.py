@@ -109,10 +109,6 @@ class ContextGroup:
 	  elif serviceAction == 'start':
 	    ## Starting context services
 	    self.start(msg=msg)
-	    
-	    ## Store service state control for task service monitoring
-	    self.logger.debug("  - Storing service state control for task service monitoring")
-	    self.contextMonitor.StoreControl(msg)
 
 	  # Restarting service
 	  elif header['action'] == 'restart':
@@ -162,7 +158,13 @@ class ContextGroup:
 	  ## Check if transaction is defined in context information
 	  if self.contextInfo.TransactionExists(transaction):
 	    self.logger.debug(" -> Updating context information based in [process] messages")
-	    self.contextInfo.UpdateProcessState(msg)
+	    result = self.contextInfo.UpdateProcessState(msg)
+	    
+	    ## Notifying context update message
+	    state = "success" if result else "failed"
+	    self.logger.debug(" -> Notifying control message as [%s]"%state)
+	    self.notify('control', 'update', state, transaction, "context_info")
+	  
 	      
 	  taskKeys = task.keys()
 	  if 'state' in taskKeys and 'message' in taskKeys:
@@ -202,9 +204,20 @@ class ContextGroup:
 	  serviceId	= header["service_id"]
 	  action	= header["action"]
 	  result	= content["status"]['result']
+	  device_action	= content["status"]['device_action']
+	  serviceName	= header["service_name"]
 	  
-	  self.logger.debug(" -> Updating context information based in [control] messages")
-	  self.contextInfo.UpdateControlState(msg)
+	  if serviceName == 'context' or device_action == 'context_info':
+	    self.logger.debug(" -> Ignoring message with service name [%s]"%serviceName)
+	    return
+	  
+	  self.logger.debug(" -> Updating context from [control] messages from [%s]"%serviceName)
+	  ret = self.contextInfo.UpdateControlState(msg)
+	  
+	  ## Notifying context update message
+	  state = "success" if ret else "failed"
+	  self.logger.debug(" -> Notifying control message as [%s]"%state)
+	  self.notify('control', 'update', state, transaction, "context_info")
 	  
 	  ## If service is started do not send further messages
 	  if not action.startswith('start'):
@@ -309,8 +322,13 @@ class ContextGroup:
 		      'FrontEndEndpoint': frontend
 		    }
 	       }
-	self.contextInfo.UpdateState(transaction, 'context', data)
 	
+	## Notifying context update message
+	result = self.contextInfo.UpdateState(transaction, 'context', data)
+	state = "success" if result else "failed"
+	self.logger.debug(" -> Notifying control message as [%s]"%state)
+	self.notify('control', 'update', state, transaction, "context_info")
+
 	## Checking if single task is not list type
 	if type(taskedServices) != type([]):
 	  taskedServices= [taskedServices]
