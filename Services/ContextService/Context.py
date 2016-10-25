@@ -741,3 +741,42 @@ class ContextGroup:
 	self.lThreads.append(tService)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  def notify(self, topic, action, result, transaction, device_action):
+    '''Notifies  '''
+    try:
+      ## Get context information 
+      stateInfo	= self.contextInfo.stateInfo
+      ctxData	= self.contextInfo.GetContextConf(transaction)
+      contextId	= ctxData['contextId']
+      
+      ## Prepare message header
+      header = {
+	    "action": action,			## has to be 'update'
+	    "service_id": contextId,
+	    "service_name": "context",
+	    "service_transaction": transaction
+      }
+	
+      ## Prepare messsage content
+      content = {
+	  "status": {
+	    "device_action": device_action,
+	    "result": result,
+	    "data": stateInfo
+	}
+      }
+
+      ## Prepare pubished message
+      pubMsg = {
+	'header':header,
+	'content':content
+	}
+      
+      ## Parsing message to json format
+      json_msg = json.dumps(pubMsg, sort_keys=True, indent=4, separators=(',', ': '))
+      send_msg = "%s @@@ %s" % (topic, json_msg)
+      self.serialize(send_msg)    
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
