@@ -29,7 +29,7 @@ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --context_file='C
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='stop' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff'
 python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='sniffer' --action='restart' --service_id='ts010' --transaction='6FDAHH3WPRVV7FGZCRIN' --device_action='sniff' --result='success' --sniffer_filter='http>0 and ip.addr == 70.42.73.72' --sniffer_header='4.json' --interface='eth0'
 
-python Tools/conf_command.py --use_file --endpoint='tcp://127.0.0.1:6557' --service_name='context' --context_file='Conf/Context-CaptureTrack.xml' --service_id='ts002' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start'
+python Tools/conf_command.py --use_file --endpoint='tcp://127.0.0.1:6557' --service_name='context' --context_file='Conf/Context-CaptureTrack.xml' --transaction='6FDAHH3WPRVV7FGZCRIN' --action='start' --service_id='ts001' 
 python Tools/conf_command.py --use_file --endpoint='tcp://127.0.0.1:5557' --service_name='context' --context_file='Conf/Context-MicroservicesExample.xml' --service_id='context002' --transaction='5HGAHZ3WPZUI71PACRPP' --action='start' --task_id='all'
 '''
 
@@ -137,17 +137,19 @@ def GetTask(configuration, options):
       },
       'header':header
   }
+
   if options.task_id == 'all':
     taskConfMsg['content']['configuration']['TaskService'] = configuration['TaskService']
     return taskConfMsg
   else:
-    ## Changing topic of message
+    ## Looking into file tasks
     for lTask in fileTasks:
       if lTask['id'] ==  options.task_id:
 	lTask['Task']['message']['header']['action']	 = options.action
 	lTask['Task']['message']['header']['service_id'] = options.task_id
 	lTask['Task']['message']['header']['transaction']= options.transaction
 	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
+	print "+   Preparing message for service [%s]"%(lTask['Task']['message']['header']['service_id'])
 	return taskConfMsg
     
     print "- Task ID not found in configuration file..."
@@ -732,47 +734,6 @@ if __name__ == '__main__':
   parser.add_option_group(monitorOpts)
 
   (options, args) = parser.parse_args()
- 
-  if options.use_file==False:
-    if options.endpoint is None:
-      parser.error("Missing required option: endpoint")
-      parser.print_help()
-    
-    if options.service_name is None:
-      parser.error("Missing required option: service_name")
-      parser.print_help()
-    
-  if options.service_name == 'ftp' and options.ftp_port is not None:
-    if options.ftp_port < 1024:
-      parser.error("Lower range of port numbers are normally reserved, set higher than 1024")
-    elif options.ftp_port > 65535:
-      parser.error("Higher valid port number is 65535")
-
-  if options.service_name == 'ftp' and options.passive_ports is not None:
-    if len(options.passive_ports)>0:
-      lInts = [int(i) for i in options.passive_ports]
-      min_value = min(lInts)
-      max_value = max(lInts)
-      lowerBound = 1025 if min_value < 1024 else min_value
-      upperBound = 65535 if max_value > 65535 else max_value
-      values = [lowerBound, upperBound]
-      options.passive_ports = [str(i) for i in values]
-
-  if options.service_name == 'portal' and options.portal_action is None:
-    parser.error("Missing required option: portal_action")
-    parser.print_help()
-    
-  if options.service_name == 'portal' and options.content_server_id is None:
-    parser.error("Missing required option: content_server_id")
-    parser.print_help()
-
-  if options.service_name == 'device' and len(options.hosts) <1:
-    parser.error("Missing required option: hosts")
-    
-  if options.service_name == 'device' and \
-     options.device_action == 'syslog' and \
-     len(options.patterns)<1:
-    parser.error("Missing required option: patterns")
   
   if options.service_name == 'state':
     if options.action == 'none':
