@@ -78,7 +78,7 @@ def MemoryUsage(pid, serviceId='', log=None, memMap=False, openFiles=False, open
     process = psutil.Process(pid)
     
     ## Getting process memory (RSS, VMS and %)
-    mem_info = process.get_memory_info()
+    mem_info = process.memory_info()
     status = process.status()
     mem = {'status': status}
     mem.update({'rss': mem_info[0] / float(2 ** 20)})
@@ -126,7 +126,7 @@ def MemoryUsage(pid, serviceId='', log=None, memMap=False, openFiles=False, open
       ## Double check if pid attribute exists in 
       ##   process object. May not be useful
       data = psutil.Process(child.pid)
-      childMem = data.get_memory_info()
+      childMem = data.memory_info()
       child_status = data.status()
       
       childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
@@ -142,7 +142,7 @@ def MemoryUsage(pid, serviceId='', log=None, memMap=False, openFiles=False, open
     threads = process.threads()
     for t in threads:
       data = psutil.Process(t.id)
-      childMem = data.get_memory_info()
+      childMem = data.memory_info()
       child_status = data.status()
       childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
 		    'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
