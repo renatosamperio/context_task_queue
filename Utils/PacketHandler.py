@@ -47,16 +47,18 @@ class PacketHandler(threading.Thread):
       self.service	= None
       
       # Configurable items
-      self.db_watermark	= 2
+      self.db_watermark	= 3
       
       # Generating instance of strategy
       for key, value in kwargs.iteritems():
 	if "interface" == key:
 	  self.interface = value
+	  self.logger.debug("  + Setting interface [%s] in packet hanlder"%self.interface)
 	elif "filter" == key:
 	  self.filter = value
+	  self.logger.debug("  + Setting filter in packet hanlder")
 	elif "onStart" == key:
-	  self.onStart = value
+	  self.onStart = bool(value)
 	elif "service" == key:
 	  self.service = value
 
@@ -64,14 +66,15 @@ class PacketHandler(threading.Thread):
       if self.onStart:
 	self.logger.debug("  + Process is set to start from the beginning")
 	self.start()
+	
+	## Joining thread
+	self.logger.debug( "  Joining thread...")
+	self.join(1)
+      
       else:
 	## Setting item started for reporting to device action
 	self.running	= True
 
-      ## Joining thread
-      self.logger.debug( "  Joining thread...")
-      self.join(1)
-      
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
@@ -118,6 +121,7 @@ class PacketHandler(threading.Thread):
       
       ## Creating sniffer
       #self.capture_tracks_sniff(self.interface, self.filter)
+      self.logger.debug("  + Using filter [%s]"%self.filter)
       self.cap = pyshark.LiveCapture(self.interface, display_filter=self.filter)
 
       if self.cap is not None:
@@ -168,7 +172,6 @@ class PacketHandler(threading.Thread):
 	lQueue = list(self.db_record.queue)
 	for element in lQueue:
 	  shared_items = set(item.items()) & set(element.items())
-	  #print "===> shared_items:", len(shared_items)
 	  if len(shared_items)<1:
 	    self.logger.debug("    ===> Adding new captured data to queue")
 	    self.db_record.put(item)
