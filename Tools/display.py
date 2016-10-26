@@ -4,8 +4,10 @@ import zmq
 import json
 import datetime
 
-def main(addrs):
-    
+from optparse import OptionParser
+
+def main(options):
+    addrs = options.endpoint
     context = zmq.Context()
     socket = context.socket(zmq.SUB)
     socket.setsockopt(zmq.SUBSCRIBE, "")
@@ -18,6 +20,11 @@ def main(addrs):
 	topic, json_msg = msg.split("@@@")
 	topic = topic.strip()
 	json_msg = json_msg.strip()
+	msg = json.loads(json_msg)
+	
+	if not options.verbose:
+	  if 'control' == topic and msg["content"]["status"]["device_action"] == "context_info":
+	    json_msg = "Message with [context_info]"
         #msg = socket.recv_json()
         #json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
         timeNow = datetime.datetime.now()
@@ -29,4 +36,22 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print "usage: display.py <address> [,<address>...]"
         raise SystemExit
-    main(sys.argv[1:])
+    
+    usage = "usage: %prog interface=arg1 filter=arg2"
+    parser = OptionParser(usage=usage)
+    parser.add_option("--endpoint", 
+		      action="append", 
+		      help="Run this in 'quiet/non-verbosing' mode",
+		      default=[])
+
+    parser.add_option('-v', '--verbose',
+			action="store_true",
+			help="Run this in 'quiet/non-verbosing' mode",
+			default=False)
+    (options, args) = parser.parse_args()
+    
+    if options.endpoint is None:
+      parser.error("Missing required option: --endpoint='tcp://127.0.0.1:6556'")
+      
+    #print options
+    main(options)
