@@ -39,7 +39,7 @@ class $TaskClass(threading.Thread):
 	if "service" == key:
 	  self.service = value
 	elif "onStart" == key:
-	  self.onStart = value
+	  self.onStart = bool(value)
 	  
       # Starting action thread
       if self.onStart:
