@@ -167,24 +167,28 @@ class TaskedService(object):
 	
 	## Getting main process state
 	has_failed = False
-	main_state = ReduceProcessStatus(proc_data['status'])
-	
-	## Reporting parent state description and only failing children
-	state = {"ppid":self.tid, "status":proc_data['status'], "children":[]}
-	
-	if main_state != 'started':
-	  self.logger.debug('  Process [%d] is [%s]'%(self.tid, main_state))
-	  has_failed = True
+	if 'status' in proc_data.keys():
+	  main_state = ReduceProcessStatus(proc_data['status'])
 	  
-	## Getting children state
-	for child in proc_data['children']:
-	  child_state = ReduceProcessStatus(child['status'])
-	  if child_state != 'started':
-	    state["children"].append({"pid":child['pid'], "status":child['status']})
-	    self.logger.debug('    Child [%d] of [%d] is [%s]'%
-		       (child['pid'], self.tid, child_state))
+	  ## Reporting parent state description and only failing children
+	  state = {"ppid":self.tid, "status":proc_data['status'], "children":[]}
+	  
+	  if main_state != 'started':
+	    self.logger.debug('  Process [%d] is [%s]'%(self.tid, main_state))
 	    has_failed = True
+	    
+	  ## Getting children state
+	  for child in proc_data['children']:
+	    child_state = ReduceProcessStatus(child['status'])
+	    if child_state != 'started':
+	      state["children"].append({"pid":child['pid'], "status":child['status']})
+	      self.logger.debug('    Child [%d] of [%d] is [%s]'%
+			(child['pid'], self.tid, child_state))
+	      has_failed = True
 
+	else:
+	   self.logger.debug('    Warning: Status not found in process memory data')
+	  
 	return has_failed, state
       except Exception as inst:
 	Utilities.ParseException(inst, logger=self.logger)
