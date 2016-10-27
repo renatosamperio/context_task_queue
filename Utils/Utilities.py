@@ -123,31 +123,37 @@ def MemoryUsage(pid, serviceId='', log=None, memMap=False, openFiles=False, open
     ## Getting memory from children processes
     kids = process.children()
     for child in kids:
-      ## Double check if pid attribute exists in 
-      ##   process object. May not be useful
-      data = psutil.Process(child.pid)
-      childMem = data.memory_info()
-      child_status = data.status()
-      
-      childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
-		    'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
-		    'percent':data.memory_percent()}
-      mem['children'].append(childData)
+      try:
+	## Double check if pid attribute exists in 
+	##   process object. May not be useful
+	data = psutil.Process(child.pid)
+	childMem = data.memory_info()
+	child_status = data.status()
+	
+	childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
+		      'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
+		      'percent':data.memory_percent()}
+	mem['children'].append(childData)
 
-      ## Calculating total values with process and children's heap
-      mem['total']['percent'] += childData['percent']
-      mem['total']['rss'] += childData['rss']
-      mem['total']['vms'] += childData['vms']      
+	## Calculating total values with process and children's heap
+	mem['total']['percent'] += childData['percent']
+	mem['total']['rss'] += childData['rss']
+	mem['total']['vms'] += childData['vms']
+      except NoSuchProcess as inst:
+	log.debug('Error: Process not found')
   
     threads = process.threads()
     for t in threads:
-      data = psutil.Process(t.id)
-      childMem = data.memory_info()
-      child_status = data.status()
-      childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
-		    'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
-		    'percent':data.memory_percent()}
-      mem['children'].append(childData)
+      try:
+	data = psutil.Process(t.id)
+	childMem = data.memory_info()
+	child_status = data.status()
+	childData = {'status': child_status, 'pid':data.pid, 'create_time':data.create_time(),
+		      'rss': childMem[0] / float(2 ** 20), 'vms': childMem[1] / float(2 ** 20),
+		      'percent':data.memory_percent()}
+	mem['children'].append(childData)
+      except NoSuchProcess as inst:
+	log.debug('Error: Process not found')
     
     elapsed = time.time() - start
     mem.update({'elapsed':elapsed, 'serviceId':serviceId, 'timestamp':time.time()})
