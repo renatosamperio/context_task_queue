@@ -167,11 +167,17 @@ class TaskedService(object):
 	
 	## Getting main process state
 	has_failed = False
-	if 'status' in proc_data.keys():
+	state = {"ppid":self.tid}
+	
+	## Checking if process data is valid
+	if proc_data is None:
+	  state.update({'reason':'process data invalid'})
+	  return has_failed, state
+	elif 'status' in proc_data.keys():
 	  main_state = ReduceProcessStatus(proc_data['status'])
 	  
 	  ## Reporting parent state description and only failing children
-	  state = {"ppid":self.tid, "status":proc_data['status'], "children":[]}
+	  state.update({"ppid":self.tid, "status":proc_data['status'], "children":[]})
 	  
 	  if main_state != 'started':
 	    self.logger.debug('  Process [%d] is [%s]'%(self.tid, main_state))
@@ -187,7 +193,7 @@ class TaskedService(object):
 	      has_failed = True
 
 	else:
-	   self.logger.debug('    Warning: Status not found in process memory data')
+	  self.logger.debug('    Warning: Status not found in process memory data')
 	  
 	return has_failed, state
       except Exception as inst:
