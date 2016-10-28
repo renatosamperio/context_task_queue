@@ -1,6 +1,7 @@
 #!/bin/bash   
-
-PathScripts=$(echo $0 | awk -F'ins' '{print $1}')
+## TODO: 
+##       - Add patch for pyshark
+##       - System install for Microservices
 
 echo -e "\e[92m \e[1m"
 echo "*****************************************************"
@@ -37,7 +38,7 @@ echo -e "\e[0m"
 pip install --upgrade pip
 pip install --upgrade google-api-python-client
 pip install --upgrade pyvirtualdisplay
-# pip install --upgrade selenium
+pip install --upgrade selenium
 
 
 ## Installing GIT repositories
@@ -68,7 +69,7 @@ echo "*****              (GIT: PyShark)               *****"
 echo "*****************************************************"
 echo -e "\e[0m"
 git clone https://github.com/KimiNewt/pyshark.git && cd pyshark/src/
-git apply --stat ${PATH_FIX}/fix_raw_xml_da077b5b6ec19a6b0b8e13045cecb6d741d9a0c3.patch
+# git apply --stat ${PATH_FIX}/fix_raw_xml_da077b5b6ec19a6b0b8e13045cecb6d741d9a0c3.patch
 python setup.py install && cd ../..
 
 echo -e "\e[92m \e[1m"
@@ -98,6 +99,7 @@ echo -e "\e[0m"
 wget https://github.com/mozilla/geckodriver/releases/download/v0.11.1/geckodriver-v0.11.1-linux64.tar.gz
 tar -zxvf geckodriver-v0.11.1-linux64.tar.gz
 mkdir -p /opt/geckodriver
+cp ~/workspace/setup/geckodriver /opt/geckodriver
 sudo -u $USER echo 'export PATH=$PATH:/opt/geckodriver'  >> ~/.bashrc
 
 echo -e "\e[92m \e[1m"
@@ -110,7 +112,7 @@ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
 echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-3.2.list
 apt-get update
 apt-get install -y mongodb-org
-wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/Tools/Templates/Context.tmpl
+wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/Tools/Install/mongodb.service
 if [ ! -f /tmp/foo.txt ]; then
     echo -e "\e[92m \e[1m"
     echo "*****************************************************"
@@ -129,3 +131,13 @@ echo "*****************************************************"
 echo -e "\e[0m"
 git clone https://github.com/mongodb/mongo-python-driver.git && cd mongo-python-driver/
 python setup.py install && cd ..
+
+
+echo -e "\e[92m \e[1m"
+echo "*****************************************************"
+echo "*****          INSTALLING DEPENDENCIES          *****"
+echo "*****            (GIT: Microservices)           *****"
+echo "*****************************************************"
+echo -e "\e[0m"$
+cd ~/workspace
+git clone https://github.com/renatosamperio/context_task_queue.git
