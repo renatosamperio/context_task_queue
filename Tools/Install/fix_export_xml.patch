@@ -1,0 +1,26 @@
+From fd86e4d1a65c74e172ea42a389cdc027af75a3b0 Mon Sep 17 00:00:00 2001
+From: Renato Samperio <renatosamperio@gmail.com>
+Date: Sat, 19 Nov 2016 15:54:16 +0100
+Subject: [PATCH] Apply Layer 'JSON' wrongly builds Javascript Object Notation 
+  - Github #149 (https://github.com/KimiNewt/pyshark)
+
+---
+ src/pyshark/packet/layer.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/pyshark/packet/layer.py b/src/pyshark/packet/layer.py
+index 66d67b9..aad65d6 100755
+--- a/src/pyshark/packet/layer.py
++++ b/src/pyshark/packet/layer.py
+@@ -130,6 +130,8 @@ class Layer(Pickleable):
+         # We copy over all the fields from the XML object
+         # Note: we don't read lazily from the XML because the lxml objects are very memory-inefficient
+         # so we'd rather not save them.
++        if self._layer_name == 'json':
++	  self.raw_xml = xml_obj.__copy__()
+         for field in xml_obj.findall('.//field'):
+             attributes = dict(field.attrib)
+             field_obj = LayerField(**attributes)
+-- 
+2.7.4
+
