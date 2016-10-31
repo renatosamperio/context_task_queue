@@ -183,9 +183,10 @@ class ContextMonitor:
 	  if actionName not in state['task_states'].keys():
 	     self.logger.debug(" Action [%s] NOT FOUND for task ID [%s]"%
 			(actionName, serviceId))
-	  else:
-	     self.logger.debug(" Action [%s] FOUND for task ID [%s]"%
-			(actionName, serviceId))
+	     return
+
+	  self.logger.debug(" Action [%s] FOUND for task ID [%s]"%
+		    (actionName, serviceId))
 	    
 	  ## Creating message with action state and state call item
 	  stateAction	= state['task_states'][actionName]['action']
