@@ -1,6 +1,5 @@
 #!/bin/bash   
 ## TODO: 
-##       - Add patch for pyshark
 ##       - System install for Microservices
 
 echo -e "\e[92m \e[1m"
@@ -68,9 +67,12 @@ echo "*****          INSTALLING DEPENDENCIES          *****"
 echo "*****              (GIT: PyShark)               *****"
 echo "*****************************************************"
 echo -e "\e[0m"
-git clone https://github.com/KimiNewt/pyshark.git && cd pyshark/src/
-# git apply --stat ${PATH_FIX}/fix_raw_xml_da077b5b6ec19a6b0b8e13045cecb6d741d9a0c3.patch
-python setup.py install && cd ../..
+git clone https://github.com/KimiNewt/pyshark.git && cd pyshark
+wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/Tools/Install/fix_export_xml.patch
+git apply --stat fix_export_xml.patch
+git apply --check fix_export_xml.patch
+git apply -v fix_export_xml.patch
+cd src && python setup.py install && cd ../..
 
 echo -e "\e[92m \e[1m"
 echo "*****************************************************"
