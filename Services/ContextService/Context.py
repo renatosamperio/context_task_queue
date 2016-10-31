@@ -384,7 +384,7 @@ class ContextGroup:
       serviceName 	= msg_header['service_name']
       self.logger.debug("==> Preparing action task [%s]"%(taskInstance))
       if serviceName == 'monitor':
-	self.logger.debug("     [%s]: Adding context info objecto to arguments"%(serviceName))
+	self.logger.debug("     [%s]: Adding context info objecto to arguments"%(taskId))
 	args.update({'contextInfo': self.contextInfo})
 
       ## Getting instance if it should be started only
@@ -403,7 +403,7 @@ class ContextGroup:
       ## Checking if device action exists in content configuration
       ##   and passing it as arguments
       if 'device_action' in msg_conf.keys():
-	self.logger.debug("==> [%s] Setting device action in class arguments")
+	self.logger.debug("==> [%s] Setting device action in class arguments"%(taskId))
 	args.update({'device_action': msg_conf['device_action']})
 	
       ## Create task with configured strategy
