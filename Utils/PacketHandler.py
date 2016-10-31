@@ -45,6 +45,7 @@ class PacketHandler(threading.Thread):
       self.db_record	= Queue()
       self.onStart	= True
       self.service	= None
+      self.only_summary	= False
       
       # Configurable items
       self.db_watermark	= 3
@@ -56,11 +57,14 @@ class PacketHandler(threading.Thread):
 	  self.logger.debug("  + Setting interface [%s] in packet hanlder"%self.interface)
 	elif "filter" == key:
 	  self.filter = value
-	  self.logger.debug("  + Setting filter in packet hanlder")
+	  self.logger.debug("  + Setting filter in packet handler")
 	elif "onStart" == key:
 	  self.onStart = bool(value)
 	elif "service" == key:
 	  self.service = value
+	elif "only_summary" == key:
+	  self.logger.debug("  + Setting option for only summary in packet handler")
+	  self.only_summary = bool(value)
 
       # Starting action thread
       if self.onStart:
@@ -122,7 +126,9 @@ class PacketHandler(threading.Thread):
       ## Creating sniffer
       #self.capture_tracks_sniff(self.interface, self.filter)
       self.logger.debug("  + Using filter [%s]"%self.filter)
-      self.cap = pyshark.LiveCapture(self.interface, display_filter=self.filter)
+      self.cap = pyshark.LiveCapture(self.interface, 
+				     display_filter=self.filter, 
+				     only_summaries=self.only_summary)
 
       if self.cap is not None:
 	## Calling filtering function from child class
