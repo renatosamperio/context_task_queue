@@ -169,7 +169,7 @@ def GetLogger(logName=LOG_NAME, useFile=True):
     logger.addHandler(fileHandler)
   return logger
     
-def GetFileLogger(fileLength=100000, numFiles=5):
+def GetFileLogger(fileLength=1000000, numFiles=5):
   ''' Sets up file handler for logger'''
   myFormat = '%(asctime)s|%(process)6d|%(name)25s|%(message)s'
   formatter = logging.Formatter(myFormat)
