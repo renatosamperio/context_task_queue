@@ -23,37 +23,44 @@ from ContextInfo import ContextInfo
 class ContextGroup:
   ''' '''
   def __init__(self, **kwargs):    
-    component		= self.__class__.__name__
-    self.logger		= Utilities.GetLogger(logName=component)
-    self.trialTimes 	= 0
-    self.threads	= {}
-    self.joined		= 0
-    self.frontend	= ''
-    self.backend	= ''
-    self.tasks 		= None
-    self.topic		= None
-    self.service_id	= None
-    self.loader		= ModuleLoader()
-    self.contextInfo	= ContextInfo()
-    self.contextMonitor	= ContextMonitor()
-    self.counter	= 1
-    
-    ## Variables for thread management
-    self.lThreads	= []
-    self.lock 		= multiprocessing.Lock()
-    self.context	= None
-    self.actionHandler	= None
+    ''' Class constructor'''
+    try: 
+      component		= self.__class__.__name__
+      self.logger		= Utilities.GetLogger(logName=component)
+      self.trialTimes 	= 0
+      self.threads	= {}
+      self.joined		= 0
+      self.frontend	= ''
+      self.backend	= ''
+      self.tasks 		= None
+      self.topic		= None
+      self.service_id	= None
+      self.loader		= ModuleLoader()
+      self.contextInfo	= ContextInfo()
+      self.contextMonitor	= ContextMonitor()
+      self.counter	= 1
+      
+      ## Variables for thread management
+      self.lThreads	= []
+      self.lock 		= multiprocessing.Lock()
+      self.context	= None
+      self.actionHandler	= None
 
-    # Generating instance of strategy
-    for key, value in kwargs.iteritems():
-      if "topic" == key:
-	self.topic = value
-      elif "tasks" == key:
-	self.tasks = value
-      elif "frontend" == key:
-	self.frontend = value
-      elif "backend" == key:
-	self.backend = value
+      # Generating instance of strategy
+      for key, value in kwargs.iteritems():
+	if "topic" == key:
+	  self.topic = value
+	elif "tasks" == key:
+	  self.tasks = value
+	elif "frontend" == key:
+	  self.frontend = value
+	elif "backend" == key:
+	  self.backend = value
+	elif "contextID" == key:
+	  self.service_id = value
+	  self.logger.debug("   Setting up context ID [%s]" % str(self.service_id))
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
    
   def deserialize(self, service, rec_msg):
     ''' '''
@@ -104,10 +111,12 @@ class ContextGroup:
 	      tasks = content['configuration']['TaskService']
 	      for task in tasks:
 		taskId = task['id']
+		self.logger.debug("  Stoping action, stopping service [%s]"%taskId)
 		self.StopService( transaction, service_id=taskId)
 	  #TODO: Set up an action when linger time is expired
 	  elif serviceAction == 'start':
 	    ## Starting context services
+	    self.logger.debug("  Starting action, starting service")
 	    self.start(msg=msg)
 
 	  # Restarting service
@@ -120,11 +129,11 @@ class ContextGroup:
 	      tasks = content['configuration']['TaskService']
 	      for task in tasks:
 		taskId = task['id']
-		self.logger.debug("  Stopping service [%s]"%taskId)
+		self.logger.debug("  Restarting action, stopping service [%s]"%taskId)
 		self.StopService( transaction, service_id=taskId)
 	      
 	    ## Second start the service task
-	    self.logger.debug("  Starting service [%s]"%header["service_id"])
+	    self.logger.debug("  Restarting action, starting service [%s]"%header["service_id"])
 	    self.start(msg=msg)
 	    
 	  ## Store service state control for task service monitoring
@@ -285,8 +294,8 @@ class ContextGroup:
 	  self.logger.debug( "Error: No services in context information data structure, stop action")
 	  return
 	
-	for serviceId in lServices:
-	  self.StopService(transaction, service_id=serviceId)
+	for service in lServices:
+	  self.StopService(transaction, service_id=service['service_id'])
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -303,7 +312,7 @@ class ContextGroup:
 	backend 	= configuration['BackendEndpoint']
 	logName		= configuration['TaskLogName']
 	transaction	= header["service_transaction"]
-	self.service_id	= header["service_id"]
+	service_id	= header["service_id"]
 	self.joined	= 0
 	taskTopic	= 'process'
 	self.logger.debug("==> Message for setting up process [%s] has been received"%
@@ -314,6 +323,7 @@ class ContextGroup:
 		  'contextId': self.service_id,
 		  'contextName': header['service_name'],
 		  'contextLogName': configuration['TaskLogName'],
+		  'tasks':[],
 		  'configuration':
 		    {
 		      'BackendBind'	: configuration['BackendBind'],
@@ -322,9 +332,9 @@ class ContextGroup:
 		      'FrontEndEndpoint': frontend
 		    }
 	       }
+	result = self.contextInfo.UpdateContext(transaction, data)
 	
 	## Notifying context update message
-	result = self.contextInfo.UpdateState(transaction, 'context', data)
 	state = "success" if result else "failed"
 	self.logger.debug(" -> Notifying control message as [%s]"%state)
 	self.notify('control', 'update', state, transaction, "context_info")
@@ -462,7 +472,7 @@ class ContextGroup:
 	msg = "%s @@@ %s" % ("process", json_msg)
 
 	## Sending message for each task in services
-	self.logger.debug( "  Stopping service [%s]..."%(service_id))
+	self.logger.debug( "  Sending message to stop service [%s]..."%(service_id))
 	self.serialize(msg)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -586,17 +596,17 @@ class ContextGroup:
       result = True
       transaction = msg['header']['service_transaction']
       if 'service_transaction' not in msg['header'].keys():
-	self.logger.debug("  Transaction [%s] not found in message" %(transaction))
+	self.logger.debug("[VALIDATE]  Transaction [%s] not found in message" %(transaction))
 	return False
 	
-      self.logger.debug("Validating context service name...")
+      self.logger.debug("[VALIDATE] Validating context service name...")
       serviceName = msg["header"]['service_name']
       if serviceName == 'context' == False:
-	self.logger.debug("  Service name not for context [%s]" %(serviceName))
+	self.logger.debug("[VALIDATE]  Service name not for context [%s]" %(serviceName))
 	result = False
 
       ## Check if transaction is already defined the processes 
-      self.logger.debug("Validating service transaction...")
+      self.logger.debug("[VALIDATE] Validating service transaction...")
       
       ## TODO: Check state of the processes to see if they all would be stopped.
       ##       If so, the could be started...
@@ -608,60 +618,66 @@ class ContextGroup:
       transactionExists = self.contextInfo.TransactionExists(transaction)
       ## Checking if is a restart allow everything
       if isRetartAction:
-	self.logger.debug("  - Validating restart action for [%s]" %(transaction))
+	self.logger.debug("[VALIDATE]  - Validating restart action for [%s]" %(transaction))
       elif isStartAction or isStopAction:
 	''' '''
 	## Checking if transaction exists for 'start' and 'stop'
 	##    exit False if it does not exists
 	if not transactionExists and isStopAction:
-	  self.logger.debug( "Transaction [%s] does not exits, failed exiting..."%transaction)
-	  self.logger.debug(" => Validation [FAILED]")
+	  self.logger.debug( "[VALIDATE] Transaction [%s] does not exits, failed exiting..."%transaction)
+	  self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	  return False
-	self.logger.debug("  - Using transaction with ID [%s]" %(transaction))
+	self.logger.debug("[VALIDATE]  - Using transaction with ID [%s]" %(transaction))
 	
 	## Checking if context ID exists for 'start' and 'stop'
 	##    exit False if it does not exists
 	contextId 	= msg['header']['service_id']
 	contextExists	= self.contextInfo.ContextExists(transaction, contextId)
 	if not contextExists and isStopAction:
-	  self.logger.debug("  - Context ID [%s] NOT found in transaction [%s], failed exiting" 
+	  self.logger.debug("[VALIDATE]  - Context ID [%s] NOT found in transaction [%s], failed exiting" 
 	      %(contextId, transaction))
-	  self.logger.debug(" => Validation [FAILED]")
+	  self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	  return False
-	self.logger.debug("  - Found context ID [%s] in transaction [%s]" 
+	self.logger.debug("[VALIDATE]  - Found context ID [%s] in transaction [%s]" 
 	    %(contextId, transaction))
-	
+
 	## Checking if action exists is different return value
 	tasks = msg['content']['configuration']['TaskService']
 	for lTask in tasks:
 	  serviceId = lTask['id']
-	  serviceExists = self.contextInfo.ServiceExists(transaction, serviceId)
-	  if serviceExists:
-	      self.logger.debug("  - Found service ID [%s] in transaction [%s], failed exiting" 
+	  service = self.contextInfo.GetServiceID(transaction, serviceId)
+	  if service is None:
+	    self.logger.debug("[VALIDATE]  - Invalid service [%s] in transaction [%s], failed exiting" 
+		%(serviceId, transaction))
+	    break
+
+	  serviceExists = service is not None
+	  if not serviceExists and isStopAction:
+	      self.logger.debug("[VALIDATE]  - Service [%s] not found in transaction [%s], failed exiting" 
 		  %(serviceId, transaction))
-	  elif not serviceExists and isStopAction:
-	      self.logger.debug("  - Not found service ID [%s] in transaction [%s], failed exiting" 
-		  %(serviceId, transaction))
-	      self.logger.debug(" => Validation [FAILED]")
+	      self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	      return False
+	  elif serviceExists:
+	      self.logger.debug("[VALIDATE]  - Service [%s] found in transaction [%s], failed exiting" 
+		  %(serviceId, transaction))
 	  
 	  ## Checking service state not to be started
-	  serviceState = self.contextInfo.GetServiceValue( transaction, serviceId, 'state')
+	  serviceState = service['action']
 	  if serviceState is not None and 'stop' in serviceState:
-	      self.logger.debug("  - Service [%s] in transaction [%s] state is [%s], failed exiting" 
+	      self.logger.debug("[VALIDATE]  - Service [%s] in transaction [%s] state is [%s], failed exiting" 
 		  %(serviceId, transaction, serviceState))
-	      self.logger.debug(" => Validation [FAILED]")
+	      self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	      return False
 	    
-	  self.logger.debug("  - Service ID [%s] in transaction [%s] has been validated" 
+	  self.logger.debug("[VALIDATE]  - Service ID [%s] in transaction [%s] has been validated" 
 	      %(serviceId, transaction))
 
       else:
-	self.logger.debug( "Unkown action [%s], failed exiting..."%action)
-	self.logger.debug(" => Validation [FAILED]")
+	self.logger.debug( "[VALIDATE] Unkown action [%s], failed exiting..."%action)
+	self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	return False
       ## PASSED all tests...
-      self.logger.debug(" => Validation [PASSED]")
+      self.logger.debug("[VALIDATE] => Validation [PASSED]")
       return True
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
