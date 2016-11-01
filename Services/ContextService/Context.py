@@ -458,6 +458,10 @@ class ContextGroup:
     try:
       ## Preparing message for stopping each of the available service
       serviceDetails = self.contextInfo.GetServiceData(transaction, service_id)
+      if serviceDetails is None:
+	self.logger.debug( "  Error: Invalid value for service details")
+	return
+	
       serviceDetailsKeys = serviceDetails.keys()
       
       if 'task' not in serviceDetailsKeys:
