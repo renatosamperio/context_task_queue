@@ -167,8 +167,8 @@ class ContextGroup:
 	  ## Check if transaction is defined in context information
 	  if self.contextInfo.TransactionExists(transaction):
 	    self.logger.debug(" -> Updating context information based in [process] messages")
-	    result = self.contextInfo.UpdateProcessState(msg)
-	    
+	    result = self.contextInfo.UpdateProcessState(msg, state='in_progress')
+
 	    ## Notifying context update message
 	    state = "success" if result else "failed"
 	    self.logger.debug(" -> Notifying control message as [%s]"%state)
