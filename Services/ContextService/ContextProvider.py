@@ -10,10 +10,8 @@ import sys, os
 import time
 import json
 import pprint
-
 import logging.handlers
 from threading import Thread
-
 from Context import ContextGroup
 from Utils import ParseXml2Dict
 from Provider.Service import MultiProcessTasks
@@ -21,121 +19,125 @@ from Utils import Utilities
 import Utils
 
 def init_worker():
-  signal.signal(signal.SIGINT, signal.SIG_IGN)
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
 
-def run_forwarder( id_, *args, **kwargs):
-  try:
-    frontendURL = args[0]
-    backendURL  = args[1]
-    
-    # Creating context and sockets
-    context = zmq.Context(1)
-    frontend = context.socket(zmq.SUB)
-    backend = context.socket(zmq.PUB)
-    
-    # Socket facing clients
-    frontend.bind(frontendURL)
-    #frontend.bind("tcp://*:5557")
-    frontend.setsockopt(zmq.SUBSCRIBE, "")
 
-    # Socket facing services
-    backend.bind(backendURL)
-    #backend.bind("tcp://*:5556")
+def run_forwarder(id_, *args, **kwargs):
+    try:
+        frontendURL = args[0]
+        backendURL = args[1]
 
-    #Setting up forwarder device
-    zmq.device(zmq.FORWARDER, frontend, backend)
-  except KeyboardInterrupt, e:
-      pass
+        # Creating context and sockets
+        context = zmq.Context(1)
+        frontend = context.socket(zmq.SUB)
+        backend = context.socket(zmq.PUB)
+
+        # Socket facing clients
+        frontend.bind(frontendURL)
+        frontend.setsockopt(zmq.SUBSCRIBE, '')
+
+        # Socket facing services
+        backend.bind(backendURL)
+
+        #Setting up forwarder device
+        zmq.device(zmq.FORWARDER, frontend, backend)
+    except KeyboardInterrupt as e:
+        pass
+
 
 def CreateSafeFowarder(frontBind, backendBind, logger):
-  logger.debug("  Creating frontend/backend binder with signal handler")
-  args = (frontBind, backendBind, logger)
-  pool = multiprocessing.Pool(1, init_worker)
-  
-  args, kw = (frontBind,backendBind), {}
-  sol = pool.apply_async(run_forwarder, (0,) + args, kw)
-  return pool
+    logger.debug('  Creating frontend/backend binder with signal handler')
+    args = (frontBind, backendBind, logger)
+    pool = multiprocessing.Pool(1, init_worker)
+
+    args, kw = (frontBind, backendBind), {}
+    sol = pool.apply_async(run_forwarder, (0,) + args, kw)
+    return pool
+
 
 def main(filename):
-  myFormat = '%(asctime)s|%(process)6d|%(name)25s|%(message)s'
-  logging.basicConfig(format=myFormat, level=logging.DEBUG)
+    myFormat = '%(asctime)s|%(process)6d|%(name)25s|%(message)s'
+    logging.basicConfig(format=myFormat, level=logging.DEBUG)
 
-  joined        = 0
-  keepAlive	= True
-  threads	= []
-  pool		= None
-  
-  rootName 		= 'Context'
-  testConf 		= ParseXml2Dict(filename, rootName)
-  log_name 		= testConf['TaskLogName']
-  
-  # Setting up logger
-  logger = Utilities.GetLogger(logName=log_name)
-  logger.debug( "Parsing tree ["+rootName+"] in file: "+filename)
+    joined = 0
+    keepAlive = True
+    threads = []
 
-  try: 
-    # Getting local vairables
-    frontend 		= testConf['FrontEndEndpoint']
-    backend 		= testConf['BackendEndpoint']
-    frontBind 		= testConf['FrontBind']
-    backendBind		= testConf['BackendBind']
-    testConfKeys	= testConf.keys()
-    
-    # Running forwarder
-    pool = CreateSafeFowarder(frontBind, backendBind, logger)
-    
-    # Getting log name
-    if 'TaskLogName' not in testConfKeys:      
-      logger.debug( "Log name not found in file: "+filename)
-      return
+    pool = None
+    rootName = 'Context'
+    testConf = ParseXml2Dict(filename, rootName)
+    log_name = testConf['TaskLogName']
 
-    # Starting threaded services
-    logger.debug("Creating a context provider")
-    s1 = MultiProcessTasks(0, frontend	=frontend, 
-			  backend	=backend,
-			  strategy	=ContextGroup,
-			  topic		='context')
-    threads.append(s1)
-    time.sleep(0.5)
+    # Setting up logger
+    logger = Utilities.GetLogger(logName=log_name)
+    logger.debug('Parsing tree [' + rootName + '] in file: ' + filename)
+    try:
+        # Getting local vairables
+        frontend = testConf['FrontEndEndpoint']
+        backend = testConf['BackendEndpoint']
+        frontBind = testConf['FrontBind']
+        backendBind = testConf['BackendBind']
+        contextID = testConf['ContextID']
+        testConfKeys = testConf.keys()
 
-    # Looping service provider
-    threadSize = len(threads)
-    while keepAlive:
-      if joined != threadSize:
-	for i in range(threadSize):
-	  if threads[i] is not None:
-	    logger.debug("Joining thread %d..."%i)
-	    threads[i].join(1)
-	    joined += 1
-      else:
-	# Doing nothing while other threads do their work
-	time.sleep(1)
-    
-  except KeyboardInterrupt:
-    logger.debug( "Ctrl-C received! Sending kill to all threads...")
-    # Stopping thread execution
-    threadSize = len(threads)
-    print "===> threadSize :", threadSize 
-    for i in range(threadSize):
-      logger.debug("Killing thread [%d]..."%i)
-      print "===> threads[",i,"] :", threads[i] 
-      if threads[i] is not None:
-	threads[i].stop()
-    # Stopping pool
-    logger.debug( "Stopping process pool")
-    if pool is not None:
-      pool.close()
+        # Running forwarder
+        pool = CreateSafeFowarder(frontBind, backendBind, logger)
 
-  except Exception as inst:
-    Utilities.ParseException(inst, logger=logger)		
+        # Getting log name
+        if 'TaskLogName' not in testConfKeys:
+            logger.debug('Log name not found in file: ' + filename)
+            return
 
-  finally:
-    ##TODO: Do not reach this point until all processes are stopped
-    logger.debug("Ending main thread...")
-    keepAlive = False
+        # Starting threaded services
+        logger.debug('Creating a context provider')
+        s1 = MultiProcessTasks(0, frontend=frontend, 
+			       backend=backend, 
+			       strategy=ContextGroup, 
+			       topic='context', 
+			       contextID=contextID)
+        threads.append(s1)
+        time.sleep(0.5)
+
+        # Looping service provider
+        threadSize = len(threads)
+        while keepAlive:
+            if joined != threadSize:
+                for i in range(threadSize):
+                    if threads[i] is not None:
+                        logger.debug('Joining thread %d...' % i)
+                        threads[i].join(1)
+                        joined += 1
+
+            else:
+                time.sleep(1)
+
+    except KeyboardInterrupt:
+        logger.debug('Ctrl-C received! Sending kill to all threads...')
+
+        # Stopping thread execution
+        threadSize = len(threads)
+        print '===> threadSize :', threadSize
+        for i in range(threadSize):
+            logger.debug('Killing thread [%d]...' % i)
+            print '===> threads[', i, '] :', threads[i]
+            if threads[i] is not None:
+                threads[i].stop()
+
+        # Stopping pool
+        logger.debug('Stopping process pool')
+        if pool is not None:
+            pool.close()
+    except Exception as inst:
+        Utilities.ParseException(inst, logger=logger)
+
+    finally:
+        ##TODO: Do not reach this point until all processes are stopped
+        logger.debug('Ending main thread...')
+        keepAlive = False
+
 
 if __name__ == '__main__':
-  if len(sys.argv) > 1:
-      print "usage: ContextService.py "
-      raise SystemExit
-  main(sys.argv[1])
+    if len(sys.argv) > 1:
+        print 'usage: ContextService.py '
+        raise SystemExit
+    main(sys.argv[1])
