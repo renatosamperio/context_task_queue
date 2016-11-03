@@ -111,7 +111,7 @@ def GetTask(configuration, options):
   ## Setting header data
   header    			= {}
   header['action']		= options.action
-  header['service_id']		= options.service_id
+  header['service_id']		= configuration['ContextID']
   header['service_name']	= options.service_name
   header['service_transaction']	= options.transaction
   fileTasks			= configuration['TaskService']
@@ -132,6 +132,7 @@ def GetTask(configuration, options):
 		'FrontBind'	  : configuration['FrontBind'],
 		'FrontEndEndpoint': configuration['FrontEndEndpoint'],
 		'TaskLogName'	  : configuration['TaskLogName'],
+		'ContextID'	  : configuration['ContextID'],
 		'TaskService'	  : {}
 	    }
       },
@@ -236,7 +237,7 @@ def message(options):
 
   elif header["service_name"] == 'all' and options.use_file==False and header["action"] == 'stop':
     content = {"content": {}}
-    
+
   elif header["service_name"] == 'ftp':
     configuration = {
       "bandwith":		'',
@@ -834,8 +835,6 @@ if __name__ == '__main__':
   if options.use_file:
     if options.context_file is None:
       parser.error("Missing required option: --context_file")
-    if options.service_id is 'none':
-      parser.error("Missing required option: --service_id")
     if options.transaction is None:
       parser.error("Missing required option: --transaction")
     if options.action is 'none':
