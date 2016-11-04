@@ -16,7 +16,6 @@ from lxml import etree
 from trollius.executor import TimeoutError
 from optparse import OptionParser
 from threading import Thread
-from Queue import Queue
 import Utilities
 
 class PacketHandler(threading.Thread):
@@ -24,6 +23,7 @@ class PacketHandler(threading.Thread):
     def __init__(self, **kwargs):
         """Class for filtering packets for finding track information from live streaming """
         try:
+	    
             threading.Thread.__init__(self)
             component = self.__class__.__name__
             self.logger = Utilities.GetLogger(component)
@@ -33,12 +33,14 @@ class PacketHandler(threading.Thread):
             self.interface = None
             self.filter = None
             self.running = False
-            self.db_record = Queue()
+            
             self.onStart = True
             self.service = None
             self.only_summary = False
             self.decode_as = "{}"
             self.db_watermark = 3
+            self.identifier = None
+            
             for key, value in kwargs.iteritems():
                 if 'interface' == key:
                     self.interface = value
@@ -57,6 +59,9 @@ class PacketHandler(threading.Thread):
                 elif 'decode_as' == key:
                     self.decode_as = value
                     self.logger.debug('  + Setting option for protocol decoder [%s]' % self.decode_as)
+                elif 'identifier' == key:
+                    self.identifier = value
+                    self.logger.debug('  + Setting idenfier [%s]' % self.identifier)
 
             if self.onStart:
                 self.logger.debug('  + Process is set to start from the beginning')
@@ -65,6 +70,7 @@ class PacketHandler(threading.Thread):
                 self.join(1)
             else:
                 self.running = True
+
         except Exception as inst:
             Utilities.ParseException(inst, logger=self.logger)
 
@@ -133,7 +139,6 @@ class PacketHandler(threading.Thread):
 
     def SearchData(self):
         """Function defined in child class for exposing beahviour within collected data """
-        self.logger.debug("  No 'SearchData' function defined in parent class")
 
     def AddNewItem(self, item):
         """Adds an item to local storage only if it is NOT already there """
