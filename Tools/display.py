@@ -23,10 +23,11 @@ def main(options):
 	msg = json.loads(json_msg)
 	
 	if not options.verbose:
-	  if 'control' == topic and msg["content"]["status"]["device_action"] == "context_info":
-	    json_msg = "Message with [context_info]"
+	  ## TODO: include context_info in command arguments
+	  if 'control' == topic:
+	    if msg["content"]["status"]["device_action"] == "context_info":
+	      json_msg = "Message with [context_info]"
 
-        json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
         timeNow = datetime.datetime.now()
         print "========================================================================"
         print "%s [%s]: \n%s" % (str(timeNow), topic, json_msg)
