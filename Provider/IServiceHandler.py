@@ -66,8 +66,8 @@ class ServiceHandler:
       topic = topic.strip()
       json_msg = json_msg.strip()
       msg = json.loads(json_msg)
-      self.logger.debug("Received message with topic [%s] of [%s] bytes"%(
-	topic, str(len(json_msg))))
+      #self.logger.debug("Received message with topic [%s] of [%s] bytes"%(
+	#topic, str(len(json_msg))))
       
       # Checking if it is the right topic
       if topic == service.topic:
