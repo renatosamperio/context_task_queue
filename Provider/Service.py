@@ -248,7 +248,6 @@ class TaskedService(object):
 
                 ## Check if it is time for looking into memory usage state
                 if self.check_in_time - time.time() < 0:
-                    #TODO: Include additional values from configuration (mem values, etc)
                     service_id = self.action.service_id
                     process_memory = Utilities.MemoryUsage(self.tid, serviceId=service_id, log=self.logger)
 
@@ -276,13 +275,14 @@ class TaskedService(object):
                             self.action.notify('failed', 'sucess', items=items)
 
                     ## Logging simplified process monitoring information
-                    self.logger.debug('[%s] Service [%s, %d] has (rss=%.2f MiB, vms=%.2f MiB, mem=%.4f %%) in %.2fms' % (self.threadID,
-                     service_id,
-                     self.tid,
-                     process_memory['total']['vms'],
-                     process_memory['total']['vms'],
-                     process_memory['total']['percent'],
-                     process_memory['elapsed'] * 1000))
+                    self.logger.debug('[%s] Service [%s, %d] has (rss=%.2f MiB, vms=%.2f MiB, mem=%3.4f%%) in %.2fms' 
+		      % (self.threadID,
+			 service_id,
+			 self.tid,
+			 process_memory['total']['rss'],
+		         process_memory['total']['vms'],
+			 process_memory['total']['percent'],
+			 process_memory['elapsed'] * 1000))
                     self.check_in_time = time.time() + self.time_out_alarm
 
             ## Destroying IPC connections and mark process as stopped
