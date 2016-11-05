@@ -20,6 +20,7 @@ class ServiceHandler:
     ''' Constructor of simple service'''
     self.component	= self.__class__.__name__
     self.logger		= Utilities.GetLogger(logName=self.component)
+    self.logger.debug("Service handler class constructor")
     
     self.stopped    	= True
     self.actionHandler 	= None
@@ -45,13 +46,13 @@ class ServiceHandler:
     for key, value in kwargs.iteritems():
       if "frontend" == key:
 	self.frontend = value
+      elif "service_id" == key:
+	self.service_id = value
+	self.logger.debug('   Setting service ID [%s]' %(self.service_id))
       elif "backend" == key:
 	self.backend = value
       elif "transaction" == key:
 	self.transaction = value
-      ## TODO: Remove this option as front and back endpoints are used
-      elif "endpoint" == key:
-	self.endpoint = value
       elif "device_action" == key:
 	self.device_action = value
 
