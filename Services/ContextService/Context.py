@@ -76,8 +76,8 @@ class ContextGroup:
       msg 		= json.loads(json_msg)
       msgKeys 		= msg.keys()
       
-      self.logger.debug("==> Message with topic [%s] but natively using topic [%s]" %
-			(topic, service.topic))
+      #self.logger.debug("==> Message with topic [%s] but natively using topic [%s]" %
+			#(topic, service.topic))
       # Processing messages with context enquires for 'context' topic
       if topic == service.topic:
 	header 		= msg["header"]
@@ -217,7 +217,7 @@ class ContextGroup:
 	  serviceName	= header["service_name"]
 	  
 	  if serviceName == 'context' or device_action == 'context_info':
-	    self.logger.debug(" -> Ignoring message with service name [%s]"%serviceName)
+	    #self.logger.debug(" -> Ignoring message with service name [%s]"%serviceName)
 	    return
 	  
 	  self.logger.debug(" -> Updating context from [control] messages from [%s]"%serviceName)
@@ -248,7 +248,7 @@ class ContextGroup:
 	self.logger.debug("Serialise called but no backend endpoint set in service")
 	return 
 	
-      self.logger.debug("    Creating context for publisher")
+      #self.logger.debug("    Creating context for publisher")
       context = zmq.Context()
       socket = context.socket(zmq.PUB)
       
@@ -256,15 +256,15 @@ class ContextGroup:
       time.sleep(0.1)
       
       # Sending message
-      self.logger.debug("    Sending message of [%s] bytes" % len(msg))
+      #self.logger.debug("    Sending message of [%s] bytes" % len(msg))
       utfEncodedMsg = msg.encode('utf-8').strip()
       socket.send(utfEncodedMsg)
       socket.close()
-      self.logger.debug("    Closing socket: %s"%str(socket.closed))
+      #self.logger.debug("    Closing socket: %s"%str(socket.closed))
       
-      self.logger.debug("    Destroying context for publisher")
+      #self.logger.debug("    Destroying context for publisher")
       context.destroy()
-      self.logger.debug("    Closing context: %s"%str(context.closed))
+      #self.logger.debug("    Closing context: %s"%str(context.closed))
       time.sleep(0.1)
       
     except Exception as inst:

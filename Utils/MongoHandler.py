@@ -20,10 +20,14 @@ class MongoAccess:
     component		= self.__class__.__name__
     self.logger		= Utilities.GetLogger(component)
     self.collection 	= None
+    self.db	 	= None
     self.debug	 	= debug
+    self.logger.debug("Creating mongo client with debug mode [%s]"%
+		      ('ON' if self.debug else 'OFF'))
     
   def connect(self, database, collection, host='localhost', port=27017):
     ''' '''
+    result = False
     try: 
       if self.debug: self.logger.debug("Creating mongo client")
       # Creating mongo client
@@ -31,15 +35,18 @@ class MongoAccess:
 
       # Getting instance of database
       if self.debug: self.logger.debug("Getting instance of database")
-      db = client[database]
+      self.db = client[database]
 
       # Getting instance of collection
       if self.debug: self.logger.debug("Getting instance of collection")
-      self.collection = db[collection]
+      self.collection = self.db[collection]
       
+      result = self.collection is not None
     
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+    finally:
+      return result
       
   def Insert(self, document):
     post_id = None
@@ -105,9 +112,10 @@ class MongoAccess:
     collSize = None
     try: 
       collSize = self.collection.count()
+      self.log("Collection [%s] has size of [%d]"%(self.collection, collSize))
     except Exception as inst:
       Utilities.ParseException(inst, logger=logger)
-    return 
+    return collSize
   
   def Update(self, condition=None, substitute=None):
     '''Updates data from database '''
@@ -129,6 +137,12 @@ class MongoAccess:
       return result
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+  ## TODO: Make all log entries a "log" method    
+  def log(self, logEntry):
+    ''' Controlled log'''
+    if self.debug: 
+      self.logger.debug(logEntry)
     
 def db_handler_call(options):
   ''' Method for calling MongoAccess handler'''
