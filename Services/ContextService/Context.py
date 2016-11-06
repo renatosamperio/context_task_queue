@@ -593,7 +593,10 @@ class ContextGroup:
     Context ID NOT Exists	OK	FAIL	OK
     Service ID Exists		OK	OK	OK
     Service ID NOT Exists	OK	FAIL	OK
+    Service STATE stopped	OK	OK	OK
+    Service STATE failed	FAIL	OK	OK -> Needs to be stopped first
     Service STATE started	FAIL	OK	OK
+    Service STATE updated	FAIL	OK	OK -> Same as started
 
     '''
     try:
@@ -662,17 +665,25 @@ class ContextGroup:
 	      self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	      return False
 	  elif serviceExists:
-	      self.logger.debug("[VALIDATE]  - Service [%s] found in transaction [%s], failed exiting" 
+	      self.logger.debug("[VALIDATE]  - Service [%s] found in transaction [%s]" 
 		  %(serviceId, transaction))
 	  
-	  ## Checking service state not to be started
-	  serviceState = service['action']
-	  if serviceState is not None and 'stop' in serviceState:
-	      self.logger.debug("[VALIDATE]  - Service [%s] in transaction [%s] state is [%s], failed exiting" 
-		  %(serviceId, transaction, serviceState))
+	  ## Checking service state not to be stopped
+	  ## Fail if it its current state is updated, failed or started and incmoing action is started
+	  serviceState 		= service['action']
+	  isStoppedService 	= serviceState == 'stopped'
+	  isFailedService 	= serviceState == 'failed'
+	  isStartedService 	= serviceState == 'started'
+	  isUpdatedService 	= serviceState == 'updated'
+	  nonAcceptedServices 	= isFailedService or isStartedService or isUpdatedService
+	  
+	  if serviceState is not None and (nonAcceptedServices and isStartAction):
+	      self.logger.debug("[VALIDATE]  - Service [%s] current state is [%s] and action [%s], failed exiting" 
+		  %(serviceId, serviceState, action))
 	      self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	      return False
-	    
+	  self.logger.debug("[VALIDATE]  - Found service [%s] with state [%s] and received action [%s]" 
+		%(serviceId, serviceState, action))
 	  self.logger.debug("[VALIDATE]  - Service ID [%s] in transaction [%s] has been validated" 
 	      %(serviceId, transaction))
 
