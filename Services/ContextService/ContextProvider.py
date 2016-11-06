@@ -116,10 +116,8 @@ def main(filename):
 
         # Stopping thread execution
         threadSize = len(threads)
-        print '===> threadSize :', threadSize
         for i in range(threadSize):
             logger.debug('Killing thread [%d]...' % i)
-            print '===> threads[', i, '] :', threads[i]
             if threads[i] is not None:
                 threads[i].stop()
 
