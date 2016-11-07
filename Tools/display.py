@@ -22,6 +22,7 @@ def main(options):
 	json_msg = json_msg.strip()
 	msg = json.loads(json_msg)
 	
+	json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
 	if not options.verbose:
 	  ## TODO: include context_info in command arguments
 	  if 'control' == topic:
