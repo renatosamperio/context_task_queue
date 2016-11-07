@@ -12,10 +12,13 @@ import ast
 import logging
 import logging.handlers
 import xmltodict, json
+
 from lxml import etree
 from trollius.executor import TimeoutError
 from optparse import OptionParser
 from threading import Thread
+from Queue import Queue
+
 import Utilities
 
 class PacketHandler(threading.Thread):
@@ -33,6 +36,7 @@ class PacketHandler(threading.Thread):
             self.interface = None
             self.filter = None
             self.running = False
+            self.db_record = Queue()
             
             self.onStart = True
             self.service = None
