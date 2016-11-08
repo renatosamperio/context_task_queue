@@ -1,0 +1,211 @@
+#!/usr/bin/python
+
+import json
+import time
+import sys, os
+import json
+import logging
+import threading
+import imp
+
+from optparse import OptionParser
+
+## Checking if Utilities module exists
+##  Otherwise, force it find it assuming this module
+##  is in /Services/Sniffer/NetworkSniffer.py
+try:
+  from Utils import Utilities
+except ImportError:
+  currentPath = sys.path[0]
+  path = ['/'.join(currentPath.split('/')[:-2])+'/Utils/']
+  name = 'Utilities'
+  print "Importing libraries from [%s]"%name
+  try:
+    fp = None
+    (fp, pathname, description) = imp.find_module(name, path)
+    Utilities = imp.load_module(name, fp, pathname, description)
+    print "  Libraries for [%s] imported"%name
+  except ImportError:
+    print "  Error: Module ["+name+"] not found"
+    sys.exit()
+  finally:
+    # Since we may exit via an exception, close fp explicitly.
+    if fp is not None:
+      fp.close()
+      fp=None
+    print "Imported libraries for [%s]"%name
+
+
+# Include additional python modules
+
+# Include class variables
+
+class $TaskClass(threading.Thread):
+  def __init__(self, **kwargs):
+    '''Service task constructor'''
+    # Initialising thread parent class
+    threading.Thread.__init__(self)
+    
+    try:
+      # Initialising class variables
+      self.component	= self.__class__.__name__
+      self.logger	= Utilities.GetLogger(self.component)
+      
+      # Thread action variables
+      self.tStop 	= threading.Event()
+      self.threads	= []
+      self.tid		= None
+      self.running	= False
+      
+      ## Adding local variables
+      self.service	= None
+      self.onStart	= True
+
+      # Generating instance of strategy
+      for key, value in kwargs.iteritems():
+	if "service" == key:
+	  self.service = value
+	elif "onStart" == key:
+	  self.onStart = bool(value)
+	  
+      # Starting action thread
+      if self.onStart:
+	self.logger.debug("  + Process is starting immediately")
+	self.start()
+      else:
+	## Setting item started for reporting to device action
+	self.running	= True
+      
+      ## Adding monitor thread to the list of references
+      self.threads.append(self)
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  def hasStarted(self):
+    ''' Reports task thread status'''
+    return self.running and not self.tStop.isSet()
+
+  def hasFinished(self):
+    ''' Reports task thread status'''
+    return not self.running and self.tStop.isSet()
+  
+  def RunSingleTask(self):
+    '''Execute single task'''
+    try:
+      # Do something here!
+      # ...
+      i=0
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
+  def run(self):
+    '''Threaded action '''
+    try:
+      ## Setting process as started
+      self.running	= True
+      
+      ## Setting thread for joining service list
+      if self.service is not None and self.service.task is not None:
+	self.logger.debug('  + Adding thread for joining context')
+	self.service.task.AddContext(self, self.component)
+      
+      # Getting thread GetPID
+      self.tid		= Utilities.GetPID()
+      self.logger.debug('Starting task [%s] with PID [%d]'% (self.component, self.tid))
+      
+      start_time = time.time()
+      self.logger.debug('Preparing task [%d]'%self.tid)
+      
+      ## Measuring time it took to process houses
+      self.RunSingleTask()
+      elapsed_time = time.time() - start_time
+	
+      ## Clearing event for completness
+      if self.service is not None and self.service.task is not None:
+	self.logger.debug('  + Stopping service')
+	self.service.task.tStop.clear()
+      
+      # Ending thread routine
+      self.logger.debug('  + Elapsed time of [%.4f]ms'%(elapsed_time*1000))
+      self.running = False
+      self.logger.debug('  + Ending thread')
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+   
+  def close(self):
+    ''' Ending task service'''
+    try:
+      # Do additional stopping routines here
+      # ...
+      
+      if not self.tStop.isSet():
+	# Stop thread and give some time to do whatever it has to do
+	self.logger.debug(" Stopping task thread, setting event...")
+	self.tStop.set()
+	time.sleep(0.75)
+      else:
+	self.logger.debug(" Event loop is already interrupted")
+      
+      # Force to stop before leaving
+      if self.is_alive(): 
+	self.logger.debug( "  Stopping the thread and wait for it to end")
+	threading.Thread.join(self, 1)  
+      else:
+	self.logger.debug(" Thread is not alive")
+	
+      self.logger.debug( "  Thread stopped")
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
+  def execute(self, service):
+    ''' Execute $TaskClass task by calling a "run" method in the service'''
+
+
+## Standalone main method
+LOG_NAME = 'TaskTool'
+def call_task(options):
+  ''' Command line method for running sniffer service'''
+  try:
+    
+    logger = Utilities.GetLogger(LOG_NAME, useFile=False)
+    logger.debug('Calling sniffer from command line')
+    
+    args = {}
+    args.update({'option1': options.opt1})
+    args.update({'option2': options.opt2})
+    
+    taskAction = $TaskClass(**args)
+
+  except Exception as inst:
+    Utilities.ParseException(inst, logger=logger)
+
+if __name__ == '__main__':
+  logger = Utilities.GetLogger(LOG_NAME, useFile=False)
+  
+  myFormat = '%(asctime)s|%(name)30s|%(message)s'
+  logging.basicConfig(format=myFormat, level=logging.DEBUG)
+  logger 	= Utilities.GetLogger(LOG_NAME, useFile=False)
+  logger.debug('Logger created.')
+  
+  usage = "usage: %prog option1=string option2=bool"
+  parser = OptionParser(usage=usage)
+  parser.add_option('--opt1',
+		      type="string",
+		      action='store',
+		      default=None,
+		      help='Write here something helpful')
+  parser.add_option("--opt2", 
+		      action="store_true", 
+		      default=False,
+		      help='Write here something helpful')
+    
+  (options, args) = parser.parse_args()
+  
+  if options.opt1 is None:
+    parser.error("Missing required option: --opt1='string'")
+    sys.exit()
+
+  call_task(options)
