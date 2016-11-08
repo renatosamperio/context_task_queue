@@ -92,6 +92,13 @@ class AutoCode(object):
   '''
   EntryAction = 'TestEntryAction'
   
+  '''
+  If it exists, defines the type of task template to use:  "Single" or "Looped". 
+  The "Single" process is executed from start to finish. The "Looped" is
+  a process that continously executes itself.
+  '''
+  TaskType = 'TestTaskType'
+  
   def __init__(self, options):
     ''' Class constructor'''
     self.ServicePath	= None
@@ -108,6 +115,7 @@ class AutoCode(object):
     self.TaskID		= None
     self.DeviceAction	= None
     self.EntryAction	= None
+    self.TaskType	= None
     self.StateConf	= []
     
     ## Service configuration location
@@ -130,6 +138,7 @@ class AutoCode(object):
     self.DeviceAction	= options['device_action']
     self.EntryAction	= options['entry_action']
     self.StateConf	= options['state']
+    self.TaskType	= options['taskType']
   
     # Validating state values whether they would be incomplete
     if len(self.StateConf) != 4:
@@ -187,7 +196,7 @@ class AutoCode(object):
       if os.path.exists(servicePath):
 	message = "Warning: Couldn't create service path"
 	reason  = "Path already exists ["+servicePath+"]"
-	print message+"=>"+reason
+	self.PrintLog(message+" "+reason)
 	return servicePath
       
       ## If directory does not exists, create it 
@@ -235,12 +244,26 @@ class AutoCode(object):
 	message = "Warning:"
 	reason  = "Root path is not valid"
 	print message+" : "+reason
-	return servicePath
+	##TODO: Should create an exception
+	sys.exit(0)
 
       ## Open service task template
       self.PrintLog("+ Loading task template file")
       fileName = self.TaskFile+'.py'
-      filePath = self.HomePath+'/Tools/Templates/Task.tmpl'
+      
+      ## Defining the type of task
+      if self.TaskType == 'Looped':
+	filePath = self.HomePath+'/Tools/Templates/Task.tmpl'
+      elif self.TaskType == 'Single':
+	filePath = self.HomePath+'/Tools/Templates/TaskSingle.tmpl'
+      else:
+	message = "Warning:"
+	reason  = "Invalid type of task template"
+	print message+" : "+reason
+	##TODO: Should create an exception
+	sys.exit(0)
+      self.PrintLog("+ Loading a task for [%s]"%self.TaskType)
+
       with open(filePath, 'r') as openedFile:
 	data=openedFile.read()
 	data = data.replace('$TaskClass', self.TaskClass)
@@ -516,6 +539,12 @@ if __name__ == '__main__':
 	service.update({'pub_port': 	services['pub_port']})
 	service.update({'service_path': services['service_path']})
 	service.update({'home_path': 	services['home_path']})
+	
+	## Checking if there is a type of task
+	taskType = 'Looped'	
+	if 'task_type' in service.keys():
+	  taskType = service['task_type']
+	service.update({'taskType': 	taskType})
 	
 	## Calling code autogenerator
 	autogenerator = AutoCode(service)
