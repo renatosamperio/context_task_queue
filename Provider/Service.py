@@ -331,7 +331,7 @@ class TaskedService(object):
 
 
 class ThreadTasks(threading.Thread, TaskedService):
-
+    '''Creates a services task in a thread '''
     def __init__(self, threadID, **kwargs):
         ''' '''
         TaskedService.__init__(self, threadID, **kwargs)
@@ -347,7 +347,7 @@ class ThreadTasks(threading.Thread, TaskedService):
 
 
 class MultiProcessTasks(TaskedService, multiprocessing.Process):
-
+    '''Creates a service task in a process '''
     def __init__(self, threadID, **kwargs):
         ''' '''
         TaskedService.__init__(self, threadID, **kwargs)

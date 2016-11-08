@@ -33,6 +33,7 @@ except ImportError:
     if fp is not None:
       fp.close()
       fp=None
+    print "Imported libraries for [%s]"%name
 
 
 # Include additional python modules
@@ -88,6 +89,16 @@ class $TaskClass(threading.Thread):
     ''' Reports task thread status'''
     return not self.running and self.tStop.isSet()
   
+  def RunSingleTask(self):
+    '''Execute single task'''
+    try:
+      # Do something here!
+      # ...
+      i=0
+      
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    
   def run(self):
     '''Threaded action '''
     try:
@@ -95,26 +106,34 @@ class $TaskClass(threading.Thread):
       self.running	= True
       
       ## Setting thread for joining service list
-      self.logger.debug('  + Adding thread for joining context')
-      self.service.task.AddContext(self, self.component)
+      if self.service is not None and self.service.task is not None:
+	self.logger.debug('  + Adding thread for joining context')
+	self.service.task.AddContext(self, self.component)
       
       # Getting thread GetPID
       self.tid		= Utilities.GetPID()
       self.logger.debug('Starting task [%s] with PID [%d]'% (self.component, self.tid))
       
-      self.logger.debug('Looping for task [%d]'%self.tid)
-      while not self.tStop.isSet():
-	# Do something here!
-	# ...
-	self.tStop.wait(5)
+      start_time = time.time()
+      self.logger.debug('Preparing task [%d]'%self.tid)
+      
+      ## Measuring time it took to process houses
+      self.RunSingleTask()
+      elapsed_time = time.time() - start_time
 	
+      ## Clearing event for completness
+      if self.service is not None and self.service.task is not None:
+	self.logger.debug('  + Stopping service')
+	self.service.task.tStop.clear()
+      
       # Ending thread routine
+      self.logger.debug('  + Elapsed time of [%.4f]ms'%(elapsed_time*1000))
       self.running = False
-      self.logger.debug('Ending thread [%d]'%self.tid)
+      self.logger.debug('  + Ending thread')
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-    
+   
   def close(self):
     ''' Ending task service'''
     try:
@@ -188,5 +207,5 @@ if __name__ == '__main__':
   if options.opt1 is None:
     parser.error("Missing required option: --opt1='string'")
     sys.exit()
-    
+
   call_task(options)
