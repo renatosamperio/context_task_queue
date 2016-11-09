@@ -3,8 +3,8 @@
 
 - [Microservices](#microservices)
 	- [Definitions](#definitions)
-- [Quick Tutorial](#quick-tutorial])
-	- [Service creation](#eervice-creation)
+- [Quick Tutorial](#quick-tutorial)
+	- [Service creation](#service-creation)
 	- [Executing a context](#executing-a-context)
 	- [Generating multiple services](#generating-multiple-services)
 	- [Autonomous process states](#autonomous-process-states)
