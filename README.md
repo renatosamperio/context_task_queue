@@ -91,7 +91,23 @@ However, the command requires an accurate parameter configuration and it should 
   * __Device action__ is an optional parameter to further identify particular messages.
   
 __All described parameters are required when calling ```create_service.py``` command.__
- 
+
+
+### Looped and Single execution tasks
+
+Services can be created to work as daemons (looped tasks) or one-shot execution. The default parameter would generate a task with a looped task template. Additionally, a one-shot execution task can be created by defining a task type with ***'Simple'*** keyword:
+
+
+    <Service task_type='Single'>
+      ...
+      <task_topic>process</task_topic>
+      ...
+      
+      <state>
+        ...
+      </state>
+    </Service>
+
 ## Executing a context
 In order to execute a service, we need to start an instance of a context provider.
 
