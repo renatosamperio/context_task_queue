@@ -1,18 +1,18 @@
 
 # Table of Contents
 
-- [Transactional microservices](#)
-	- [Definitions](#)
-- [Quick Tutorial](#)
-	- [Service creation](#)
-	- [Executing a context](#)
-	- [Generating multiple services](#)
-	- [Autonomous process states](#)
-- [Advanced components](#)
-	- [Monitoring service](#)
-	- [Publishing context information](#)
+- [Microservices](#microservices)
+	- [Definitions](#definitions)
+- [Quick Tutorial](#quick-tutorial])
+	- [Service creation](#eervice-creation)
+	- [Executing a context](#executing-a-context)
+	- [Generating multiple services](#generating-multiple-services)
+	- [Autonomous process states](#autonomous-process-states)
+- [Additional components](#additional-components)
+	- [Monitoring service](#monitoring-service)
+	- [Publishing context information](#publishing-context-information)
 
-# Transactional microservices
+# Microservices
 This package is for organising and monitoring sets of transactional processes. The processes have a minimalistic microservice approach and are communicated within [ZMQ forward devices](http://api.zeromq.org/2-1:zmq-device).
 
 In the scope of this module, each process is called **Task Service** as it is managed as a Unix-based service (_e. g. start/stop/restarted_) and performs a very specific and simple task (or action). Similarly, a task service has a life and usage that is monitored and represented in a context. Therefore, a context has allocated and controls a set of task services.
@@ -33,6 +33,8 @@ In the scope of this module, each process is called **Task Service** as it is ma
 # Quick Tutorial
 ## Service creation
 In this tutorial we are using the ```create_service.py``` command contained in ```Tools``` subpackage. This command would generate a task service with the following steps:
+
+
 1. Add a service directory
 2. Provide a ```__init__.py```
 3. Generate a ```Service[NAME].py``` stub file
@@ -123,7 +125,6 @@ The ```conf_command.py``` command requires of the following parameters:
   * __Action__: the context actions are *start*, *stop* and *restart*.
   
 
- 
 ## Generating multiple services
 To generate skeleton services for multiple services, is easier to prepare a service configuration file:
 
