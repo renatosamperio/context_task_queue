@@ -310,44 +310,64 @@ Each task service has a configurable set of triggered actions for "**start**", "
 * **fail**: Automatic call of another task service ID when current service notifies a _failed_ action.
 * **updat**: Automatic call of another task service ID when current service notifies a _updated_ action.
 
-# Advanced components
+# Additional components
 ## Monitoring service
-The configurable actions are maintained by a monitor service which it is also included in context configuration. The default monitor service configuration is described below:
+The configurable actions are maintained by a monitor service which it is also included in context configuration. The monitor service can be configured as another service task:
 
-      <Service>
-        <task_service>Monitor</task_service>
-        <task_file>ContextMonitor</task_file>
-        <task_class>ContextMonitor</task_class>
-        <task_desc>Monitors memory and process for context task services</task_desc>
-        <service_name>monitor</service_name>
-        <task_id>ts000</task_id>
-        <task_topic>monitor</task_topic>
-        <device_action>task_monitor</device_action>
+      <TaskService id="ts000" instance="Monitor" serviceType="Process" topic="process">
+        <Task>
+          <description>
+            Monitors memory and process for context task services
+          </description>
     
-        <entry_action>on_start</entry_action>
-        <state>
-          <trigger>on_start</trigger>
-          <action></action>
-          <state_id></state_id>
-        </state>
-        <state>
-          <trigger>on_update</trigger>
-          <action></action>
-          <state_id></state_id>
-        </state>
-        <state>
-          <trigger>on_fail</trigger>
-          <action></action>
-          <state_id></state_id>
-        </state>
-        <state>
-          <trigger>on_exit</trigger>
-          <action></action>
-          <state_id></state_id>
-        </state>
-      </Service>
-
-TODO: Explain two types of monitoring calling
+          <message>
+            <header>
+              <action>start</action>
+              <service_name>monitor</service_name>
+            </header>
+            
+            <content>
+              <configuration>
+            	<device_action>task_monitor</device_action>
+            	<service>
+            	  <endpoint>tcp://127.0.0.1:6558</endpoint>
+            	  <frequency_s>30.0</frequency_s>
+            	  <type>pub</type>
+            	</service>
+            	<monitor_options>
+            	  <opened_files>1</opened_files>
+            	  <open_connections>1</open_connections>
+            	  <memory_maps>1</memory_maps>
+            	</monitor_options>
+              </configuration>
+            </content>
+          </message>
+    
+          <state type="on_start">
+            <on_start>
+              <action />
+              <call />
+            </on_start>
+      
+            <on_update>
+              <action />
+              <call />
+            </on_update>
+      
+            <on_fail>
+              <action>restart</action>
+              <call>ts000</call>
+            </on_fail>
+      
+            <on_exit>
+              <action />
+              <call />
+            </on_exit>
+          </state>
+        </Task>
+      </TaskService>
+      
+The context monitoring is a service that process published messages with context information in the **control** topic and a device action of **context_info**. This service requires its own endpoint for publishing periodic messages. The messages contain use services PIDs with information related to RSS, VMS, machine percentage, memory_maps, children (processes and threads), open_files and opened connections.
 
 ## Publishing context information
 The available context information can be published on the **state** topic or channel. The provided information is a JSON representation of the context information data structure. This data structure is maintained by the context and contains the available configuration, names, states and service  identifiers such as: ID, name, PID, instance name and current state action.  
