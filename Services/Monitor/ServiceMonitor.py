@@ -94,55 +94,20 @@ class ServiceMonitor(ServiceHandler):
       confKeys 	= conf.keys()
       args 	= {'onStart': True, 'service': self}
       
-      ## Parsing monitor options from configuration message
-      ##    Getting transaction
-      ##      required: transaction
-      notMissingArgs = True
-      if 'header' not in message.keys():
-	self.logger.debug("  - Missing argument: header in message")
-	notMissingArgs = True
+      ## Parsing parameters
+      self.logger.debug("   Parsing message parameters")
+      for key in confKeys:
+	if key in confKeys:
+	  value = message['content']['configuration'][key]
+	  args.update({key: value})
+
       ##    Got message, not checking for transaction
       header = message['header']
       if 'transaction' not in header.keys():
 	self.logger.debug("  - Missing argument: transaction in header")
-	notMissingArgs = True
       transaction = header['transaction']
       args.update({'transaction': transaction})
-      
-      ##    Getting service information
-      ##      required: endpoint
-      if 'service' in confKeys:
-	service = conf['service']
-	serviceKeys 	= service.keys()
-	if 'endpoint' in serviceKeys:
-	  endpoint = service['endpoint']
-	  args.update({'endpoint': endpoint})
-	else:
-	  self.logger.debug("  - Missing argument: endpoint")
-	  notMissingArgs = False
 
-	if 'frequency_s' in serviceKeys:
-	  frequency_s = service['frequency_s']
-	  args.update({'frequency_s': frequency_s})
-	if 'type' in serviceKeys:
-	  type_ = service['type']
-	  args.update({'type': type_})
-	
-      ##    Getting monitoring options
-      ##      required: ---
-      if 'monitor_options' in confKeys:
-	monitor_options = conf['monitor_options']
-	monitorKeys 	= monitor_options.keys()
-	if 'memory_maps' in monitorKeys:
-	  memory_maps = monitor_options['memory_maps']
-	  args.update({'memory_maps': memory_maps})
-	if 'open_connections' in monitorKeys:
-	  open_connections = monitor_options['open_connections']
-	  args.update({'open_connections': open_connections})
-	if 'opened_files' in monitorKeys:
-	  opened_files = monitor_options['opened_files']
-	  args.update({'opened_files': opened_files})
-	
       ## Creating service object and notify
       start_state = 'started'
       taskType = state['type']
@@ -153,10 +118,7 @@ class ServiceMonitor(ServiceHandler):
 	
       ## Creating service object and notify
       deviceAction = Monitor(**args)
-      time.sleep(1)
-      
-      hasStarted = deviceAction.hasStarted()
-      if deviceAction.hasStarted() and notMissingArgs:
+      if deviceAction.hasStarted():
 	result="success"
 
     except Exception as inst:
