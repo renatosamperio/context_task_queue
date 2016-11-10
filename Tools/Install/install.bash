@@ -134,6 +134,15 @@ echo -e "\e[0m"
 git clone https://github.com/mongodb/mongo-python-driver.git && cd mongo-python-driver/
 python setup.py install && cd ..
 
+echo -e "\e[92m \e[1m"
+echo "*****************************************************"
+echo "*****          INSTALLING DEPENDENCIES          *****"
+echo "*****         (GIT: Python matplotlib)          *****"
+echo "*****************************************************"
+echo -e "\e[0m"
+apt-get --assume-yes install libfreetype6-dev libpng12-dev
+git clone https://github.com/matplotlib/matplotlib.git && cd matplotlib/
+python setup.py install && cd ..
 
 echo -e "\e[92m \e[1m"
 echo "*****************************************************"
