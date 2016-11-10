@@ -117,10 +117,17 @@ class MongoAccess:
       Utilities.ParseException(inst, logger=logger)
     return collSize
   
-  def Update(self, condition=None, substitute=None):
-    '''Updates data from database '''
+  def Update(self, condition=None, substitute=None, upsertValue=False):
+    '''
+    Updates data from database. 
+    condition	dictionary with lookup condition
+    substitue	item to substitute
+    upsertValue	True for insert if not exist, False otherwise
+    
+    returns True if update was OK, otherwise False
+    '''
     try: 
-      result = None
+      result = False
       if condition is not None and substitute is not None:
 	
 	if '_id' in substitute.keys():
@@ -129,15 +136,20 @@ class MongoAccess:
 	if len(condition)<1:
 	  self.logger.debug("Updating documents from collection")
 	  
-	self.collection.update(condition,{
+	resultSet = self.collection.update(condition,{
 				'$set': substitute
-			      }, upsert=False, multi=False)
+			      }, upsert=upsertValue, multi=False)
+	
+	self.logger.debug("Updated existing:"+str(resultSet['updatedExisting']))
+	result = resultSet['ok'] == 1
       else:
 	self.logger.debug("Invalid condition for updateing")
-      return result
+      result = True
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-
+    finally:
+      return result
+      
   ## TODO: Make all log entries a "log" method    
   def log(self, logEntry):
     ''' Controlled log'''
