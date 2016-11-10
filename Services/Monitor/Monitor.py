@@ -1,22 +1,83 @@
 #!/usr/bin/python
 
 import json
-import time
+import time, datetime
 import sys, os
 import json
 import logging
 import threading
 import zmq
 import multiprocessing
+import imp
 import pprint
 
-from Utils import Utilities
-from Services.ContextService import ContextInfo
+from optparse import OptionParser
 
-# Include additional python modules
+## Checking if Utilities module exists
+##  Otherwise, force it find it assuming this module
+##  is in /Services/Sniffer/NetworkSniffer.py
+try:
+  from Utils import Utilities
+  from Utils.MongoHandler import MongoAccess
+  from Services.ContextService import ContextInfo
+except ImportError:
+  currentPath = sys.path[0]
+  path = ['/'.join(currentPath.split('/')[:-2])+'/Utils/']
+  name = 'Utilities'
+  print "Importing libraries from [%s]"%name
+  try:
+    fp = None
+    (fp, pathname, description) = imp.find_module(name, path)
+    Utilities = imp.load_module(name, fp, pathname, description)
+    print "  Libraries for [%s] imported"%name
+  except ImportError:
+    print "  Error: Module ["+name+"] not found"
+    sys.exit()
+  finally:
+    # Since we may exit via an exception, close fp explicitly.
+    if fp is not None:
+      fp.close()
+      fp=None
+    print "Imported libraries for [%s]"%name
 
-# Include class variables
-
+  name = 'MongoHandler'
+  print "Importing libraries from [%s]"%name
+  try:
+    fp = None
+    (fp, pathname, description) = imp.find_module(name, path)
+    MongoAccess = imp.load_module(name, fp, pathname, description).MongoAccess
+    print "  Libraries for [%s] imported"%name
+  except ImportError:
+    print "  Error: Module ["+name+"] not found"
+    sys.exit()
+  finally:
+    ''' '''
+    # Since we may exit via an exception, close fp explicitly.
+    if fp is not None:
+      fp.close()
+      fp=None
+      
+  path = ['/'.join(currentPath.split('/')[:-2])+'/Services/ContextService/']
+  name = 'ContextInfo'
+  print "Importing libraries from [%s]"%name
+  try:
+    fp = None
+    (fp, pathname, description) = imp.find_module(name, path)
+    ContextInfo = imp.load_module(name, fp, pathname, description).ContextInfo
+    print "  Libraries for [%s] imported"%name
+  except ImportError:
+    print "  Error: Module ["+name+"] not found"
+    sys.exit()
+  finally:
+    ''' '''
+    # Since we may exit via an exception, close fp explicitly.
+    if fp is not None:
+      fp.close()
+      fp=None
+      
+      
+      
+## TODO: Monitor more than one transaction from same context
 class Monitor(threading.Thread):
   def __init__(self, **kwargs):
     '''Service task constructor'''
@@ -40,7 +101,7 @@ class Monitor(threading.Thread):
       ## Adding local variables 
       self.service	= None
       self.onStart	= True
-      self.logger.debug("  + Creating context information data structure")
+      self.logger.debug("  + Creating process monitoring service")
       self.lContextInfo	= []
 
       ## Variables for monitoring service
@@ -51,37 +112,98 @@ class Monitor(threading.Thread):
       self.memory_maps		= False
       self.open_connections	= False
       self.opened_files		= False
+      self.store_records	= False
       self.pub_socket		= None
       self.context		= None
+      
+      ## Database variables
+      self.database		= None
+      self.collection		= None
+      self.host			= None
+      self.port			= None
+      self.db_handler		= None
+      self.connected		= False
 	  
-      # Generating instance of strategy
+      ## Generating instance of strategy
       for key, value in kwargs.iteritems():
-	if "service" == key:
+	#print "===>",key,":", value
+	if "service" == key:			# (/)
 	  self.service = value
-	elif "onStart" == key:
+	elif "onStart" == key:			# (/)
 	  self.onStart = value
 	elif "msg" == key:
 	  self.msg = value
-	elif "memory_maps" == key:
-	  self.memory_maps = bool(value)
-	elif "open_connections" == key:
-	  self.open_connections = bool(value)
-	elif "opened_files" == key:
-	  self.opened_files = bool(value)
-	elif "frequency_s" == key:
-	  self.service_freq = float(value)
-	elif "endpoint" == key:
-	  self.service_endpoint = value
-	elif "type" == key:
-	  self.service_type = value
-	elif "transaction" == key:
+
+	elif "transaction" == key:		# (/)
 	  self.transaction = value
-	  
-      # Starting action thread
+	  self.logger.debug('    Setting up transaction [%s]'%self.transaction)
+	elif "db_connection" == key:
+	  self.logger.debug('    Found options for [%s]'%key)
+	  valueKeys = value.keys()
+	  for vKey in valueKeys:
+	    vKValue = value[vKey]
+	    #print "  ===>",vKey,":", vKValue
+	    if "host" == vKey:
+	      self.host = vKValue
+	      self.logger.debug('      Setting up DB host [%s]'%self.host)
+	    elif "port" == vKey:
+	      self.port = int(vKValue)
+	      self.logger.debug('      Setting up DB port [%s]'%self.port)
+	    elif "collection" == vKey:
+	      self.collection = vKValue
+	      self.logger.debug('      Setting up DB collection [%s]'%self.collection)
+	    elif "database" == vKey:
+	      self.database = vKValue
+	      self.logger.debug('      Setting up DB [%s]'%self.database)
+	elif "monitor_options" == key:
+	  self.logger.debug('    Found options for [%s]'%key)
+	  valueKeys = value.keys()
+	  for vKey in valueKeys:
+	    vKValue = value[vKey]
+	    #print "  ===>",vKey,":", vKValue
+	    if "memory_maps" == vKey:		# (/)
+	      self.memory_maps = bool(vKValue)
+	      store = 'ON' if self.memory_maps else 'OFF'
+	      self.logger.debug('      Setting to get memory maps in dB [%s]'%store)
+	    elif "open_connections" == vKey:		# (/)
+	      self.open_connections = bool(vKValue)
+	      store = 'ON' if self.open_connections else 'OFF'
+	      self.logger.debug('      Setting to get open connections in dB [%s]'%store)
+	    elif "opened_files" == vKey:		# (/)
+	      self.opened_files = bool(vKValue)
+	      store = 'ON' if self.opened_files else 'OFF'
+	      self.logger.debug('      Setting to get opened files in dB [%s]'%store)
+	    elif "store_records" == vKey:
+	      self.store_records = bool(vKValue)
+	      store = 'ON' if self.store_records else 'OFF'
+	      self.logger.debug('      Setting to store records in dB [%s]'%store)
+	elif "publisher" == key:
+	  self.logger.debug('    Found options for [%s]'%key)
+	  valueKeys = value.keys()
+	  for vKey in valueKeys:
+	    vKValue = value[vKey]
+	    #print "  ___>",vKey,":", vKValue
+	    if "frequency_s" == vKey:		# (/)
+	      self.service_freq = float(vKValue)
+	      self.logger.debug('      Setting up service frequency [%f]'%self.service_freq)
+	    elif "endpoint" == vKey:			# (/)
+	      self.service_endpoint = vKValue
+	      self.logger.debug('      Setting up endpoint [%s]'%self.service_endpoint)
+	    elif "type" == vKey:			# (/)
+	      self.service_type = vKValue
+	      self.logger.debug('      Setting up service type [%s]'%self.service_type)
+	      
+      ## Starting action thread
       if self.onStart:
 	self.logger.debug("  + Process is set to start from the beginning")
 	self.start()
       
+      # Connecting to Mongo client
+      if self.ConnectDB():
+	self.logger.debug("  + Created mongo client for [%s] in catalogue [%s]"%(self.database, self.collection))
+      else:
+	self.logger.debug("Error: Creationg of Mongo client failed")
+	
       ### Adding monitor thread to the list of references
       self.threads.append(self)
     except Exception as inst:
@@ -94,7 +216,7 @@ class Monitor(threading.Thread):
   def hasFinished(self):
     ''' Reports task thread status'''
     return not self.running and self.tStop.isSet()
-  
+
   def run(self):
     '''Threaded action '''
     try:
@@ -106,6 +228,7 @@ class Monitor(threading.Thread):
       
       ## Checking if socket exists
       if socket is None:
+	## If socket is invalid, can't do anything
 	self.logger.debug('Error: Could not connect to [%s] in [%d]'
 	  %(self.service_endpoint, self.tid))
 	self.running = False
@@ -119,14 +242,11 @@ class Monitor(threading.Thread):
 	
 	## Getting available data from local copy of context
 	with self.lock:
-	  #print "===> lContextInfo:", type(self.lContextInfo)
-	  #pprint.pprint(self.lContextInfo)
 	  contextInfo = list(self.lContextInfo)
 	
 	## Getting process memory data
 	processInfo = self.FormatContextData(contextInfo)
 	process_timer = (time.time() - start_time)*1000 ## ms
-	self.logger.debug('  @ Process operations done in [%.4f]ms' % process_timer)
 	if processInfo is not None:
 	  json_msg = json.dumps(processInfo)
 	  
@@ -134,10 +254,17 @@ class Monitor(threading.Thread):
 	  if json_msg is not None and len(json_msg)>0:
 	    send_msg = "%s @@@ %s" % ("monitor", json_msg)
 	    utfEncodedMsg = send_msg.encode('utf-8').strip()
+	    self.logger.debug('    Sending message of [%d] bytes'%(len(utfEncodedMsg)))
 	    socket.send(utfEncodedMsg)
+	    
+	  ## Inserting record in database
+	  if self.store_records and self.connected:
+	    self.logger.debug('    Storing record for [%s]'%self.transaction)
+	    self.KeepMongoRecord(processInfo)
 	
 	## Waiting for sending next message
 	lapsed_time = time.time() - start_time
+	self.logger.debug('  @ Process operations done in [%.4f]ms' % (lapsed_time*1000))
 	waitingTime = self.service_freq - lapsed_time
 	if waitingTime<1.0:
 	  waitingTime = 1.0
@@ -164,14 +291,11 @@ class Monitor(threading.Thread):
 
   def stop_all_msg(self):
     ''' Implement if the service task requires to stop any other running process'''
-    
-  def FormatMemData(self, taskElement):
-    ''' Formats element of task queue'''
-    
+
   def FormatContextData(self, contextInfo):
     ''' Prepares a JSON message from context information'''
     try:
-      processInfo = []
+      processInfo = {self.transaction:[]}
       if contextInfo is None:
 	self.logger.debug(' Error: Context information is empty')
 	return contextInfo
@@ -209,97 +333,9 @@ class Monitor(threading.Thread):
 					  openFiles=self.opened_files, 
 					  openConn =self.open_connections)
 		process_memory.update({'action':action, 'state':state, 'pid':pid})
-		processInfo.append(process_memory)
+		processInfo[self.transaction].append(process_memory)
 	
 	return processInfo
-    except Exception as inst:
-      Utilities.ParseException(inst, logger=self.logger)
-
-  def FormatContextData2(self, contextInfo):
-    ''' Prepares a JSON message from context information'''
-    try:
-      #self.logger.debug("  Getting task service monitoring data")
-      memUsage 		= []
-      json_msg		= ""
-    
-      ### Checking for transaction
-      #if self.transaction is None or len(self.transaction)<1:
-	#self.logger.debug("Error: No transaction in service monitor")
-	#return json_msg
-	
-      ### Getting context data
-      #contextData	= self.service.contextInfo.GetContext(self.transaction)
-      #if contextData is None or len(contextData)<1:
-	#self.logger.debug("Error: No context data found in service monitor")
-	#return json_msg
-      
-      for context in contextInfo:
-	for contextID in context.keys():
-	  contextData 	= context[contextID]
-	  tasks 	= contextData['tasks']
-	  for task in tasks:
-	    taskAction		= task['action']	## Should be active (not stopped)
-	    taskPid		= task['pid']		## Should be not None nor zero
-	    taskServiceID	= task['service_id']	## Should be valid
-	    taskState		= task['state']		## Should be valid
-	  
-	    ## TODO: Get processing time by PIDs
-	    process_memory = Utilities.MemoryUsage(pid, 
-					  log=self.logger, 
-					  memMap   =self.memory_maps, 
-					  openFiles=self.opened_files, 
-					  openConn =self.open_connections)
-	  
-      #dataKeys		= contextData.keys()
-      #json_msg		= ''
-      #for key in dataKeys:
-	##if key != 'context':
-	  ### TODO: Validate if there is no valid PID
-	  ###	   Catch exception and continue with other processes
-
-	  ###  Obtaining memory usage
-	  #print "***> contextData"
-	  #pprint.pprint(contextData)
-	  
-	  #lServices = self.contextInfo.GetContextServices(transaction)
-	  #print "***> lServices"
-	  #pprint.pprint(lServices)
-	  #for service in lServices:
-	    #pid = service['pid']
-	    #if pid is not None or len(pid)>0:
-	      
-	      ### TODO: Get processing time by PIDs
-	      #process_memory = Utilities.MemoryUsage(pid, 
-					    #log=self.logger, 
-					    #memMap   =self.memory_maps, 
-					    #openFiles=self.opened_files, 
-					    #openConn =self.open_connections)
-	  
-	      ###  Preparing task service identifiers
-	      #memUsage.append({'service_id':key, 
-			      #'pid':pid,
-			      #'serviceName':contextData[key]['serviceName'],
-			      #'instance':contextData[key]['instance'],
-			      #'memory':process_memory
-			      #})
-      
-      ## Preparing reply/publshed message
-      header = {
-	  "action": "top",
-	  "service_id": "monitor",
-	  "service_name": "state",
-	  "service_transaction": self.transaction
-	}
-      
-      pubMsg = {
-	'header':header,
-	'content':memUsage
-	}
-      
-      ## Encapsulating message to reply
-      json_msg	= json.dumps(pubMsg, sort_keys=True, indent=4, separators=(',', ': '))
-      
-      return json_msg
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
       
@@ -337,69 +373,117 @@ class Monitor(threading.Thread):
       
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-      
-  def StoreCxtConf(self, socket):
-    '''	Stores context configuration and
-	check task by task and add if different
-    '''
+
+  def ConnectDB(self):
+    ''' Establish connection to mongo database'''
     try:
-      ## Find task in existing conviguration
-      idKey	= 'serviceId'
-      updater	= 'element'
-      while self.service.taskQueue.qsize() > 0:
-	tService = self.service.taskQueue.get()
-	## Validating ID exists in message received configuration
-	if idKey not in tService.keys():
-	  self.logger.debug('    Warning: service [%s] without %s'%(str(tService), idKey))
-	  continue
+      if self.port is not None and self.host is not None and self.collection is not None and self.database is not None: 
 
-	## Looing for configured task
-	configuredTask = filter(lambda task: task[idKey] == tService[idKey], self.info)
-
-	## Task does not exists, adding it
-	if len(configuredTask) < 1:
-	  self.logger.debug('    Adding non-existing task to current %s'%updater)
-	  self.info.append(tService)
-
-	## There are two task with that ID
-	elif len(configuredTask) > 1:
-	  self.logger.debug('    Task [%s] has more than one %s, not adding it...'
-	    %(tService[idKey], updater))
-
-	## It already exists, update it...
-	else:
-	  self.logger.debug('    Task [%s] exists in configuration, updating old %s'
-	    %(tService[idKey], updater))
-	  taskID = configuredTask[0][idKey]
-	  index = [i for i in range(len(self.info)) if self.info[i][idKey] == taskID]
-	  if len(index)<1:
-	    raise ContextError('Warning:', 'Task if [%s] not found in %s'%(taskID, updater))
-	    return
-	  self.logger.debug('    Updating task [%s] in existing process data'%index[0])
-	  self.info[index[0]] = tService
-
-      ## Preparing message to send
-      header = {
-	  "action": "top",
-	  "service_id": "monitor",
-	  "service_name": "state",
-	  "service_transaction": self.transaction
-	}
-      
-      pubMsg = {
-	'header':header,
-	'content':self.info
-	}
-      
-      ## Encapsulating message to reply
-      json_msg	= json.dumps(pubMsg, sort_keys=True, indent=4, separators=(',', ': '))
-      send_msg = "%s @@@ %s" % ("monitor", json_msg)
-      
-      ## Encoding ASCII message
-      utfEncodedMsg = send_msg.encode('utf-8').strip()
-      self.logger.debug('   Sending message of [%d] bytes and [%d] items'% 
-			(len(utfEncodedMsg),len(self.info) ) )
-      socket.send(utfEncodedMsg)
-	  
+	self.db_handler = MongoAccess()
+	
+	self.logger.debug("  +   Creating Mongo client")
+	self.connected = self.db_handler.connect(self.database, 
+				self.collection,
+				host=self.host, 
+				port=self.port)
+      else:
+	self.connected = False
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+      self.connected = False
+    return self.connected
+
+  def KeepMongoRecord(self, processInfo):
+    ''' '''
+    result = False
+    try:
+
+      if self.transaction is None:
+	self.logger.debug('Error: Invalid transaction, record not stored')
+      else:
+	
+	## Getting stored data
+	value = processInfo[self.transaction]
+	
+	## Preparing current time as inserting condition
+	now = datetime.datetime.utcnow()
+	currentDate = datetime.datetime(now.year, 
+					now.month, 
+					now.day, 
+					now.hour, 
+					0, 0, 0)
+	## Preparing time series model 
+	##   1) Condition to search item
+	condition = { 
+	    'timestamp_hour': currentDate,
+	    'type': self.transaction
+	}
+	
+	##   2) Update/Insert item in DB
+	valueKey 		= 'values.%d.%d'%(now.minute, now.second)
+	itemUpdate 	= {valueKey: value } 
+	self.db_handler.Update(condition	=condition, 
+			      substitute	=itemUpdate, 
+			      upsertValue=True)
+	result = True
+	    
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    finally:
+      return result
+
+## Standalone main method
+LOG_NAME = 'TaskTool'
+def call_task(options):
+  ''' Command line method for running sniffer service'''
+  try:
+    
+    logger = Utilities.GetLogger(LOG_NAME, useFile=False)
+    logger.debug('Calling sniffer from command line')
+    
+    dbConnection = {
+      'database': 	'monitor',
+      'collection': 	'memory',
+      'host': 		'localhost',
+      'port': 		'27017'
+      }
+    
+    if options.graph:
+      i=0
+    else:
+      return
+      args = {}
+      args.update({'db_connection': dbConnection})
+      args.update({'option2': options.opt2})
+      taskAction = Monitor(**args)
+
+  except Exception as inst:
+    Utilities.ParseException(inst, logger=logger)
+
+if __name__ == '__main__':
+  logger = Utilities.GetLogger(LOG_NAME, useFile=False)
+  
+  myFormat = '%(asctime)s|%(name)30s|%(message)s'
+  logging.basicConfig(format=myFormat, level=logging.DEBUG)
+  logger 	= Utilities.GetLogger(LOG_NAME, useFile=False)
+  logger.debug('Logger created.')
+  
+  usage = "usage: %prog option1=string option2=bool"
+  parser = OptionParser(usage=usage)
+  parser.add_option('--opt1',
+		      type="string",
+		      action='store',
+		      default=None,
+		      help='Write here something helpful')
+  parser.add_option("--graph", 
+		      action="store_true", 
+		      default=False,
+		      help='Write here something helpful')
+    
+  (options, args) = parser.parse_args()
+  
+  if options.opt1 is None:
+    parser.error("Missing required option: --opt1='string'")
+    sys.exit()
+
+  call_task(options)
