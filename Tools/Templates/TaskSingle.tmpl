@@ -68,13 +68,13 @@ class $TaskClass(threading.Thread):
 	elif "onStart" == key:
 	  self.onStart = bool(value)
 	  
+      ## Setting item started for reporting to device action
+      self.running	= True
+	
       # Starting action thread
       if self.onStart:
 	self.logger.debug("  + Process is starting immediately")
 	self.start()
-      else:
-	## Setting item started for reporting to device action
-	self.running	= True
       
       ## Adding monitor thread to the list of references
       self.threads.append(self)
