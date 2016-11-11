@@ -81,10 +81,12 @@ class PacketHandler(threading.Thread):
     def run(self):
         try:
             self.tid = Utilities.GetPID()
-            self.logger.debug('Starting thread [%d]' % self.tid)
-            self.logger.debug('Starting network packet capture in thread [%d]' % self.tid)
+            if self.logger is not None:
+	      self.logger.debug('Starting thread [%d]' % self.tid)
+	      self.logger.debug('Starting network packet capture in thread [%d]' % self.tid)
             self.CaptureThread()
-            self.logger.debug('Looping for capture monitoring [%d]' % self.tid)
+            if self.logger is not None:
+	      self.logger.debug('Looping for capture monitoring [%d]' % self.tid)
             while not self.tStop.isSet():
                 self.tStop.wait(1)
                 self.SearchData()
