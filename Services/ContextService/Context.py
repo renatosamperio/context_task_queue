@@ -388,7 +388,6 @@ class ContextGroup:
       self.logger.debug("==> Starting task service [%s]"%(taskId))
       if (taskType != 'on_start' and taskType != 'start_now'):
 	self.logger.debug("==> Task [%s] not required to start yet"%(taskId))
-	return
       
       ## Preparing action task if it is a process monitor
       serviceName 	= msg_header['service_name']
@@ -461,7 +460,7 @@ class ContextGroup:
       if serviceDetails is None:
 	self.logger.debug( "  Error: Invalid value for service details")
 	return
-	
+
       serviceDetailsKeys = serviceDetails.keys()
       
       if 'task' not in serviceDetailsKeys:
