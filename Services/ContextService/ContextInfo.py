@@ -28,10 +28,12 @@ except ImportError:
       fp=None
 
 class ContextInfo:
-  def __init__(self, stateInfo=None):    
+  def __init__(self, stateInfo=None, debug=False):    
     ''' Class constructor'''
     component		= self.__class__.__name__
     self.logger		= Utilities.GetLogger(logName=component)
+    if not debug:
+      self.logger.setLevel(logging.INFO)
     
     if stateInfo is not None:
       self.stateInfo	= stateInfo
@@ -562,7 +564,7 @@ def test_SearchMethods():
     
     ## Create object
     logger.debug('Creating context information container')
-    contextInfo = ContextInfo(sample_dict)
+    contextInfo = ContextInfo(sample_dict, debug=True)
     
     ## Test1: Search in a list of transactions
     logger.debug( "Test 1.1: Looking for transaction IDs")
@@ -589,7 +591,7 @@ def test_CreateInfo():
   try:
     ## Create object
     logger.debug('Creating context information container')
-    contextInfo = ContextInfo()
+    contextInfo = ContextInfo(debug=True)
     
     ## Generate context state from start
     logger.debug( "Test 2.1: Generate context state from start")
@@ -667,7 +669,7 @@ def test_ListServices():
     
     ## Create object
     logger.debug('Creating context information container')
-    contextInfo = ContextInfo(sample_dict)
+    contextInfo = ContextInfo(sample_dict, debug=True)
     
     ## Test1: Search in a list of transactions
     logger.debug( "Test 4.1: Getting list of services")
