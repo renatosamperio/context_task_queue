@@ -19,6 +19,8 @@ class MongoAccess:
     ''' '''
     component		= self.__class__.__name__
     self.logger		= Utilities.GetLogger(component)
+    if not debug:
+      self.logger.setLevel(logging.INFO)
     self.collection 	= None
     self.db	 	= None
     self.debug	 	= debug
@@ -29,16 +31,16 @@ class MongoAccess:
     ''' '''
     result = False
     try: 
-      if self.debug: self.logger.debug("Creating mongo client")
+      self.logger.debug("Creating mongo client")
       # Creating mongo client
       client = MongoClient(host, port)
 
       # Getting instance of database
-      if self.debug: self.logger.debug("Getting instance of database")
+      self.logger.debug("Getting instance of database")
       self.db = client[database]
 
       # Getting instance of collection
-      if self.debug: self.logger.debug("Getting instance of collection")
+      self.logger.debug("Getting instance of collection")
       self.collection = self.db[collection]
       
       result = self.collection is not None
@@ -51,7 +53,7 @@ class MongoAccess:
   def Insert(self, document):
     post_id = None
     try: 
-      if self.debug: self.logger.debug("Inserting document in collection [%s]"%(self.collection))
+      self.logger.debug("Inserting document in collection [%s]"%(self.collection))
       post_id = self.collection.insert(document)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -61,7 +63,7 @@ class MongoAccess:
     '''Collects data from database '''
     posts = None
     try: 
-      if self.debug: self.logger.debug("Finding document in collection [%s]"%(self.collection))
+      self.logger.debug("Finding document in collection [%s]"%(self.collection))
       posts = self.collection.find(condition)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -112,7 +114,7 @@ class MongoAccess:
     collSize = None
     try: 
       collSize = self.collection.count()
-      self.log("Collection [%s] has size of [%d]"%(self.collection, collSize))
+      self.logger.debug("Collection [%s] has size of [%d]"%(self.collection, collSize))
     except Exception as inst:
       Utilities.ParseException(inst, logger=logger)
     return collSize
@@ -149,18 +151,13 @@ class MongoAccess:
       Utilities.ParseException(inst, logger=self.logger)
     finally:
       return result
-      
-  ## TODO: Make all log entries a "log" method    
-  def log(self, logEntry):
-    ''' Controlled log'''
-    if self.debug: 
-      self.logger.debug(logEntry)
     
 def db_handler_call(options):
   ''' Method for calling MongoAccess handler'''
   #print options
   
   try: 
+    logger = Utilities.GetLogger(LOG_NAME, useFile=False)
     database = MongoAccess()
     database.connect(options.database, options.collections)
     
@@ -316,4 +313,3 @@ if __name__ == '__main__':
     parser.print_help()
   
   db_handler_call(options)
-  
