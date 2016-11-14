@@ -160,5 +160,5 @@ echo "*****************************************************"
 echo -e "\e[0m"$
 cd ~/workspace
 git clone https://github.com/renatosamperio/context_task_queue.git
-cd context_task_queue && python setup.py install && cd ..
+cd context_task_queue && python setup.py install install_scripts && cd ..
 
