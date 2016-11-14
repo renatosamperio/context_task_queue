@@ -5,10 +5,18 @@
 echo -e "\e[92m \e[1m"
 echo "*****************************************************"
 echo "*****          INSTALLING DEPENDENCIES          *****"
-echo "*****       (Python, Git, LibXML and ZMQ)       *****"
+echo "*****           (Python, Git, LibXML)           *****"
 echo "*****************************************************"
 echo -e "\e[0m"
-apt-get --assume-yes install python-setuptools python-dev build-essential python-pip python-pycurl librtmp-dev git libxml2-dev libxslt1-dev libzmq-dev libzmq5 python-zmq
+apt-get --assume-yes install python-setuptools python-dev build-essential python-pip python-pycurl librtmp-dev git libxml2-dev libxslt1-dev
+
+echo -e "\e[92m \e[1m"
+echo "*****************************************************"
+echo "*****          INSTALLING DEPENDENCIES          *****"
+echo "*****                  (ZMQ)                    *****"
+echo "*****************************************************"
+echo -e "\e[0m"
+apt-get --assume-yes install libzmq-dev libzmq5 python-zmq
 
 echo -e "\e[92m \e[1m"
 echo "*****************************************************"
@@ -152,3 +160,5 @@ echo "*****************************************************"
 echo -e "\e[0m"$
 cd ~/workspace
 git clone https://github.com/renatosamperio/context_task_queue.git
+cd context_task_queue && python setup.py install && cd ..
+
