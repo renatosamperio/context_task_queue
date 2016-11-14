@@ -28,21 +28,26 @@ def create_symbolic_links(install_cmd):
 
   print "Generating symbolic links as commands"
   absolutePath = sitePath+'/'+dist_fullname+'-py'+str(sys.version_info.major)+'.'+str(sys.version_info.minor)+'.egg/Tools/'
-  files = ['service_context.py', 'create_service.py', 'display.py']
+  files = ['service_context.py', 'create_service.py', 'display.py', 'conf_command.py']
   for aFile in files:
     src = absolutePath+aFile
     symbolicLink = aFile.split('.')[0]
     dst = absoluteDest+symbolicLink
-    print "   Creating symbolic link for "+symbolicLink
+    
+    ## Overwriting link if exists
+    if os.path.isfile(dst):
+      print "  | Removing existing symbolic link for "+symbolicLink
+      os.remove(dst)
+    print "  / Creating symbolic link for "+symbolicLink
     os.symlink(src, dst)
-    print "   Changing executable persmissions to ", symbolicLink
+    print "  - Changing executable persmissions to "+symbolicLink
     os.system("chmod +x "+src)
       
 class smart_install_scripts(install_scripts):
     def run(self):
       install_cmd 	= self.get_finalized_command('install')
       create_symbolic_links(install_cmd)
-      return install_scripts.run(self)
+      #return install_scripts.run(self)
 
 setup(
     name 	= PACKAGE_NAME,
