@@ -55,18 +55,26 @@ setup(
     author 	= "Renato Samperio",
     author_email= "renatosamperio@gmail.com",
     description = "An alternative way for doing micro-services.",
-    license 	= "GPL-3.0",
-    keywords 	= "microservices zmq distributed",
+    license 	= "GPL 3.0",
+    keywords 	= ["microservices", "zmq", "distributed apps"],
     url 	= "https://github.com/renatosamperio/context_task_queue",
     platforms	= "Ubuntu 16.04",
     packages	=['Provider', 'Tools', 'Tools.Install', 'Tools.Templates', 'Utils', 'Services', 'Services.ContextService', 'Services.Monitor'],
     classifiers	=[
-        "Development Status :: 1 - Alpha",
+        "Development Status :: 3 - Alpha",
         "Topic :: Utilities",
-        "License :: OSI Approved :: GPL-3.0",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: System :: Monitoring",
+        "Topic :: System :: Software Distribution",
+        #"License :: OSI Approved :: GNU General Public License (GPL)",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        #"License :: OSI Approved :: GPL-3.0",
+        "Natural Language :: English",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 2.7",
+        
     ],
-    cmdclass = { 
-	  'install_scripts'	: smart_install_scripts
-	  },
+    download_url= 'https://github.com/renatosamperio/context_task_queue/tarball/1.0',
+    cmdclass = {'install_scripts': smart_install_scripts},
     long_description=long_description,
 )
