@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from XMLParser import ParseXml2Dict, ParseSchedule2Dict
 from Utilities import *
