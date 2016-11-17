@@ -14,7 +14,7 @@ import pprint
 
 from Utils import Utilities
 from Provider.IServiceHandler import ServiceHandler
-from Monitor import Monitor
+from Services.Monitor import Monitor
 
 class ServiceMonitor(ServiceHandler):
   ''' Service for Monitors memory and process for context task services'''
