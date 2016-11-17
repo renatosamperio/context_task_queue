@@ -406,6 +406,10 @@ class ContextGroup:
       ## Getting instance if it should be started only
       self.logger.debug("==> [%s] Getting instance of action [%s]"%(taskId, taskInstance))
       taskStrategy, taskObj = self.FindInstance(taskInstance, location)
+      if taskStrategy is None:
+	self.logger.debug("Error: Unknown task sservice [%s] with location [%s], no service started"%
+		   (taskInstance, location))
+	return
       
       ## TODO: This is a local checking up, should not be here!!!
       ## Checking if hosts is defined as a list
