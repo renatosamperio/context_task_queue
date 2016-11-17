@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import time
+import sys
 import json
 import zmq
 import threading
@@ -582,10 +583,23 @@ class ContextGroup:
       ## Returns None because the task is not contained in itself
       #taskObj = self.loader.GetInstance(taskPath) 
       
-      ## Getting action class instance
-      serviceName = "Service"+sObjName
-      path = sObjName+'.'+serviceName
-      self.logger.debug("  Getting an instance of ["+path+"]")
+      if location is None:
+	self.logger.debug(" + Getting action class instance for [%s] from system"%(sObjName))
+	serviceName = "Service"+sObjName
+	path = "Services."+sObjName+'.'+serviceName
+
+	if not any(path in s for s in sys.modules.keys()):
+	  self.logger.debug(" - Module [%s] not found in system modules"%path)
+	  return None, None
+	
+      else:
+	## Getting action class instance
+	self.logger.debug(" + Preparing action class from [%s]"%location)
+	serviceName = "Service"+sObjName
+	path = sObjName+'.'+serviceName
+	location = [location]
+
+      self.logger.debug(" +   Loading an nstance of ["+path+"]")
       classObj = self.loader.GetInstance(path, location)
       return classObj, None #, taskObj
 
