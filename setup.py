@@ -1,4 +1,5 @@
 import os, sys
+import shutil
 import site
 
 from distutils.core import setup
@@ -12,12 +13,35 @@ from setuptools import setup
 
 PACKAGE_NAME = 'zmicroservices'
 PACKAGE_VERSION = "1.0.0"
+HELPERS_PATH = '/opt/zmicroservices'
 
 ## Creating long description
 with open("README.md", 'r') as f:
     long_description = f.read()
 
 ## Creating post install operations
+def copy_helper_files(install_cmd):
+  ''' Copies additional files in /opt'''
+  
+  print "Generating helpers space in: "+HELPERS_PATH
+  
+  if not os.path.exists(HELPERS_PATH):
+    os.makedirs(HELPERS_PATH)
+    
+  ## TODO: Make smarter to copy only official files
+  installPath		= '/Tools/Install'
+  templatesPath	= '/Tools/Templates'
+  srcInstallHelpers	= os.getcwd()+installPath
+  srcTemplatesHelpers	= os.getcwd()+templatesPath
+  dstInstallHelpers	= HELPERS_PATH+installPath
+  dstTemplatesHelpers	= HELPERS_PATH+templatesPath
+  print "  | Copying installation files: "+dstInstallHelpers
+  shutil.copytree (srcInstallHelpers, dstInstallHelpers)
+  print "  / Copying template files: "+dstTemplatesHelpers
+  shutil.copytree (srcTemplatesHelpers, dstTemplatesHelpers)
+  print "  - Changing writing persmissions to "+dstTemplatesHelpers
+  os.system("chmod +wx -R "+dstTemplatesHelpers)
+
 def create_symbolic_links(install_cmd):
   ''' Creating post installation routines'''
   
