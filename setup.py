@@ -64,13 +64,23 @@ def create_symbolic_links(install_cmd):
       os.remove(dst)
     print "  / Creating symbolic link for "+symbolicLink
     os.symlink(src, dst)
-    print "  - Changing executable persmissions to "+symbolicLink
+    print "  - Changing executable persmissions to source "+symbolicLink
     os.system("chmod +x "+src)
+    
+    ## Creating permanent user made directories
+    helpers = [HELPERS_PATH+'/Services', HELPERS_PATH+'/Conf']
+    for helper in helpers:
+      if not os.path.exists(helper):
+	print "  \   Creating helper path: "+helper
+	os.makedirs(helper)
+	print "  |   Changing writing persmissions to "+helper
+	os.system("chmod 777 "+helper)
       
 class smart_install_scripts(install_scripts):
     def run(self):
       install_cmd 	= self.get_finalized_command('install')
       create_symbolic_links(install_cmd)
+      copy_helper_files(install_cmd)
       #return install_scripts.run(self)
 
 setup(
