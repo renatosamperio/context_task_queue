@@ -68,8 +68,9 @@ class ContextGroup:
     try:
       topic, json_msg 	= rec_msg.split("@@@")
       topic 		= topic.strip()
+      json_msg		= json_msg.strip()
       
-      if len(json_msg)<1:
+      if len(json_msg)<1 or  json_msg == 'null':
 	self.logger.debug("Error: Empty message received")
 	return
 	
