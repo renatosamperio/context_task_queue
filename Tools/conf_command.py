@@ -14,6 +14,9 @@ import pprint
 
 from optparse import OptionParser, OptionGroup
 from operator import xor
+
+from Utils import Utilities
+
 '''
 ## For getting context information:
 $ python Tools/conf_command.py --endpoint='tcp://127.0.0.1:6557' --service_name='state' --transaction="5HGAHZ3WPZUI71PACRPP" --action='request'
@@ -78,270 +81,285 @@ def ParseTasks(options):
   '''Generates JSON task configuration from XML file'''
   # Adding utils path based on current location
   # TODO: Change this!
-  currPath  = os.path.abspath(__file__)
-  utilsPath = currPath[:currPath.find("Tools")]+"Utils"
-  sys.path.append(utilsPath) 
-  testConf = None
-  if options.context_file is not None:
-    # Importing XML parser
-    try:
-      from XMLParser import ParseXml2Dict
-      print "Parser found locally"
-    except ImportError:
-      print "Parser not found locally"
-      
-    try:
-      print "Parser found in system"
-      from Utils.XMLParser import ParseXml2Dict
-    except ImportError:
-      print "Parser not found in system"
+  try:
+    optKeys = options.__dict__.keys()
+    
+    currPath  = os.path.abspath(__file__)
+    utilsPath = currPath[:currPath.find("Tools")]+"Utils"
+    sys.path.append(utilsPath) 
+    testConf = None
+    if options.context_file is not None:
+      # Importing XML parser
+      try:
+	from XMLParser import ParseXml2Dict
+	print "Parser found locally"
+      except ImportError:
+	print "Parser not found locally"
+	
+      try:
+	from Utils.XMLParser import ParseXml2Dict
+	print "Parser found in system"
+      except ImportError:
+	print "Parser not found in system"
 
-    
-    # Parsing test file
-    rootName 		= 'Context'
-    testConf 		= ParseXml2Dict(options.context_file, rootName)
-    
-  # If an interface is set
-  if options.interface is not None:
-    '''' '''
-    # Checking task is a list
-    if type(testConf['TaskService']) != type([]):
-      testConf['TaskService'] = [testConf['TaskService']]
-    
-    # Overwriting network interface if defined as arguments
-    for lTask in testConf['TaskService']:
-      if lTask['instance'] == 'Sniffer':
-	task = lTask['Task']
-	conf = task['message']['content']['configuration']
-	conf['interface'] = options.interface
-  return testConf
+      
+      # Parsing test file
+      rootName 		= 'Context'
+      testConf 		= ParseXml2Dict(options.context_file, rootName)
+      
+    # If an interface is set
+    if 'service_id' in optKeys and options.interface is not None:
+      '''' '''
+      # Checking task is a list
+      if type(testConf['TaskService']) != type([]):
+	testConf['TaskService'] = [testConf['TaskService']]
+      
+      # Overwriting network interface if defined as arguments
+      for lTask in testConf['TaskService']:
+	if lTask['instance'] == 'Sniffer':
+	  task = lTask['Task']
+	  conf = task['message']['content']['configuration']
+	  conf['interface'] = options.interface
+    return testConf
+  except Exception as inst:
+    Utilities.ParseException(inst)
 
 def GetTask(configuration, options):
   '''Getting task configuration from XML with an specific service ID'''
+  try:
+    ''' '''
+    ## Setting header data
+    header    			= {}
+    header['action']		= options.action
+    header['service_id']		= configuration['ContextID']
+    header['service_name']	= options.service_name
+    header['service_transaction']	= options.transaction
+    fileTasks			= configuration['TaskService']
+    options.topic 		= 'context'
+    serviceTask 			= {}
 
-  ## Setting header data
-  header    			= {}
-  header['action']		= options.action
-  header['service_id']		= configuration['ContextID']
-  header['service_name']	= options.service_name
-  header['service_transaction']	= options.transaction
-  fileTasks			= configuration['TaskService']
-  options.topic 		= 'context'
-  serviceTask 			= {}
-
-  ## If configuration file has only one task it will not be a list
-  if not isinstance(fileTasks, list):
-    fileTasks = [fileTasks]
-  
-  ## Preparing task configuration message
-  taskConfMsg = {
-      'content': 
-	{'configuration':
-	    {
-		'BackendBind'	  : configuration['BackendBind'],
-		'BackendEndpoint' : configuration['BackendEndpoint'],
-		'FrontBind'	  : configuration['FrontBind'],
-		'FrontEndEndpoint': configuration['FrontEndEndpoint'],
-		'TaskLogName'	  : configuration['TaskLogName'],
-		'ContextID'	  : configuration['ContextID'],
-		'TaskService'	  : {}
-	    }
-      },
-      'header':header
-  }
-
-  if options.task_id == 'all':
-    taskConfMsg['content']['configuration']['TaskService'] = configuration['TaskService']
-    return taskConfMsg
-  else:
-    ## Looking into file tasks
-    for lTask in fileTasks:
-      if lTask['id'] ==  options.task_id:
-	lTask['Task']['message']['header']['action']	 = options.action
-	lTask['Task']['message']['header']['service_id'] = options.task_id
-	lTask['Task']['message']['header']['transaction']= options.transaction
-	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
-	print "+   Preparing message for service [%s]"%(lTask['Task']['message']['header']['service_id'])
-	return taskConfMsg
+    ## If configuration file has only one task it will not be a list
+    if not isinstance(fileTasks, list):
+      fileTasks = [fileTasks]
     
-    print "- Task ID not found in configuration file..."
-    sys.exit(0)
-    return
+    ## Preparing task configuration message
+    taskConfMsg = {
+	'content': 
+	  {'configuration':
+	      {
+		  'BackendBind'	  : configuration['BackendBind'],
+		  'BackendEndpoint' : configuration['BackendEndpoint'],
+		  'FrontBind'	  : configuration['FrontBind'],
+		  'FrontEndEndpoint': configuration['FrontEndEndpoint'],
+		  'TaskLogName'	  : configuration['TaskLogName'],
+		  'ContextID'	  : configuration['ContextID'],
+		  'TaskService'	  : {}
+	      }
+	},
+	'header':header
+    }
 
-	
-    ## Passing task
-    #taskConfMsg['TaskService'] = serviceTask
-  return serviceTask
+    if options.task_id == 'all':
+      taskConfMsg['content']['configuration']['TaskService'] = configuration['TaskService']
+      return taskConfMsg
+    else:
+      ## Looking into file tasks
+      for lTask in fileTasks:
+	if lTask['id'] ==  options.task_id:
+	  lTask['Task']['message']['header']['action']	 = options.action
+	  lTask['Task']['message']['header']['service_id'] = options.task_id
+	  lTask['Task']['message']['header']['transaction']= options.transaction
+	  taskConfMsg['content']['configuration']['TaskService'] = [lTask]
+	  print "+   Preparing message for service [%s]"%(lTask['Task']['message']['header']['service_id'])
+	  return taskConfMsg
+      
+      if not options.task_id == 'ts000':
+	print "- Task ID not found in configuration file..."
+	sys.exit(0)
+      return
+
+	  
+      ## Passing task
+      #taskConfMsg['TaskService'] = serviceTask
+    return serviceTask
+  except Exception as inst:
+    Utilities.ParseException(inst)
 
 def message(options):
   ''' '''
-  msg = {}
-  header = {
-    "service_name": 	'' ,
-    "action":		'',
-    "service_id":	''
-  }
-  configuration = {}
-  content = {}
-  
+  try:
+    optKeys = options.__dict__.keys()
     
-  if options.action is not None:
-    header["action"] = options.action
-  if options.service_name is not None:
-    header["service_name"] = options.service_name
-  if options.service_id is not None:
-    header["service_id"] = options.service_id
-
-  # Settting up transaction
-  if options.transaction is not None:
-    ''' '''
-    if len(options.transaction) < 1:
-      transactionID = IdGenerator(size=20)
-      header["service_transaction"] = transactionID
-      options.transaction = transactionID
-    else:
-      header["service_transaction"] = options.transaction
-	
-  if header["service_name"] == 'state':
-    ''' '''
-    # If a request of context is sent, we do not need some of the fields
-    if options.action == "request":
-      header["service_transaction"] = options.transaction
-      header["service_id"] = ''
-      options.topic	   = header["service_name"]
-    if options.action == "top":
-      header["service_transaction"] = options.transaction
-      header["service_id"] = ''
-      options.topic	   = header["service_name"]
+    msg = {}
+    header = {
+      "service_name": 	'' ,
+      "action":		'',
+      "service_id":	''
+    }
+    configuration = {}
+    content = {}
+    
       
-      ## Setting up monitoring service configuration
-      ##   options in message
-      configuration = {
-	  "open_connections":options.open_connections,
-	  "memory_maps":options.memory_maps,
-	  "opened_files":options.opened_files
-	  }
-      if options.use_service:
-	service = {
-	  "service":{
-	    "type":options.service_type,
-	    "frequency_s":options.service_freq,
-	    "endpoint":options.service_endpoint,
+    if options.action is not None:
+      header["action"] = options.action
+    if options.service_name is not None:
+      header["service_name"] = options.service_name    
+    if 'service_id' in optKeys and options.service_id is not None:
+      header["service_id"] = options.service_id
+
+    # Settting up transaction
+    if options.transaction is not None:
+      ''' '''
+      if len(options.transaction) < 1:
+	transactionID = IdGenerator(size=20)
+	header["service_transaction"] = transactionID
+	options.transaction = transactionID
+      else:
+	header["service_transaction"] = options.transaction
+	  
+    if header["service_name"] == 'state':
+      ''' '''
+      # If a request of context is sent, we do not need some of the fields
+      if options.action == "request":
+	header["service_transaction"] = options.transaction
+	header["service_id"] = ''
+	options.topic	   = header["service_name"]
+      if options.action == "top":
+	header["service_transaction"] = options.transaction
+	header["service_id"] = ''
+	options.topic	   = header["service_name"]
+	
+	## Setting up monitoring service configuration
+	##   options in message
+	configuration = {
+	    "open_connections":options.open_connections,
+	    "memory_maps":options.memory_maps,
+	    "opened_files":options.opened_files
 	    }
-	  }
-	configuration.update(service)
-    content = {"content": {"configuration": configuration}}
-  
-  elif header["service_name"] == 'context' and options.use_file==False:
-    header["service_name"] = options.service_name
-    options.topic	   = header["service_name"]
+	if options.use_service:
+	  service = {
+	    "service":{
+	      "type":options.service_type,
+	      "frequency_s":options.service_freq,
+	      "endpoint":options.service_endpoint,
+	      }
+	    }
+	  configuration.update(service)
+      content = {"content": {"configuration": configuration}}
     
-    ## Getting XML and interface from arguments
-    configuration = ParseTasks(options)
-    if configuration is None:
-      print "- Task parsing failed..."
-      sys.exit(0)
-      return
-    if  header["action"] == 'stop':
-      configuration = {}
-    content = {"content": {"configuration": configuration}}
-
-  elif header["service_name"] == 'all' and options.use_file==False and header["action"] == 'stop':
-    content = {"content": {}}
-
-  elif header["service_name"] == 'sniffer':
-    configuration = {
-      "device_action":	''
-    }
-    
-    if options.device_action is not None:
-      configuration["device_action"] = options.device_action
-      if options.service_name == 'track_found':
-	if options.result != 'none':
-	  configuration["result"] = options.result
-	
-	if options.track_title is not None or len(options.track_title)>0:
-	  configuration["tracks"] = []
-	  for i in range(len(options.track_title)):
-	    track = options.track_title[i]
-	    item = {'track':track, 'timestamp': ''}
-	    #print "track:", options.track_title
-	    try:
-	      timestamp = options.track_timestamp[i]
-	      item['timestamp'] = timestamp
-	    except IndexError:
-	      item['timestamp'] = str(datetime.datetime.now())
-	    except Exception as inst: 
-	      exc_type, exc_obj, exc_tb = sys.exc_info()
-	      exception_fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-	      exception_line = str(exc_tb.tb_lineno) 
-	      exception_type = str(type(inst))
-	      exception_desc = str(inst)
-	      print "  %s: %s in %s:%s"%(exception_type, 
-					exception_desc, 
-					exception_fname,  
-					exception_line )
-	    ## Adding track item to content 
-	    configuration["tracks"].append(item)
-	    content = {"content": {"status": configuration}}
-	    
-      elif options.service_name == 'sniffer' and (options.action == 'start' or options.action == 'restart'):
-	configuration.update({"filter": options.sniffer_filter})
-	configuration.update({"headerPath": options.sniffer_header})
-	configuration.update({"interface": options.interface})
-	content = {"content": {"configuration": configuration}}
-      elif options.service_name == 'sniffer' and options.action == 'stop':
-	header["action"] = options.action
-	header = {
-	   'service_name':header["service_name"],
-	   'service_id':header["service_id"],
-	   'service_transaction' : header["service_transaction"],
-	   'action' : options.action
-	  }
-	content = {"Task": {"message": {'header':header}}}
-
-  elif header["service_name"] == 'music_search':
-    configuration = {
-      "device_action":	'',
-      "query":		'',
-      "report":		{'items':[], 'status':''},
-      "result":		'',
-      "timestamp":	'',
-    }
+    elif header["service_name"] == 'context' and options.use_file==False:
+      header["service_name"] = options.service_name
+      options.topic	   = header["service_name"]
       
-    if options.device_action is not None:
-      configuration["device_action"] = options.device_action
-    if options.result is not None:
-      configuration["result"] = options.result
-    if options.query is not None:
-      configuration["query"] = options.query
-    if len(options.track_timestamp)>0:
-      configuration["timestamp"] = options.track_timestamp[0]
-    else:
-      configuration["timestamp"] = str(datetime.datetime.now())
-    configuration['report']['status'] = 'found'
-    ## Tracks here are treated as titles inside report
-    if options.track_title is not None or len(options.track_title)>0:
-      for i in range(len(options.track_title)):
-	track = options.track_title[i]
-	youtubeId = IdGenerator(size=11)
-	ratio = random.randint(75,101)/100.00
-	item = {'title':track, 'id': youtubeId, 'ratio': ratio}
-	configuration['report']['items'].append(item)
-    content = {"content": {"status": configuration}}
-  
-  elif options.use_file==True:
-    ''''''
-    ## Getting XML and interface from arguments
-    configuration = ParseTasks(options)
+      ## Getting XML and interface from arguments
+      configuration = ParseTasks(options)
+      print "===>configuration:", configuration
+      if configuration is None:
+	print "- Task parsing failed..."
+	sys.exit(0)
+	return
+      if  header["action"] == 'stop':
+	configuration = {}
+      content = {"content": {"configuration": configuration}}
+
+    elif header["service_name"] == 'all' and options.use_file==False and header["action"] == 'stop':
+      content = {"content": {}}
+
+    elif header["service_name"] == 'sniffer':
+      configuration = {
+	"device_action":	''
+      }
+      
+      if options.device_action is not None:
+	configuration["device_action"] = options.device_action
+	if options.service_name == 'track_found':
+	  if options.result != 'none':
+	    configuration["result"] = options.result
+	  
+	  if options.track_title is not None or len(options.track_title)>0:
+	    configuration["tracks"] = []
+	    for i in range(len(options.track_title)):
+	      track = options.track_title[i]
+	      item = {'track':track, 'timestamp': ''}
+	      #print "track:", options.track_title
+	      try:
+		timestamp = options.track_timestamp[i]
+		item['timestamp'] = timestamp
+	      except IndexError:
+		item['timestamp'] = str(datetime.datetime.now())
+	      except Exception as inst: 
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		exception_fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+		exception_line = str(exc_tb.tb_lineno) 
+		exception_type = str(type(inst))
+		exception_desc = str(inst)
+		print "  %s: %s in %s:%s"%(exception_type, 
+					  exception_desc, 
+					  exception_fname,  
+					  exception_line )
+	      ## Adding track item to content 
+	      configuration["tracks"].append(item)
+	      content = {"content": {"status": configuration}}
+	      
+	elif options.service_name == 'sniffer' and (options.action == 'start' or options.action == 'restart'):
+	  configuration.update({"filter": options.sniffer_filter})
+	  configuration.update({"headerPath": options.sniffer_header})
+	  configuration.update({"interface": options.interface})
+	  content = {"content": {"configuration": configuration}}
+	elif options.service_name == 'sniffer' and options.action == 'stop':
+	  header["action"] = options.action
+	  header = {
+	    'service_name':header["service_name"],
+	    'service_id':header["service_id"],
+	    'service_transaction' : header["service_transaction"],
+	    'action' : options.action
+	    }
+	  content = {"Task": {"message": {'header':header}}}
+
+    elif header["service_name"] == 'music_search':
+      configuration = {
+	"device_action":	'',
+	"query":		'',
+	"report":		{'items':[], 'status':''},
+	"result":		'',
+	"timestamp":	'',
+      }
+	
+      if options.device_action is not None:
+	configuration["device_action"] = options.device_action
+      if options.result is not None:
+	configuration["result"] = options.result
+      if options.query is not None:
+	configuration["query"] = options.query
+      if len(options.track_timestamp)>0:
+	configuration["timestamp"] = options.track_timestamp[0]
+      else:
+	configuration["timestamp"] = str(datetime.datetime.now())
+      configuration['report']['status'] = 'found'
+      ## Tracks here are treated as titles inside report
+      if options.track_title is not None or len(options.track_title)>0:
+	for i in range(len(options.track_title)):
+	  track = options.track_title[i]
+	  youtubeId = IdGenerator(size=11)
+	  ratio = random.randint(75,101)/100.00
+	  item = {'title':track, 'id': youtubeId, 'ratio': ratio}
+	  configuration['report']['items'].append(item)
+      content = {"content": {"status": configuration}}
     
-    ## Getting task by service ID
-    msg= GetTask(configuration, options)
+    elif options.use_file==True:
+      ''''''
+      ## Getting XML and interface from arguments
+      configuration = ParseTasks(options)
+      
+      ## Getting task by service ID
+      msg= GetTask(configuration, options)
+      return msg
+      
+    msg.update({"header": header})
+    msg.update(content)
     return msg
-    
-  msg.update({"header": header})
-  msg.update(content)
-  return msg
+  except Exception as inst:
+    Utilities.ParseException(inst)
 
 def main(msg):
   ''' '''
