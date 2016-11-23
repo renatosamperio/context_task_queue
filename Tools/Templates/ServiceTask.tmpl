@@ -96,7 +96,7 @@ class Service$ServiceType(ServiceHandler):
 	start_state = 'created'	
 	
       # Creating service object and notify
-      deviceAction = $TaskFile.$TaskClass(**args)
+      deviceAction = $TaskClass(**args)
       if deviceAction.hasStarted():
 	result="success"
 
