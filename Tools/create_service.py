@@ -112,60 +112,71 @@ class AutoCode(object):
   
   def __init__(self, options):
     ''' Class constructor'''
-    self.ServicePath	= None
-    self.HomePath	= None
-    self.ServiceType	= None
-    self.TaskFile	= None
-    self.TaskClass	= None
-    self.TaskDescription= None
-    self.ServiceName	= None
-    self.ServerIP	= None
-    self.SubPort	= None
-    self.PubPort	= None
-    self.ContextName	= None
-    self.TaskID		= None
-    self.DeviceAction	= None
-    self.EntryAction	= None
-    self.TaskType	= None
-    self.StateConf	= []
-    
-    ## Service configuration location
-    self.ServicePath	= options['service_path']
-    self.HomePath	= options['home_path']
-    
-    ## Service generation stub variables
-    self.ServiceType	= options['task_service']
-    self.TaskFile	= options['task_service']
-    self.TaskClass	= options['task_class']
-    self.TaskDescription= options['task_desc']
-    
-    ## Service XML configuration options
-    self.ServiceName	= options['service_name']
-    self.ServerIP	= options['server_ip']
-    self.SubPort	= options['sub_port']
-    self.PubPort	= options['pub_port']
-    self.ContextName	= options['context_name']
-    self.TaskID		= options['task_id']
-    self.DeviceAction	= options['device_action']
-    self.EntryAction	= options['entry_action']
-    self.StateConf	= options['state']
-    self.TaskType	= options['taskType']
-  
-    # Validating state values whether they would be incomplete
-    if len(self.StateConf) != 4:
-      raise AutoCodeError('Failure in constructor', 'State transitions are not complete')
+    try:
+      self.ServicePath		= None
+      self.HomePath		= None
+      self.ServiceType		= None
+      self.TaskFile		= None
+      self.TaskClass		= None
+      self.TaskDescription	= None
+      self.ServiceName		= None
+      self.ServerIP		= None
+      self.SubPort		= None
+      self.PubPort		= None
+      self.ContextName		= None
+      self.TaskID		= None
+      self.DeviceAction		= None
+      self.EntryAction		= None
+      self.TaskType		= 'Looped'
+      self.ModuleLocation	= None
+      self.ContextID		= None
+      self.StateConf		= []
+      self.log			= True
+      
+      ## Service configuration location
+      self.ServicePath	= options['service_path']
+      self.HomePath	= options['home_path']
+      
+      ## Service generation stub variables
+      self.ServiceType	= options['task_service']
+      self.TaskFile	= options['task_service']
+      self.TaskClass	= options['task_class']
+      self.TaskDescription= options['task_desc']
+      
+      ## Service XML configuration options
+      self.ServiceName	= options['service_name']
+      self.ServerIP	= options['server_ip']
+      self.SubPort	= options['sub_port']
+      self.PubPort	= options['pub_port']
+      self.ContextName	= options['context_name']
+      self.TaskID	= options['task_id']
+      self.DeviceAction	= options['device_action']
+      self.EntryAction	= options['entry_action']
+      self.StateConf	= options['state']
+      self.ContextID	= options['context_id']
+      self.ModuleLocation= options['location']
+      
+      ## Setting logger
+      self.log = options['log_on']
 
-    reason  = "Analysing... ["+self.ServicePath+"]"
-    self.PrintLog("- "+reason)
-    servicesPath = self.ServicePath+'/Services'
-    if not os.path.exists(servicesPath):
-      self.PrintLog("-   Context service root path not found, creating [Services] directory")
-      os.makedirs(servicesPath)
+      # Validating state values whether they would be incomplete
+      if 'task_type' in options.keys():
+	self.TaskType = options['task_type']
+	  
+      if len(self.StateConf) != 4:
+	raise AutoCodeError('Failure in constructor', 'State transitions are not complete')
 
-    toolsPath = self.ServicePath+'/Tools'
-    if not os.path.exists(toolsPath):
-      self.PrintLog("-   Context service root path not found, creating [Tools] directory")
-      os.makedirs(toolsPath)
+      reason  = "Analysing... ["+self.ServicePath+"]"
+      self.PrintLog("- "+reason)
+      servicesPath = self.ServicePath+'/Services'
+      if not os.path.exists(servicesPath):
+	self.PrintLog("-   Context service root path not found, creating [Services] directory")
+	os.makedirs(servicesPath)
+      else:
+	self.PrintLog("    Nothing to do")
+	
+    except Exception as inst:
+      Utilities.ParseException(inst)
    
   def PrintLog(self, msg):
     ''' Internal logger method'''
@@ -549,13 +560,15 @@ if __name__ == '__main__':
 	services['Service'] = [services['Service']]
 
       for service in services['Service']:
-	#pprint.pprint(service)
 	service.update({'context_name':	services['context_name']})
 	service.update({'server_ip': 	services['server_ip']})
 	service.update({'sub_port': 	services['sub_port']})
 	service.update({'pub_port': 	services['pub_port']})
 	service.update({'service_path': services['service_path']})
 	service.update({'home_path': 	services['home_path']})
+	service.update({'context_id': 	services['context_id']})
+	service.update({'log_on': 	bool(int(services['log_on']))})
+	#pprint.pprint(service)
 	
 	## Checking if there is a type of task
 	taskType = 'Looped'	
