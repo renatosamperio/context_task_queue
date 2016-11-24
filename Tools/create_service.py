@@ -99,6 +99,17 @@ class AutoCode(object):
   '''
   TaskType = 'TestTaskType'
   
+  '''
+  User-defined identifier for context. It should be a unique alpha-numeric
+  identifier.
+  '''
+  ContextID = 'TestContextID'
+  
+  '''
+  Used to refer the absolute path location of non-system services.
+  '''
+  ModuleLocation = 'TestModuleLocation'
+  
   def __init__(self, options):
     ''' Class constructor'''
     self.ServicePath	= None
@@ -158,7 +169,8 @@ class AutoCode(object):
    
   def PrintLog(self, msg):
     ''' Internal logger method'''
-    print msg
+    if self.log:
+      print msg
     
   def CreateInit(self):
     '''Create init file for service'''
@@ -330,6 +342,7 @@ class AutoCode(object):
 	    templateRoot.remove(templateRoot.find('FrontBind'))
 	    templateRoot.remove(templateRoot.find('BackendBind'))
 	    templateRoot.remove(templateRoot.find('TaskLogName'))
+	    templateRoot.remove(templateRoot.find('ContextID'))
 
 	    ## Merging XML trees and obtaining merged XML file
 	    self.PrintLog("+   Merging XML processes")
@@ -350,6 +363,7 @@ class AutoCode(object):
 	  with open(confFileName, "w") as init_file:
 	    init_file.write(data)
       
+	  ## TODO: Add extended configuration if it exists
     except Exception as inst:
       Utilities.ParseException(inst)
   
@@ -359,12 +373,15 @@ class AutoCode(object):
     data = data.replace('$SubPort',	self.SubPort)
     data = data.replace('$PubPort',	self.PubPort)
     data = data.replace('$ContextName',	self.ContextName)
+    data = data.replace('$ContextID',	self.ContextID)
+    
     data = data.replace('$TaskID',	self.TaskID)
     data = data.replace('$DeviceAction',self.DeviceAction)
     data = data.replace('$TaskDescription',self.TaskDescription)
     data = data.replace('$ServiceName', self.ServiceName)
     data = data.replace('$ServiceType', self.ServiceType)
     data = data.replace('$EntryAction', self.EntryAction)
+    data = data.replace('$ModuleLocation',self.ModuleLocation)
     
     ## Replacing state information
     confSize  = len(self.StateConf)
