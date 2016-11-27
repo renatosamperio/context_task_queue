@@ -55,16 +55,17 @@ class TaskedService(object):
             self.threadID = threadID
             self.logger = Utilities.GetLogger(logName=component + str(self.threadID))
 
-            self.ipc_ready = False
-            self.tStop = threading.Event()
-            self.frontend = None
-            self.backend = None
-            self.topic = None
-            self.socketCtxt = None
-            self.action = None
-            self.tid = None
-            self.transaction = None
-            self.context = None
+            self.ipc_ready	= False
+            self.tStop 		= threading.Event()
+            self.frontend	= None
+            self.backend 	= None
+            self.topic		= None
+            self.socketCtxt	= None
+            self.action		= None
+            self.tid		= None
+            self.transaction 	= None
+            self.context 	= None
+            self.stopper 	= None
 	
             ## Variables for process monitor
             self.contextInfo = None
@@ -248,42 +249,42 @@ class TaskedService(object):
 
                 ## Check if it is time for looking into memory usage state
                 if self.check_in_time - time.time() < 0:
-                    service_id = self.action.service_id
-                    process_memory = Utilities.MemoryUsage(self.tid, serviceId=service_id, log=self.logger)
+		  service_id = self.action.service_id
+		  process_memory = Utilities.MemoryUsage(self.tid, serviceId=service_id, log=self.logger)
 
-                    ## Getting current service and action task states
-                    service_has_failed, type_state = self.is_process_running(process_memory)
-                    action_is_context = self.action is not None and self.action.context is None
+		  ## Getting current service and action task states
+		  service_has_failed, type_state = self.is_process_running(process_memory)
+		  action_is_context = self.action is not None and self.action.context is None
 
-                    ## If process state is failed and it is because there are zombie
-                    ##    processes, remove them and notify
-                    if service_has_failed:
-	      
-                        ## Cleaning up zombie processes
-                        self.logger.debug('[%s] Cleaning up zombie processes' % self.threadID)
-                        active = multiprocessing.active_children()
-	      
-                        ## Send failure notification if it happens in service
-                        ##   TODO: What would happen if failure occurs in context?
-                        if self.action.actionHandler is not None:
-                            self.logger.debug('[%s] Notifying failed state [%s] for process with PID [%d]' % (self.threadID, type_state, self.tid))
+		  ## If process state is failed and it is because there are zombie
+		  ##    processes, remove them and notify
+		  if service_has_failed:
+	    
+		    ## Cleaning up zombie processes
+		    self.logger.debug('[%s] Cleaning up zombie processes' % self.threadID)
+		    active = multiprocessing.active_children()
+	  
+		    ## Send failure notification if it happens in service
+		    ##   TODO: What would happen if failure occurs in context?
+		    if self.action.actionHandler is not None:
+			self.logger.debug('[%s] Notifying failed state [%s] for process with PID [%d]' % (self.threadID, type_state, self.tid))
 
-                            ## Notifying failure
-                            ## TODO: Report why is it failing!
-                            items = {'pid': self.tid,
-                             'reason': type_state}
-                            self.action.notify('failed', 'sucess', items=items)
+			## Notifying failure
+			## TODO: Report why is it failing!
+			items = {'pid': self.tid,
+			  'reason': type_state}
+			self.action.notify('failed', 'sucess', items=items)
 
-                    ## Logging simplified process monitoring information
-                    self.logger.debug('[%s] Service [%s, %d] has (rss=%.2f MiB, vms=%.2f MiB, mem=%3.4f%%) in %.2fms' 
-		      % (self.threadID,
-			 service_id,
-			 self.tid,
-			 process_memory['total']['rss'],
-		         process_memory['total']['vms'],
-			 process_memory['total']['percent'],
-			 process_memory['elapsed'] * 1000))
-                    self.check_in_time = time.time() + self.time_out_alarm
+		  ## Logging simplified process monitoring information
+		  self.logger.debug('[%s] Service [%s, %d] has (rss=%.2f MiB, vms=%.2f MiB, mem=%3.4f%%) in %.2fms' 
+		    % (self.threadID,
+			service_id,
+			self.tid,
+			process_memory['total']['rss'],
+			process_memory['total']['vms'],
+			process_memory['total']['percent'],
+			process_memory['elapsed'] * 1000))
+		  self.check_in_time = time.time() + self.time_out_alarm
 
             ## Destroying IPC connections and mark process as stopped
             self.logger.debug('[%s] Loop finished, stopping action task' % self.threadID)
