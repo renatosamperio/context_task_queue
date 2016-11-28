@@ -27,29 +27,34 @@ class ContextGroup:
     ''' Class constructor'''
     try: 
       component		= self.__class__.__name__
-      self.logger		= Utilities.GetLogger(logName=component)
+      self.logger	= Utilities.GetLogger(logName=component)
       self.trialTimes 	= 0
       self.threads	= {}
-      self.joined		= 0
+      self.joined	= 0
       self.frontend	= ''
       self.backend	= ''
-      self.tasks 		= None
-      self.topic		= None
+      self.tasks 	= None
+      self.topic	= None
       self.service_id	= None
-      self.loader		= ModuleLoader()
+      self.loader	= ModuleLoader()
       self.contextInfo	= ContextInfo()
-      self.contextMonitor	= ContextMonitor()
+      self.contextMonitor= ContextMonitor()
       self.counter	= 1
+      self.service	= None
       
       ## Variables for thread management
       self.lThreads	= []
-      self.lock 		= multiprocessing.Lock()
+      self.lock 	= multiprocessing.Lock()
       self.context	= None
-      self.actionHandler	= None
+      self.actionHandler= None
 
       # Generating instance of strategy
       for key, value in kwargs.iteritems():
-	if "topic" == key:
+	if "service" == key:
+	  if value is not None:
+	    self.logger.debug("   Setting up service")
+	    self.service = value
+	elif "topic" == key:
 	  self.topic = value
 	elif "tasks" == key:
 	  self.tasks = value
@@ -78,8 +83,8 @@ class ContextGroup:
       msg 		= json.loads(json_msg)
       msgKeys 		= msg.keys()
       
-      #self.logger.debug("==> Message with topic [%s] but natively using topic [%s]" %
-			#(topic, service.topic))
+      self.logger.debug("==> Message with topic [%s] with default topic [%s]" %
+			(topic, service.topic))
       # Processing messages with context enquires for 'context' topic
       if topic == service.topic:
 	header 		= msg["header"]
@@ -409,7 +414,7 @@ class ContextGroup:
       self.logger.debug("==> [%s] Getting instance of action [%s]"%(taskId, taskInstance))
       taskStrategy, taskObj = self.FindInstance(taskInstance, location)
       if taskStrategy is None:
-	self.logger.debug("Error: Unknown task sservice [%s] with location [%s], no service started"%
+	self.logger.debug("Error: Unknown task service [%s] with location [%s], no service started"%
 		   (taskInstance, location))
 	return
       
