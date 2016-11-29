@@ -58,6 +58,7 @@ class ContextInfo:
   def UpdateControlState(self, msg):
     '''Updates context state data structure '''
     try:
+      resultRet = False
       ## Adding process state and PID in context information
       header = msg['header']
       action = header['action'] 
@@ -83,14 +84,14 @@ class ContextInfo:
 		})
 	
 	## Updating context information
-	ret =  self.SetServiceIdData(transaction, serviceId, data)
-	return ret
+	resultRet =  self.SetServiceIdData(transaction, serviceId, data)
       else:
 	self.logger.debug("Warning: Received failed control message in transaction [%s]"%transaction)
-      return False
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
-      return False
+      resultRet = False
+    finally:
+      return resultRet
 
   def UpdateProcessState(self, msg, state=''):
     ''' Updates context state based in process messages'''
