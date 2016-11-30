@@ -10,55 +10,6 @@
   <service_path>/opt/zmicroservices</service_path>
   <log_on>0</log_on>
 
-<!--
-  <Service>
-    <task_service>Monitor</task_service>
-    <task_class>Monitor</task_class>
-    <task_desc>Monitors memory and process for context task services</task_desc>
-    <service_name>monitor</service_name>
-    <task_id>ts000</task_id>
-    <task_topic>process</task_topic>
-    <device_action>task_monitor</device_action>
-    <entry_action>on_start</entry_action>
-    <location></location>
-
-    <state>
-	<trigger>on_start</trigger>
-	<action></action>
-	<state_id></state_id>
-    </state>
-    <state>
-	<trigger>on_update</trigger>
-	<action></action>
-	<state_id></state_id>
-    </state>
-    <state>
-	<trigger>on_fail</trigger>
-	<action></action>
-	<state_id></state_id>
-    </state>
-    <state>
-	<trigger>on_exit</trigger>
-	<action></action>
-	<state_id></state_id>
-    </state>
-
-    <configuration>
-      <publisher>
-	<endpoint>tcp://127.0.0.1:6558</endpoint>
-	<frequency_s>1</frequency_s>
-      </publisher>
-      
-      <monitor_options>
-	<opened_files></opened_files>
-	<open_connections></open_connections>
-	<memory_maps></memory_maps>
-	<store_records>1</store_records>
-      </monitor_options>
-    </configuration>
-  </Service>
--->
-
   <Service task_type='Single'>
     <task_service>WakeUp</task_service>
     <task_class>WakeUp</task_class>
