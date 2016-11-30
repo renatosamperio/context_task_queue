@@ -125,6 +125,8 @@ class $TaskClass(threading.Thread):
       if self.service is not None and self.service.task is not None:
 	self.logger.debug('  + Stopping service')
 	self.service.task.tStop.clear()
+	self.logger.debug('  + Notifying task service has stopped')
+	self.service.notify("stopped", 'success', items={})
       
       # Ending thread routine
       self.logger.debug('  + Elapsed time of [%.4f]ms'%(elapsed_time*1000))
