@@ -91,6 +91,9 @@ class TaskedService(object):
                     self.contextInfo = value
                 elif 'isMonitor' == key:
                     self.isMonitor = value
+                elif 'stopper' == key:
+		    self.logger.debug('[%s]   Setting main thread stopper'% str(self.threadID))
+                    self.stopper = value
 
             ## Including context information in local service
             if self.isMonitor:
@@ -314,6 +317,12 @@ class TaskedService(object):
 
             self.logger.debug('   Clearing thread event in service')
             self.tStop.clear()
+            
+            if self.stopper is not None:
+	      self.logger.debug('   Clearing main thread stopper')
+	      self.stopper.wait(1)
+	      self.stopper.clear()
+	      
 
         except Exception as inst:
             Utilities.ParseException(inst, logger=self.logger)
