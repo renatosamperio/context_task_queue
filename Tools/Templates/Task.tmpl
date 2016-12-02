@@ -19,11 +19,12 @@ except ImportError:
   currentPath = sys.path[0]
   path = ['/'.join(currentPath.split('/')[:-2])+'/Utils/']
   name = 'Utilities'
-  print "Exporing libraries from [%s]"%name
+  print "Importing libraries from [%s]"%name
   try:
     fp = None
     (fp, pathname, description) = imp.find_module(name, path)
     Utilities = imp.load_module(name, fp, pathname, description)
+    print "  Libraries for [%s] imported"%name
   except ImportError:
     print "  Error: Module ["+name+"] not found"
     sys.exit()
@@ -32,7 +33,6 @@ except ImportError:
     if fp is not None:
       fp.close()
       fp=None
-    #print "  Imported libraries for [%s]"%name
 
 
 # Include additional python modules
@@ -145,4 +145,48 @@ class $TaskClass(threading.Thread):
     ''' Execute $TaskClass task by calling a "run" method in the service'''
 
 
-## TODO: Include main to independent call
+## Standalone main method
+LOG_NAME = 'TaskTool'
+def call_task(options):
+  ''' Command line method for running sniffer service'''
+  try:
+    
+    logger = Utilities.GetLogger(LOG_NAME, useFile=False)
+    logger.debug('Calling sniffer from command line')
+    
+    args = {}
+    args.update({'option1': options.opt1})
+    args.update({'option2': options.opt2})
+    
+    taskAction = $TaskClass(**args)
+
+  except Exception as inst:
+    Utilities.ParseException(inst, logger=logger)
+
+if __name__ == '__main__':
+  logger = Utilities.GetLogger(LOG_NAME, useFile=False)
+  
+  myFormat = '%(asctime)s|%(name)30s|%(message)s'
+  logging.basicConfig(format=myFormat, level=logging.DEBUG)
+  logger 	= Utilities.GetLogger(LOG_NAME, useFile=False)
+  logger.debug('Logger created.')
+  
+  usage = "usage: %prog option1=string option2=bool"
+  parser = OptionParser(usage=usage)
+  parser.add_option('--opt1',
+		      type="string",
+		      action='store',
+		      default=None,
+		      help='Write here something helpful')
+  parser.add_option("--opt2", 
+		      action="store_true", 
+		      default=False,
+		      help='Write here something helpful')
+    
+  (options, args) = parser.parse_args()
+  
+  if options.opt1 is None:
+    parser.error("Missing required option: --opt1='string'")
+    sys.exit()
+    
+  call_task(options)
