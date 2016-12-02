@@ -620,17 +620,17 @@ class ContextGroup:
   def DeserializeAction(self, msg):
     ''' 
     The validation for context desearilisation conisderes the following table:
-				Start	Stop	Restart
-    Transaction Exists		OK	OK	OK
-    Transaction NOT Exists	OK	FAIL	OK
-    Context ID Exists		OK	OK	OK
-    Context ID NOT Exists	OK	FAIL	OK
-    Service ID Exists		OK	OK	OK
-    Service ID NOT Exists	OK	FAIL	OK
-    Service STATE stopped	OK	OK	OK
-    Service STATE failed	FAIL	OK	OK -> Needs to be stopped first
-    Service STATE started	FAIL	OK	OK
-    Service STATE updated	FAIL	OK	OK -> Same as started
+				Exit	Start	Stop	Restart
+    Transaction Exists			OK	OK	OK
+    Transaction NOT Exists		OK	FAIL	OK
+    Context ID Exists			OK	OK	OK
+    Context ID NOT Exists		OK	FAIL	OK
+    Service ID Exists			OK	OK	OK
+    Service ID NOT Exists		OK	FAIL	OK
+    Service STATE stopped		OK	OK	OK
+    Service STATE failed		FAIL	OK	OK -> Needs to be stopped first
+    Service STATE started		FAIL	OK	OK
+    Service STATE updated		FAIL	OK	OK -> Same as started
 
     '''
     try:
@@ -642,92 +642,99 @@ class ContextGroup:
 	
       self.logger.debug("[VALIDATE] Validating context service name...")
       serviceName = msg["header"]['service_name']
-      if serviceName == 'context' == False:
+      if serviceName != 'context':
 	self.logger.debug("[VALIDATE]  Service name not for context [%s]" %(serviceName))
 	result = False
-
-      ## Check if transaction is already defined the processes 
-      self.logger.debug("[VALIDATE] Validating service transaction...")
-      
-      ## TODO: Check state of the processes to see if they all would be stopped.
-      ##       If so, the could be started...
-      action 		= msg['header']['action']
-      isStartAction 	= action == 'start'
-      isStopAction 	= action == 'stop'
-      isRetartAction 	= action == 'restart'
-      
-      transactionExists = self.contextInfo.TransactionExists(transaction)
-      ## Checking if is a restart allow everything
-      if isRetartAction:
-	self.logger.debug("[VALIDATE]  - Validating restart action for [%s]" %(transaction))
-      elif isStartAction or isStopAction:
-	''' '''
-	## Checking if transaction exists for 'start' and 'stop'
-	##    exit False if it does not exists
-	if not transactionExists and isStopAction:
-	  self.logger.debug( "[VALIDATE] Transaction [%s] does not exits, failed exiting..."%transaction)
-	  self.logger.debug("[VALIDATE] => Validation [FAILED]")
-	  return False
-	self.logger.debug("[VALIDATE]  - Using transaction with ID [%s]" %(transaction))
 	
-	## Checking if context ID exists for 'start' and 'stop'
-	##    exit False if it does not exists
-	contextId 	= msg['header']['service_id']
-	contextExists	= self.contextInfo.ContextExists(transaction, contextId)
-	if not contextExists and isStopAction:
-	  self.logger.debug("[VALIDATE]  - Context ID [%s] NOT found in transaction [%s], failed exiting" 
+      ## If exits, stop all contexts and safely exit
+      headerAction = msg["header"]["action"]
+      if headerAction == 'exit':
+	self.logger.debug("[VALIDATE] Received exiting command")
+	return True
+	
+      else:
+	## Check if transaction is already defined the processes 
+	self.logger.debug("[VALIDATE] Validating task service transaction...")
+	
+	## TODO: Check state of the processes to see if they all would be stopped.
+	##       If so, the could be started...
+	action 		= msg['header']['action']
+	isStartAction 	= action == 'start'
+	isStopAction 	= action == 'stop'
+	isRetartAction 	= action == 'restart'
+	
+	transactionExists = self.contextInfo.TransactionExists(transaction)
+	## Checking if is a restart allow everything
+	if isRetartAction:
+	  self.logger.debug("[VALIDATE]  - Validating restart action for [%s]" %(transaction))
+	elif isStartAction or isStopAction:
+	  ''' '''
+	  ## Checking if transaction exists for 'start' and 'stop'
+	  ##    exit False if it does not exists
+	  if not transactionExists and isStopAction:
+	    self.logger.debug( "[VALIDATE] Transaction [%s] does not exits, failed exiting..."%transaction)
+	    self.logger.debug("[VALIDATE] => Validation [FAILED]")
+	    return False
+	  self.logger.debug("[VALIDATE]  - Using transaction with ID [%s]" %(transaction))
+	  
+	  ## Checking if context ID exists for 'start' and 'stop'
+	  ##    exit False if it does not exists
+	  contextId 	= msg['header']['service_id']
+	  contextExists	= self.contextInfo.ContextExists(transaction, contextId)
+	  if not contextExists and isStopAction:
+	    self.logger.debug("[VALIDATE]  - Context ID [%s] NOT found in transaction [%s], failed exiting" 
+		%(contextId, transaction))
+	    self.logger.debug("[VALIDATE] => Validation [FAILED]")
+	    return False
+	  self.logger.debug("[VALIDATE]  - Found context ID [%s] in transaction [%s]" 
 	      %(contextId, transaction))
+
+	  ## Checking if action exists is different return value
+	  tasks = msg['content']['configuration']['TaskService']
+	  for lTask in tasks:
+	    serviceId = lTask['id']
+	    service = self.contextInfo.GetServiceID(transaction, serviceId)
+	    if service is None:
+	      self.logger.debug("[VALIDATE]  - Invalid service [%s] in transaction [%s], failed exiting" 
+		  %(serviceId, transaction))
+	      break
+
+	    serviceExists = service is not None
+	    if not serviceExists and isStopAction:
+		self.logger.debug("[VALIDATE]  - Service [%s] not found in transaction [%s], failed exiting" 
+		    %(serviceId, transaction))
+		self.logger.debug("[VALIDATE] => Validation [FAILED]")
+		return False
+	    elif serviceExists:
+		self.logger.debug("[VALIDATE]  - Service [%s] found in transaction [%s]" 
+		    %(serviceId, transaction))
+	    
+	    ## Checking service state not to be stopped
+	    ## Fail if it its current state is updated, failed or started and incmoing action is started
+	    serviceState 		= service['action']
+	    isStoppedService 	= serviceState == 'stopped'
+	    isFailedService 	= serviceState == 'failed'
+	    isStartedService 	= serviceState == 'started'
+	    isUpdatedService 	= serviceState == 'updated'
+	    nonAcceptedServices 	= isFailedService or isStartedService or isUpdatedService
+	    
+	    if serviceState is not None and (nonAcceptedServices and isStartAction):
+		self.logger.debug("[VALIDATE]  - Service [%s] current state is [%s] and action [%s], failed exiting" 
+		    %(serviceId, serviceState, action))
+		self.logger.debug("[VALIDATE] => Validation [FAILED]")
+		return False
+	    self.logger.debug("[VALIDATE]  - Found service [%s] with state [%s] and received action [%s]" 
+		  %(serviceId, serviceState, action))
+	    self.logger.debug("[VALIDATE]  - Service ID [%s] in transaction [%s] has been validated" 
+		%(serviceId, transaction))
+
+	else:
+	  self.logger.debug( "[VALIDATE] Unkown action [%s], failed exiting..."%action)
 	  self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	  return False
-	self.logger.debug("[VALIDATE]  - Found context ID [%s] in transaction [%s]" 
-	    %(contextId, transaction))
-
-	## Checking if action exists is different return value
-	tasks = msg['content']['configuration']['TaskService']
-	for lTask in tasks:
-	  serviceId = lTask['id']
-	  service = self.contextInfo.GetServiceID(transaction, serviceId)
-	  if service is None:
-	    self.logger.debug("[VALIDATE]  - Invalid service [%s] in transaction [%s], failed exiting" 
-		%(serviceId, transaction))
-	    break
-
-	  serviceExists = service is not None
-	  if not serviceExists and isStopAction:
-	      self.logger.debug("[VALIDATE]  - Service [%s] not found in transaction [%s], failed exiting" 
-		  %(serviceId, transaction))
-	      self.logger.debug("[VALIDATE] => Validation [FAILED]")
-	      return False
-	  elif serviceExists:
-	      self.logger.debug("[VALIDATE]  - Service [%s] found in transaction [%s]" 
-		  %(serviceId, transaction))
-	  
-	  ## Checking service state not to be stopped
-	  ## Fail if it its current state is updated, failed or started and incmoing action is started
-	  serviceState 		= service['action']
-	  isStoppedService 	= serviceState == 'stopped'
-	  isFailedService 	= serviceState == 'failed'
-	  isStartedService 	= serviceState == 'started'
-	  isUpdatedService 	= serviceState == 'updated'
-	  nonAcceptedServices 	= isFailedService or isStartedService or isUpdatedService
-	  
-	  if serviceState is not None and (nonAcceptedServices and isStartAction):
-	      self.logger.debug("[VALIDATE]  - Service [%s] current state is [%s] and action [%s], failed exiting" 
-		  %(serviceId, serviceState, action))
-	      self.logger.debug("[VALIDATE] => Validation [FAILED]")
-	      return False
-	  self.logger.debug("[VALIDATE]  - Found service [%s] with state [%s] and received action [%s]" 
-		%(serviceId, serviceState, action))
-	  self.logger.debug("[VALIDATE]  - Service ID [%s] in transaction [%s] has been validated" 
-	      %(serviceId, transaction))
-
-      else:
-	self.logger.debug( "[VALIDATE] Unkown action [%s], failed exiting..."%action)
-	self.logger.debug("[VALIDATE] => Validation [FAILED]")
-	return False
-      ## PASSED all tests...
-      self.logger.debug("[VALIDATE] => Validation [PASSED]")
-      return True
+	## PASSED all tests...
+	self.logger.debug("[VALIDATE] => Validation [PASSED]")
+	return True
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
 
