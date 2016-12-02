@@ -110,7 +110,11 @@ class ContextGroup:
 			    (service.tid, len(json_msg)))
 
 	  ## Managing thread actions start/stop
-	  if serviceAction == 'stop':
+	  if serviceAction == 'exit':
+	    self.logger.debug("Shutting down content provider")
+	    self.ShutDown(service)
+	    return
+	  elif serviceAction == 'stop':
 	    if serviceName == 'all':
 	      self.stop(msg=msg)
 	    else:
