@@ -252,6 +252,44 @@ class ContextGroup:
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
    
+  def ShutDown(self, service):
+    ''' Prepares everything for shutting down'''
+    try:
+      
+      ## Preparing context information
+      contexts = self.contextInfo.stateInfo
+      contextSize = len(contexts)
+      if contextSize<1:
+	self.logger.debug("  No context to shutdown in context information")
+      else:
+	''''''
+	## Looking into context state information for
+	## available context and non-stopped service
+	## transactions.
+	for context in contexts:
+	  contextKeys = context.keys()
+	  for transaction in contextKeys:
+	    aContext = context[transaction]
+	    
+	    ## Looking into available context tasks
+	    ## and stopping services
+	    tasks = aContext['tasks']
+	    for task in tasks:
+	      action = task['action']
+	      serviceId = task['service_id']
+	      self.logger.debug("  Found service [%s] in state [%s]"%
+		    (serviceId, action))
+	      if action != 'stopped':
+		self.StopService(transaction, service_id=serviceId)
+      
+      ## Now is time to shut down all
+      if service is not None:
+	self.logger.debug("  Shutting down context provider")
+	service.stop()
+	    
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+
   def serialize(self, msg):
     ''' '''
     try:
