@@ -48,7 +48,7 @@ def run_forwarder(id_, *args, **kwargs):
 def CreateSafeFowarder(frontBind, backendBind, logger):
     logger.debug('  Creating frontend/backend binder with signal handler')
     args = (frontBind, backendBind, logger)
-    pool = multiprocessing.Pool(1, init_worker)
+    pool = multiprocessing.Pool(1)
 
     args, kw = (frontBind, backendBind), {}
     sol = pool.apply_async(run_forwarder, (0,) + args, kw)
@@ -73,12 +73,14 @@ def main(filename):
     logger.debug('Parsing tree [' + rootName + '] in file: ' + filename)
     try:
         # Getting local vairables
-        frontend = testConf['FrontEndEndpoint']
-        backend = testConf['BackendEndpoint']
-        frontBind = testConf['FrontBind']
-        backendBind = testConf['BackendBind']
-        contextID = testConf['ContextID']
-        testConfKeys = testConf.keys()
+        frontend 	= testConf['FrontEndEndpoint']
+        backend 	= testConf['BackendEndpoint']
+        frontBind 	= testConf['FrontBind']
+        backendBind 	= testConf['BackendBind']
+        contextID 	= testConf['ContextID']
+        testConfKeys 	= testConf.keys()
+        stopper		= multiprocessing.Event()
+        stopper.set()
 
         # Running forwarder
         pool = CreateSafeFowarder(frontBind, backendBind, logger)
@@ -94,22 +96,27 @@ def main(filename):
 			       backend=backend, 
 			       strategy=ContextGroup, 
 			       topic='context', 
-			       contextID=contextID)
+			       contextID=contextID,
+			       stopper=stopper)
         threads.append(s1)
         time.sleep(0.5)
 
         # Looping service provider
         threadSize = len(threads)
-        while keepAlive:
-            if joined != threadSize:
-                for i in range(threadSize):
-                    if threads[i] is not None:
-                        logger.debug('Joining thread %d...' % i)
-                        threads[i].join(1)
-                        joined += 1
+        while stopper.is_set():
+	  if joined != threadSize:
+	      for i in range(threadSize):
+		  if threads[i] is not None:
+		      logger.debug('Joining thread %d...' % i)
+		      threads[i].join(1)
+		      joined += 1
 
-            else:
-                time.sleep(1)
+	  else:
+	      time.sleep(1)
+	    
+	logger.debug('Joining pool...')
+	pool.terminate()
+	pool.join()
 
     except KeyboardInterrupt:
         logger.debug('Ctrl-C received! Sending kill to all threads...')
