@@ -10,7 +10,6 @@ import sys, os
 import pprint
 import datetime
 import string
-import pprint
 
 from optparse import OptionParser, OptionGroup
 from operator import xor
@@ -131,12 +130,12 @@ def GetTask(configuration, options):
     ## Setting header data
     header    			= {}
     header['action']		= options.action
-    header['service_id']		= configuration['ContextID']
+    header['service_id']	= configuration['ContextID']
     header['service_name']	= options.service_name
-    header['service_transaction']	= options.transaction
+    header['service_transaction']= options.transaction
     fileTasks			= configuration['TaskService']
     options.topic 		= 'context'
-    serviceTask 			= {}
+    serviceTask 		= {}
 
     ## If configuration file has only one task it will not be a list
     if not isinstance(fileTasks, list):
@@ -161,6 +160,10 @@ def GetTask(configuration, options):
 
     if options.task_id == 'all':
       taskConfMsg['content']['configuration']['TaskService'] = configuration['TaskService']
+      
+      for lTask in fileTasks:
+	lTask['Task']['message']['header']['action']	 = options.action
+	  
       return taskConfMsg
     else:
       ## Looking into file tasks
