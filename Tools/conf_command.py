@@ -175,15 +175,12 @@ def GetTask(configuration, options):
 	  taskConfMsg['content']['configuration']['TaskService'] = [lTask]
 	  print "+   Preparing message for service [%s]"%(lTask['Task']['message']['header']['service_id'])
 	  return taskConfMsg
-      
-      if not options.task_id == 'ts000':
+
+      if options.task_id != 'ts000' and options.task_id != configuration['ContextID']:
 	print "- Task ID not found in configuration file..."
 	sys.exit(0)
-      return
+      return taskConfMsg
 
-	  
-      ## Passing task
-      #taskConfMsg['TaskService'] = serviceTask
     return serviceTask
   except Exception as inst:
     Utilities.ParseException(inst)
