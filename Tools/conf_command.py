@@ -418,26 +418,6 @@ if __name__ == '__main__':
   deviceOpts = OptionGroup(parser, "Device inspection",
 		      "These options are for setting up process for"
 		      "inspecting device syslog entries")
-  deviceOpts.add_option("--hosts", 
-		      action="append", 
-		      default=[],
-		      type="string", 
-		      help="list of available IP addresses")
-  deviceOpts.add_option('--username',
-                      type="string",
-                      action='store',
-		      default='root',
-                      help='Input similar user name for all accessed devices')
-  deviceOpts.add_option('--device_password',
-                      type="string",
-                      action='store',
-		      default='barixsp14',
-                      help='Input similar password for all accessed devices')
-  deviceOpts.add_option('--filename',
-                      type="string",
-                      action='store',
-		      default='/var/log/messages',
-                      help='Input similar file name for all accessed devices')
   deviceOpts.add_option('--device_action',
                       type='choice',
                       action='store',
@@ -445,116 +425,6 @@ if __name__ == '__main__':
                       choices=available_device_actions,
                       default='none',
                       help='defines destination process from [syslog, none]')
-  deviceOpts.add_option("--patterns", 
-		      action="append", 
-		      default=[],
-		      type="string", 
-		      help="Sets patterns to grep from devices in order of appearance")
-  deviceOpts.add_option('--grep_desc',
-                      type="string",
-                      action='store',
-		      default="This is a default description for mock message",
-                      help="")
-  
-  portalOpts = OptionGroup(parser, "Command action to portal",
-		      "These options are for setting up process for"
-		      "browsing portal")
-  portalOpts.add_option('--portal_action',
-                      type='choice',
-                      action='store',
-                      dest='portal_action',
-                      choices=['sync', 'none'],
-                      default='none',
-                      help='defines portal action from [sync, none]')
-  portalOpts.add_option('--driver',
-                      type='choice',
-                      action='store',
-                      dest='driver',
-                      choices=['firefox'],
-                      default='firefox',
-                      help='defines type of browser to use from [firefox]')
-  portalOpts.add_option('--content_server_id',  
-                      type="string",
-                      action='store',
-		      default=None,
-		      help="defines a valid ID number of content server")
-  
-  ftpOpts = OptionGroup(parser, "FTP set up",
-		      "These options are for setting up an FTP server")
-  ftpOpts.add_option('--bandwith', 
-		      metavar="FLOAT", 
-		      default=None,
-		      type="str", 
-		      help="set an upper FLOAT limit for download and upload")
-  ftpOpts.add_option('--ftp_port', 
-		      metavar="NUMBER", 
-		      default=None,
-		      dest='ftp_port', 
-		      type="int", 
-		      help="set port NUMBER")
-  ftpOpts.add_option('--passive_ports', 
-		    action="append", 
-		    dest='passive_ports', 
-		    default=[], 
-		      help="set port range NUMBER of passive port number")
-  ftpOpts.add_option('--user',
-                      type="string",
-                      action='store',
-		      default=None,
-                      help='sets ftp server user name')
-  ftpOpts.add_option('--password',
-                      type="string",
-                      action='store',
-		      default=None,
-                      help='sets ftp server password')
-  ftpOpts.add_option('--home_path',
-                      type="string",
-                      action='store',
-		      default=None,
-                      help='sets ftp server home path')
-  ftpOpts.add_option('--permissions',
-                      type="string",
-                      action='store',
-		      default='elradfmw',
-                      help='sets permissions of ftp server home path')
-  ftpOpts.add_option('--max_cons', 
-		      metavar="NUMBER", 
-		      default=None,
-		      dest='max_cons', 
-		      type="int", 
-		      help="set ftp server maximum connections")
-  ftpOpts.add_option('--max_cons_per_ip', 
-		      metavar="NUMBER", 
-		      default=None,
-		      dest='max_cons_per_ip', 
-		      type="int", 
-		      help="set ftp server maximum connections per IP")
-  
-  localOpts = OptionGroup(parser, "Local process execution",
-		      "These options are for executing local"
-		      "process calls like generating new files.")
-  localOpts.add_option("--source_files", 
-		      action="append", 
-		      default=[],
-		      type="string", 
-		      help="list of source files to act with locally")
-  localOpts.add_option('--action_command',
-                      type='choice',
-                      action='store',
-                      dest='action_command',
-                      choices=available_action_cmds,
-                      default='none',
-                      help='list of local actions '+str(available_action_cmds))
-  localOpts.add_option('--source_path',
-                      type="string",
-                      action='store',
-		      default=None,
-                      help='path where local files are found')  
-  localOpts.add_option('--dest_path',
-                      type="string",
-                      action='store',
-		      default=None,
-                      help='path where copied files will be')  
   
   contextOpts = OptionGroup(parser, "Context generation",
 		      "These options are for generating contexts of services"
@@ -664,9 +534,6 @@ if __name__ == '__main__':
 		      help="Sets frequency for reporting process monitoring")
   
   parser.add_option_group(deviceOpts)
-  parser.add_option_group(ftpOpts)
-  parser.add_option_group(localOpts)
-  parser.add_option_group(portalOpts)
   parser.add_option_group(contextOpts)
   parser.add_option_group(annotatorOpts)
   parser.add_option_group(snifferOpts)
@@ -744,29 +611,7 @@ if __name__ == '__main__':
     elif options.transaction is None:
       parser.error("Missing required option: transaction")
     
-  if options.service_name == 'local' and (
-         options.dest_path is None or 
-         options.source_path is None or 
-         len(options.source_files) < 1 or 
-         options.action_command == 'none'):
-    if options.dest_path is None:
-      parser.error("Missing required option: [dest_path]")
-    elif options.source_path is None:
-      parser.error("Missing required option: [source_path]")
-    elif len(options.source_files) < 1:
-      parser.error("Missing required option: [source_files]")
-    elif options.action_command == 'none':
-      parser.error("Missing required option: [action_command], choose from "+str(available_action_cmds))
-
   # Forcing list types for single itemss
-  if type(options.source_files) != type([]):
-    options.source_files = [options.source_files]
-  if type(options.passive_ports) != type([]):
-    options.passive_ports = [options.passive_ports]
-  if type(options.hosts) != type([]):
-    options.hosts = [options.hosts]
-  if type(options.patterns) != type([]):
-    options.patterns = [options.patterns]
   if type(options.track_title) != type([]):
     options.track_title = [options.track_title]
   
