@@ -374,14 +374,15 @@ def main(msg):
 
   json_msg = json.dumps(msg, sort_keys=True, indent=4, separators=(',', ': '))
   print "+ Sending message of [%d] bytes"%(len(json_msg))
-  socket.send("%s @@@ %s" % (topic, json_msg))
+  message = "%s @@@ %s" % (topic, json_msg)
+  socket.send(message)
   
 if __name__ == '__main__':
   ''' '''
   available_services		= ['browser', 'ftp', 'portal', 'device', 'local', 'context', 'state', 'sniffer', 'music_search', 'all']
   available_action_cmds		= ['new_songs', 'none']
   available_device_actions	= ['firefox', 'syslog', 'downloader', 'track_found', 'track_report', 'sniff', 'none']
-  available_actions		= ['start', 'stop', 'restart', 'request', 'updated', 'none', 'top']
+  available_actions		= ['start', 'stop', 'restart', 'request', 'updated', 'none', 'top', 'exit']
   available_topics		= ['process', 'context', 'control']
   available_results		= ['success', 'failure', 'none']
   
