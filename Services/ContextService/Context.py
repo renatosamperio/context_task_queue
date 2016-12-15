@@ -374,6 +374,8 @@ class ContextGroup:
       msg_header	= message["header"]
       serviceName 	= msg_header['service_name']
       args 		= {}
+      location		= None
+      confKeys		= msg_conf.keys()
       
       args.update({'topic': taskTopic})
       args.update({'transaction': transaction})
@@ -396,13 +398,18 @@ class ContextGroup:
 	self.logger.debug("     [%s]: Adding context info objecto to arguments"%(taskId))
 	args.update({'contextInfo': self.contextInfo})
 
+      ## Getting task location if available
+      if 'location' in confKeys:
+	self.logger.debug("==> [%s] Found task location"%taskId)
+	location = msg_conf['location']
+      
       ## Getting instance if it should be started only
       self.logger.debug("==> [%s] Getting instance of action [%s]"%(taskId, taskInstance))
-      taskStrategy, taskObj = self.GetIntance(taskInstance)
+      taskStrategy, taskObj = self.FindInstance(taskInstance, location)
       
       ## TODO: This is a local checking up, should not be here!!!
       ## Checking if hosts is defined as a list
-      if 'hosts' in msg_conf.keys() and not type(msg_conf['hosts']) == type([]):
+      if 'hosts' in confKeys and not type(msg_conf['hosts']) == type([]):
 	task['Task']['message']["content"]["configuration"]["hosts"] = [msg_conf['hosts']]
 	
       ## Checking if service ID is included in header
@@ -411,7 +418,7 @@ class ContextGroup:
       
       ## Checking if device action exists in content configuration
       ##   and passing it as arguments
-      if 'device_action' in msg_conf.keys():
+      if 'device_action' in confKeys:
 	self.logger.debug("==> [%s] Setting device action in class arguments"%(taskId))
 	args.update({'device_action': msg_conf['device_action']})
 	
