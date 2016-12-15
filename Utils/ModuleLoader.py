@@ -3,9 +3,10 @@
 import imp
 import py_compile
 import logging
-import sys
+import sys, os
 
 from Utils import Utilities
+from optparse import OptionParser
 
 class ModuleLoader:
   ''' Loads modules dynamically'''
@@ -21,22 +22,28 @@ class ModuleLoader:
     ''' Class constructor'''
     component		= self.__class__.__name__
     self.logger		= Utilities.GetLogger(component)
-     
-  def GetInstance(self, path):
-    ''' '''
+
+  def GetInstance(self, path, searchPath, className=None):
+    ''' 
+    To get an instance is required to:
+      1) Know the name of loaded class inside the found python module 
+      2) Expect the loaded class has the same name as the found python module
+    '''
     try:
-      fileName = None
+      self.logger.debug("  + Getting instance in [%s]" % (path))
       path_parts= path.split('.')
       sModules  = len(path_parts)
+      lastPackage =''
       for i in range(sModules):
 	moduleName = path_parts[i]
 	
 	## Preparing file for method arguments
-	if fileName is not None:
-	  fileName = [fileName]
+	if searchPath is not None and type(searchPath) is not list:
+	  searchPath = [searchPath]
+	searchPath = [searchPath[0]+"/"+lastPackage]
 	
 	## Getting information from given path
-	f, fileName, description = imp.find_module(moduleName, fileName)
+	f, fileName, description = imp.find_module(moduleName, searchPath)
 	importType = self.module_types[description[2]]
 	self.logger.debug("  + Loading [%s] of type [%s]" % ( moduleName, importType))
 	
@@ -44,7 +51,12 @@ class ModuleLoader:
 	loadingObject = imp.load_module(moduleName, f, fileName, description)
 	moduleType = self.module_types[description[2]]
 	self.logger.debug("    [%s] is a [%s]"%(moduleName, moduleType))
-      
+	
+	## Concatenating last package in the search directory as we may
+	### find the class inside it
+	if moduleType == 'package':
+	  lastPackage = moduleName
+	  
         # If the module is source, get the class, 
         #    will raise AttributeError if class cannot be found
 	if moduleType == 'source':
@@ -64,11 +76,25 @@ class ModuleLoader:
 	      self.logger.debug("    Re-loading module [%s]"%(moduleName))
 	      imp.reload(sys.modules[m])
 	  
-	  ## Getting class object
-	  if moduleName in newLoaded.__dict__:
-	    self.logger.debug("    Getting a class [%s]"%(moduleName))
-	    classObj = getattr(newLoaded, moduleName)
+	  ## Choosing the class to load
+	  loadedClass = None
+	  if className is not None and className in newLoaded.__dict__:
+	    loadedClass = className
+	  elif moduleName in newLoaded.__dict__:
+	    loadedClass = moduleName
+	  
+	  ## NOTE: The class would not be loaded if loaded class has 
+	  ##	   not the same name as the found module or it was 
+	  ##	   not input in the parameters of this method
+	  if loadedClass is not None:
+	    self.logger.debug("    Getting a class [%s]"%(loadedClass))
+	    classObj = getattr(newLoaded, loadedClass)
 	    return classObj
-	  return None
+	  else:
+	    ## TODO: The class is somewhere in the new loaded module
+	    ## 	     and should be gotten
+	    self.logger.debug("    Class not found in module [%s]"%moduleName)
+	    return None
+	    
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
