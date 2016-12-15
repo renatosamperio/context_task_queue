@@ -84,7 +84,18 @@ def ParseTasks(options):
   testConf = None
   if options.context_file is not None:
     # Importing XML parser
-    from XMLParser import ParseXml2Dict
+    try:
+      from XMLParser import ParseXml2Dict
+      print "Parser found locally"
+    except ImportError:
+      print "Parser not found locally"
+      
+    try:
+      print "Parser found in system"
+      from Utils.XMLParser import ParseXml2Dict
+    except ImportError:
+      print "Parser not found in system"
+
     
     # Parsing test file
     rootName 		= 'Context'
