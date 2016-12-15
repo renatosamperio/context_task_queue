@@ -98,3 +98,65 @@ class ModuleLoader:
 	    
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
+
+## Usage samples:
+##  NOT WORKING
+##  $ python ModuleLoader.py --searchPath='/home/renato/workspace/Services/Sniffer' --modulePath='PacketCollector'
+##  WORKING
+##  $ python ModuleLoader.py --searchPath='/home/renato/workspace/Services/Sniffer' --modulePath='PacketCollector' --className="CaptureTrack"
+##  $ python ModuleLoader.py --searchPath='/home/renato/workspace/Services' --modulePath='Sniffer.ServiceSniffer'
+##  $ python ModuleLoader.py --searchPath='/home/renato/workspace/Services' --modulePath='Sniffer.ServiceSniffer' --className="ServiceSniffer"
+
+
+LOG_NAME = 'ModuleLoaderTool'
+def call_tool(options):
+  ''' Command line method for running sniffer service'''
+  try:
+    
+    path	= options.modulePath
+    location	= options.searchPath
+    className	= options.className
+    loader 	= ModuleLoader()
+    logger.debug("  Getting an instance of ["+path+"]")
+    classObj 	= loader.GetInstance(path, location, className=className)
+    assert(classObj)
+    
+  except Exception as inst:
+    Utilities.ParseException(inst, logger=logger)
+
+if __name__ == '__main__':
+  logger = Utilities.GetLogger(LOG_NAME, useFile=False)
+  
+  myFormat = '%(asctime)s|%(name)30s|%(message)s'
+  logging.basicConfig(format=myFormat, level=logging.DEBUG)
+  logger 	= Utilities.GetLogger(LOG_NAME, useFile=False)
+  logger.debug('Logger created.')
+  
+  usage = "usage: %prog interface=arg1 filter=arg2"
+  parser = OptionParser(usage=usage)
+  parser.add_option('--searchPath',
+		      type="string",
+		      action='store',
+		      default=None,
+		      help='Module location')
+  parser.add_option('--modulePath',
+		      type="string",
+		      action='store',
+		      default=None,
+		      help='Module python path')
+  parser.add_option('--className',
+		      type="string",
+		      action='store',
+		      default=None,
+		      help='Class name inside module')
+  
+  (options, args) = parser.parse_args()
+  
+  if options.searchPath is None:
+    parser.error("Missing required option: --searchPath='/home/path'")
+  
+  if options.modulePath is None:
+    parser.error("Missing required option: --modulePath='Service.Task.Module'")
+  call_tool(options)
+
+    
