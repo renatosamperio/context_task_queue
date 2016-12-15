@@ -567,7 +567,7 @@ class ContextGroup:
     if transaction not in threadKeys:
       self.threads.update({transaction: []})
     
-  def GetIntance(self, sObjName):
+  def FindInstance(self, sObjName, location):
     ''' Returns an insance of an available service'''
     try:
       
@@ -580,9 +580,9 @@ class ContextGroup:
       
       ## Getting action class instance
       serviceName = "Service"+sObjName
-      path = 'Services.'+sObjName+'.'+serviceName
+      path = sObjName+'.'+serviceName
       self.logger.debug("  Getting an instance of ["+path+"]")
-      classObj = self.loader.GetInstance(path)
+      classObj = self.loader.GetInstance(path, location)
       return classObj, None #, taskObj
 
     except Exception as inst:
