@@ -17,16 +17,13 @@ from Tools.create_service import AutoCode
 from Tools.conf_command import *
 
 class TestCreateServices(unittest.TestCase):
-
   def __init__(self, *args, **kwargs):
       super(TestCreateServices, self).__init__(*args, **kwargs)
       self.HasStarted	= False
       self.component	= self.__class__.__name__
       self.logger	= Utilities.GetLogger(self.component)
       self.tStop 	= threading.Event()
-      
-      self.logger.setLevel(logging.INFO)   
-  
+
   def GenerateSampleServices(self):
     ''' Generating files only once'''
     try:
@@ -40,7 +37,7 @@ class TestCreateServices(unittest.TestCase):
 	if type(services['Service']) is not type([]):
 	  services['Service'] = [services['Service']]
 
-	self.logger.debug( "Checking if previous files exists")
+	self.logger.info( "Checking if previous files exists")
 	## Remove existing files
 	fileName = 'Context-%s.xml'%services['context_name']
 	confPath = services['service_path']+'/Conf/'+fileName
@@ -56,7 +53,7 @@ class TestCreateServices(unittest.TestCase):
 	    shutil.rmtree(serviceFilesPath)
 
 	  if len(service['location'])>0:
-	    self.logger.debug( "Creating service [%s] with ID [%s]"%
+	    self.logger.info( "Creating service [%s] with ID [%s]"%
 		      (service['task_service'], service['task_id']))
 	    service.update({'context_name':	services['context_name']})
 	    service.update({'server_ip': 	services['server_ip']})
@@ -90,6 +87,7 @@ class TestCreateServices(unittest.TestCase):
   def test_files_created( self ):
     try:
       ## Reading file
+      self.logger.info('  + Reading test configuration file')
       filename = 'sample_services.xml'
       services = ParseXml2Dict(filename, 'MetaServiceConf')
 
@@ -97,7 +95,7 @@ class TestCreateServices(unittest.TestCase):
       ## 1.1 Check configuration file exists
       fileName = 'Context-%s.xml'%services['context_name']
       confPath = services['service_path']+'/Conf/'+fileName
-      self.logger.debug("  + Checking if configuration file exists:"+confPath)
+      self.logger.info("  + Checking if configuration file exists:"+confPath)
       self.assertTrue(os.path.isfile(confPath), "1.1 Files created") 
       
       ## 1.2 Check Services were created
@@ -115,7 +113,7 @@ class TestCreateServices(unittest.TestCase):
 	  fileId = 1
 	  for sfile in files:
 	    serviceFile = serviceFilesPath+sfile
-	    self.logger.debug( "  + Checking if service file exists: "+serviceFile)
+	    self.logger.info( "  + Checking if service file exists: "+serviceFile)
 	    msg = "1.2.%d Files created"%fileId
 	    self.assertTrue(os.path.isfile(serviceFile), msg) 
 	
