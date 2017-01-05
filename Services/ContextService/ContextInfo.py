@@ -420,8 +420,6 @@ class ContextInfo:
       else:
 	self.logger.debug("    |@| Getting context data from transaction [%s]"% transaction)
 	# TODO: Look inside a list of transactions
-	#print "===> stateInfo:"
-	#pprint.pprint(self.stateInfo)
 	
 	## Looking for transaction
 	for context in self.stateInfo:
@@ -442,7 +440,6 @@ class ContextInfo:
       
       ## Search for context in list of transactions
       contextData = self.GetContext(transaction)
-      #pprint.pprint (contextData)
       if 'contextId' not in contextData.keys():
 	self.logger.debug("  Context ID not found for transaction [%s]"% 
 		   (serviceId, transaction))
@@ -464,8 +461,6 @@ class ContextInfo:
       else:
 	self.logger.debug("    |@| Getting context data from transaction [%s]"% transaction)
 	# TODO: Look inside a list of transactions
-	#print "===> stateInfo:"
-	#pprint.pprint(self.stateInfo)
 	
 	## Looking for transaction
 	for context in self.stateInfo:
@@ -550,8 +545,6 @@ def test_GetData():
       logger.debug( "Test 3.1.3: Testing context ID value")
       assert('context001' == contextId)
       logger.debug("========= PASSED")
-    
-    #pprint.pprint(ctxData)
   except Exception as inst:
     Utilities.ParseException(inst, logger=logger)
 
@@ -608,14 +601,12 @@ def test_CreateInfo():
     result = contextInfo.GenerateContext(transaction, data)
     assert(result)
     logger.debug("========= PASSED")
-    #pprint.pprint(contextInfo.stateInfo)
     
     logger.debug( "Test 2.2: Generate service ID space in right transaction")
     ### Generating service task space
     result = contextInfo.SetTaskStart(transaction, 'ts001')
     assert(result)
     logger.debug("========= PASSED")
-    #pprint.pprint(contextInfo.stateInfo)
 	  
     ## Method from deserialize in topic process
     logger.debug( "Test 2.3: Method from deserialize in topic process")
@@ -638,7 +629,6 @@ def test_CreateInfo():
     result = contextInfo.UpdateProcessState(msg, state='in_progress')
     assert(result)
     logger.debug("========= PASSED")
-    #pprint.pprint(contextInfo.stateInfo)
     
     
     ## Method from deserialize in topic control
@@ -654,7 +644,6 @@ def test_CreateInfo():
     result = contextInfo.UpdateControlState(msg)
     assert(result)
     logger.debug("========= PASSED")
-    #pprint.pprint(contextInfo.stateInfo)
     
     return contextInfo
   except Exception as inst:
