@@ -2,14 +2,16 @@ import os, sys
 import shutil
 import site
 
-from distutils.core import setup
+from distutils.core import setup, Command
 from distutils.command.install import install
 from distutils.command.install_data import install_data
 from distutils.command.install_scripts import install_scripts
 from distutils.command.build_py import build_py as _build_py
 
-
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
+
+from subprocess import Popen
 
 PACKAGE_NAME = 'zmicroservices'
 PACKAGE_VERSION = "1.0.0"
@@ -83,6 +85,38 @@ class smart_install_scripts(install_scripts):
       copy_helper_files(install_cmd)
       #return install_scripts.run(self)
 
+class TestCommand(Command):
+    """Custom distutils command to run the test suite."""
+
+    description = "Test PyZMQ (must have been built inplace: `setup.py build_ext --inplace`)"
+
+    user_options = [ ]
+
+    def initialize_options(self):
+        self._dir = os.getcwd()
+
+    def finalize_options(self):
+        pass
+    
+    def run(self):
+        """Run the test suite with py.test"""
+        # crude check for inplace build:
+        try:
+            import Services
+        except ImportError:
+            print "Error: Module should be built first!"
+            print_exc()
+            sys.exit(1)
+        
+        print "Running pytest command..."
+        p = Popen([ 'pytest'])
+        p.wait()
+        sys.exit(p.returncode)
+
+cmdclass = {'test': TestCommand, 
+	    'install_scripts': smart_install_scripts
+	    }
+
 setup(
     name 	= PACKAGE_NAME,
     version 	= PACKAGE_VERSION,
@@ -93,6 +127,7 @@ setup(
     keywords 	= ["microservices", "zmq", "distributed apps"],
     url 	= "https://github.com/renatosamperio/context_task_queue",
     platforms	= "Ubuntu 16.04",
+    cmdclass = cmdclass,
     packages	=['Provider', 
 		  'Tools', 
 		  'Tools.Install', 
@@ -115,6 +150,6 @@ setup(
         
     ],
     download_url= 'https://github.com/renatosamperio/context_task_queue/tarball/1.0',
-    cmdclass = {'install_scripts': smart_install_scripts},
     long_description=long_description,
+    
 )
