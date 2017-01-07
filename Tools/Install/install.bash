@@ -150,23 +150,44 @@ git clone https://github.com/mongodb/mongo-python-driver.git && cd mongo-python-
 python setup.py install && cd ..
 rm -rf mongo-python-driver
 
+# echo -e "\e[92m \e[1m"
+# echo "*****************************************************"
+# echo "*****          INSTALLING DEPENDENCIES          *****"
+# echo "*****        (PYTHON: Python matplotlib)        *****"
+# echo "*****************************************************"
+# echo -e "\e[0m"
+# apt-get --assume-yes install libfreetype6-dev libpng12-dev
+# git clone https://github.com/matplotlib/matplotlib.git && cd matplotlib/
+# python setup.py install && cd ..
+# rm -rf matplotlib
+
 echo -e "\e[92m \e[1m"
 echo "*****************************************************"
 echo "*****          INSTALLING DEPENDENCIES          *****"
-echo "*****        (PYTHON: Python matplotlib)        *****"
+echo "*****         (PYTHON: Python paramiko)         *****"
 echo "*****************************************************"
 echo -e "\e[0m"
-apt-get --assume-yes install libfreetype6-dev libpng12-dev
-git clone https://github.com/matplotlib/matplotlib.git && cd matplotlib/
+git clone https://github.com/paramiko/paramiko.git && cd paramiko
 python setup.py install && cd ..
-rm -rf matplotlib
+rm -rf paramiko
+
+
+echo -e "\e[92m \e[1m"
+echo "*****************************************************"
+echo "*****          INSTALLING DEPENDENCIES          *****"
+echo "*****         (PYTHON: Python dicttoxml)        *****"
+echo "*****************************************************"
+echo -e "\e[0m"
+git clone https://github.com/quandyfactory/dicttoxml.git && cd dicttoxml
+python setup.py install && cd ..
+rm -rf dicttoxml
 
 echo -e "\e[92m \e[1m"
 echo "*****************************************************"
 echo "*****          INSTALLING DEPENDENCIES          *****"
 echo "*****          (PYTHON: Microservices)          *****"
 echo "*****************************************************"
-echo -e "\e[0m"$
+echo -e "\e[0m"
 cd ~/workspace
 git clone https://github.com/renatosamperio/context_task_queue.git
 cd context_task_queue && python setup.py install install_scripts && cd ..
