@@ -30,9 +30,9 @@ before_install:
 
   - wget https://github.com/renatosamperio/context_task_queue/archive/master.zip
   - unzip master.zip && cd context_task_queue-master && sudo python setup.py install install_scripts && cd ..
-  - rm -rf context_task_queue-master; rm master.zip
+  - sudo rm -rf context_task_queue-master; rm master.zip
 
 install:
-  - python setup.py install install_scripts
+  - sudo python setup.py install install_scripts
 
-script: travis_retry python setup.py test
+script: travis_retry sudo python setup.py test
