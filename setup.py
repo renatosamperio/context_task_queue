@@ -21,6 +21,9 @@ HELPERS_PATH = '/opt/zmicroservices'
 with open("README.md", 'r') as f:
     long_description = f.read()
 
+def copy_files(src, dst):
+  os.system("cp -rf "+src+" "+dst) 
+  
 ## Creating post install operations
 def copy_helper_files(install_cmd):
   ''' Copies additional files in /opt'''
@@ -38,9 +41,9 @@ def copy_helper_files(install_cmd):
   dstInstallHelpers	= HELPERS_PATH+installPath
   dstTemplatesHelpers	= HELPERS_PATH+templatesPath
   print "  | Copying installation files: "+dstInstallHelpers
-  shutil.copytree (srcInstallHelpers, dstInstallHelpers)
+  copy_files(srcInstallHelpers, dstInstallHelpers)
   print "  / Copying template files: "+dstTemplatesHelpers
-  shutil.copytree (srcTemplatesHelpers, dstTemplatesHelpers)
+  copy_files(srcTemplatesHelpers, dstTemplatesHelpers)
   print "  - Changing writing persmissions to "+dstTemplatesHelpers
   os.system("chmod +wx -R "+dstTemplatesHelpers)
 
