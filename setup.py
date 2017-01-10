@@ -40,6 +40,13 @@ def copy_helper_files(install_cmd):
   srcTemplatesHelpers	= os.getcwd()+templatesPath
   dstInstallHelpers	= HELPERS_PATH+installPath
   dstTemplatesHelpers	= HELPERS_PATH+templatesPath
+  if not os.path.exists(dstInstallHelpers):
+    print "  - Creatinig destination path: "+dstInstallHelpers
+    os.makedirs(dstInstallHelpers)
+    
+  if not os.path.exists(dstInstallHelpers):
+    print "  \ Creatinig destination path: "+dstTemplatesHelpers
+    
   print "  | Copying installation files: "+dstInstallHelpers
   copy_files(srcInstallHelpers, dstInstallHelpers)
   print "  / Copying template files: "+dstTemplatesHelpers
