@@ -34,4 +34,4 @@ before_install:
 install:
   - sudo python setup.py install install_scripts
 
-script: travis_retry python setup.py test
+script: travis_retry sudo python setup.py test
