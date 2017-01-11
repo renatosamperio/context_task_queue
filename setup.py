@@ -37,11 +37,11 @@ def copy_helper_files(install_cmd):
   dstInstallHelpers	= HELPERS_PATH+installPath
   dstTemplatesHelpers	= HELPERS_PATH+templatesPath
   if not os.path.exists(dstInstallHelpers):
-    print "  - Creatinig destination path: "+dstInstallHelpers
+    print "  - Creating destination path: "+dstInstallHelpers
     os.makedirs(dstInstallHelpers)
     
   if not os.path.exists(dstInstallHelpers):
-    print "  \ Creatinig destination path: "+dstTemplatesHelpers
+    print "  \ Creating destination path: "+dstTemplatesHelpers
     
   print "  | Copying installation files: "+dstInstallHelpers
   copy_files(srcInstallHelpers, dstInstallHelpers)
