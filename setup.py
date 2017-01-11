@@ -14,12 +14,8 @@ from setuptools.command.test import test as TestCommand
 from subprocess import Popen
 
 PACKAGE_NAME = 'zmicroservices'
-PACKAGE_VERSION = "1.0.0"
+PACKAGE_VERSION = "1.0.2"
 HELPERS_PATH = '/opt/zmicroservices'
-
-## Creating long description
-with open("README.md", 'r') as f:
-    long_description = f.read()
 
 def copy_files(src, dst):
   os.system("cp -rf "+src+" "+dst) 
@@ -160,6 +156,5 @@ setup(
         
     ],
     download_url= 'https://github.com/renatosamperio/context_task_queue/tarball/1.0',
-    long_description=long_description,
     
 )
