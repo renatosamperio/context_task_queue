@@ -66,11 +66,11 @@ def create_symbolic_links(install_cmd):
     symbolicLink = aFile.split('.')[0]
     dst = absoluteDest+symbolicLink
     
-    ## Overwriting link if exists
-    if os.path.isfile(dst):
-      print "  | Removing existing symbolic link for "+symbolicLink
+    ## Overwriting link if exists 
+    if os.path.islink(dst):
+      print "  | Removing existing symbolic link for "+dst
       os.remove(dst)
-    print "  / Creating symbolic link for "+symbolicLink
+    print "  / Creating symbolic link for "+dst
     os.symlink(src, dst)
     print "  - Changing executable persmissions to source "+symbolicLink
     os.system("chmod +x "+src)
