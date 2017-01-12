@@ -95,8 +95,9 @@ class $TaskClass(threading.Thread):
       self.running	= True
       
       ## Setting thread for joining service list
-      self.logger.debug('  + Adding thread for joining context')
-      self.service.task.AddContext(self, self.component)
+      if self.service is not None and self.service.task is not None:
+	self.logger.debug('  + Adding thread for joining context')
+	self.service.task.AddContext(self, self.component)
       
       # Getting thread GetPID
       self.tid		= Utilities.GetPID()
