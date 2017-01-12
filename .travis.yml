@@ -25,15 +25,14 @@ before_install:
     patch src/pyshark/packet/layer.py < fix_export_xml.patch
     cd src && sudo python setup.py install && cd ../..
     sudo rm -rf pyshark-master; rm master.zip
-  - python -c "import pyshark"
+    python -c "import pyshark"
+
   - |
-    sudo python setup.py install install_scripts
-  - |
-    python --version
-    ls -la /usr/local/lib/python2.7/dist-packages/zmicroservices-1.0.2-py2.7.egg
-    python -c "import Services"
+    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg:/usr/local/lib/python2.7/dist-packages/futures-3.0.5-py2.7.egg:/usr/local/lib/python2.7/dist-packages/xmltodict-0.10.2-py2.7.egg:/usr/local/lib/python2.7/dist-packages/psutil-5.0.1-py2.7-linux-x86_64.egg:/usr/local/lib/python2.7/dist-packages/oauth2client-4.0.0-py2.7.egg:/usr/local/lib/python2.7/dist-packages/google_api_python_client-1.5.5-py2.7.egg:/usr/local/lib/python2.7/dist-packages/paramiko-2.1.1-py2.7.egg:/usr/local/lib/python2.7/dist-packages/zmicroservices-1.0.3-py2.7.egg:/usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg:/usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg:/usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg:/usr/local/lib/python2.7/dist-packages/lxml-3.7.2-py2.7-linux-x86_64.egg"
 
 install:
-  - sudo python setup.py install install_scripts
+  - |
+    sudo python setup.py install install_scripts
+    python -c "import Services"
 
 script: travis_retry pytest
