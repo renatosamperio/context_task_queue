@@ -142,6 +142,7 @@ def GetTask(configuration, options):
       fileTasks = [fileTasks]
     
     ## Preparing task configuration message
+    print "+   Preparing task configuration message"
     taskConfMsg = {
 	'content': 
 	  {'configuration':
@@ -158,7 +159,21 @@ def GetTask(configuration, options):
 	'header':header
     }
 
-    if options.task_id == 'all':
+    if options.task_id == None:
+      ## Looking into file tasks when no task_id is given
+      for lTask in fileTasks:
+	print "+   Reusing task ID [%s] for task service control message"%lTask['id']
+	lTask['Task']['message']['header'].update({'action':options.action})
+	lTask['Task']['message']['header'].update({'service_id':lTask['id']})
+	lTask['Task']['message']['header'].update({'transaction':options.transaction})
+	taskConfMsg['content']['configuration']['TaskService'] = [lTask]
+	print "+   Preparing message for service [%s]"%(lTask['Task']['message']['header']['service_id'])
+	return taskConfMsg
+
+      return taskConfMsg
+      
+    elif options.task_id == 'all':
+      print "+   Preparing broadcast message"
       taskConfMsg['content']['configuration']['TaskService'] = configuration['TaskService']
       
       for lTask in fileTasks:
@@ -166,6 +181,7 @@ def GetTask(configuration, options):
 	  
       return taskConfMsg
     else:
+      print "+   Looking into file tasks"
       ## Looking into file tasks
       for lTask in fileTasks:
 	if lTask['id'] ==  options.task_id:
@@ -451,7 +467,7 @@ if __name__ == '__main__':
 			   help='Makes use of configuration file for configuring task services')
   contextOpts.add_option('--task_id', 
 			   metavar="TASK_ID", 
-			   default='all',
+			   default=None,
 			   help="Service ID to control found in XML configuration file")
  
   annotatorOpts = OptionGroup(parser, "Song annotation service",
