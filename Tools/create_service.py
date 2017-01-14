@@ -11,8 +11,8 @@ join_path = os.path.join(file_path, '../Utils')
 abs_path  = os.path.abspath(join_path)
 sys.path.append(abs_path)
 
-import Utilities
-from XMLParser import ParseXml2Dict
+from Utils import Utilities
+from Utils.XMLParser import ParseXml2Dict
 
 class AutoCodeError(Exception):
    def __init__(self, message, reason):
