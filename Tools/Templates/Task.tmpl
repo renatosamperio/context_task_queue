@@ -131,7 +131,7 @@ class $TaskClass(threading.Thread):
 	self.logger.debug(" Event loop is already interrupted")
       
       # Force to stop before leaving
-      if self.is_alive(): 
+      if self.is_alive() and self.service is not None:  
 	self.logger.debug( "  Stopping the thread and wait for it to end")
 	threading.Thread.join(self, 1)  
       else:
@@ -153,7 +153,7 @@ def call_task(options):
   try:
     
     logger = Utilities.GetLogger(LOG_NAME, useFile=False)
-    logger.debug('Calling sniffer from command line')
+    logger.debug('Calling task from command line')
     
     args = {}
     args.update({'option1': options.opt1})
