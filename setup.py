@@ -110,8 +110,7 @@ class TestCommand(Command):
         try:
             import Services
         except ImportError:
-            print "Error: Module should be built first!"
-            print_exc()
+            print "Error: Library not installed"
             sys.exit(1)
         
         print "Running pytest command..."
