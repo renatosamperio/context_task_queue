@@ -188,7 +188,7 @@ def ParseException(inst, logger=None):
   exception_type = str(type(inst))
   exception_desc = str(inst)
   if logger:
-    logger.debug( "  %s: %s in %s:%s"%(exception_type, 
+    logger.error( "  %s: %s in %s:%s"%(exception_type, 
 				    exception_desc, 
 				    exception_fname,  
 				    exception_line ))
