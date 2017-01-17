@@ -10,31 +10,7 @@ import imp
 
 from optparse import OptionParser
 
-## Checking if Utilities module exists
-##  Otherwise, force it find it assuming this module
-##  is in /Services/Sniffer/NetworkSniffer.py
-try:
-  from Utils import Utilities
-except ImportError:
-  currentPath = sys.path[0]
-  path = ['/'.join(currentPath.split('/')[:-2])+'/Utils/']
-  name = 'Utilities'
-  print "Importing libraries from [%s]"%name
-  try:
-    fp = None
-    (fp, pathname, description) = imp.find_module(name, path)
-    Utilities = imp.load_module(name, fp, pathname, description)
-    print "  Libraries for [%s] imported"%name
-  except ImportError:
-    print "  Error: Module ["+name+"] not found"
-    sys.exit()
-  finally:
-    # Since we may exit via an exception, close fp explicitly.
-    if fp is not None:
-      fp.close()
-      fp=None
-    print "Imported libraries for [%s]"%name
-
+from Utils import Utilities
 
 # Include additional python modules
 
