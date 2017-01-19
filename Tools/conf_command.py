@@ -160,7 +160,7 @@ def GetTask(configuration, options):
     }
 
     if options.task_id == None:
-      ## Looking into file tasks when no task_id is given
+      ## Reusing task ID from given message
       for lTask in fileTasks:
 	print "+   Reusing task ID [%s] for task service control message"%lTask['id']
 	lTask['Task']['message']['header'].update({'action':options.action})
@@ -183,14 +183,14 @@ def GetTask(configuration, options):
     else:
       print "+   Looking into file tasks"
       ## Looking into file tasks
+      
+      taskConfMsg['content']['configuration']['TaskService'] = []
       for lTask in fileTasks:
-	if lTask['id'] ==  options.task_id:
-	  lTask['Task']['message']['header']['action']	 = options.action
-	  lTask['Task']['message']['header']['service_id'] = options.task_id
-	  lTask['Task']['message']['header']['transaction']= options.transaction
-	  taskConfMsg['content']['configuration']['TaskService'] = [lTask]
-	  print "+   Preparing message for service [%s]"%(lTask['Task']['message']['header']['service_id'])
-	  return taskConfMsg
+	lTask['Task']['message']['header']['action']	 = options.action
+	lTask['Task']['message']['header']['service_id'] = lTask['id']
+	lTask['Task']['message']['header']['transaction']= options.transaction
+	taskConfMsg['content']['configuration']['TaskService'].append(lTask)
+	print "+   Preparing message for service [%s]"%(lTask['Task']['message']['header']['service_id'])
 
       if options.task_id != 'ts000' and options.task_id != configuration['ContextID']:
 	print "- Task ID not found in configuration file..."
