@@ -44,21 +44,16 @@ class ServiceMonitor(ServiceHandler):
 	
 	if isRightTransaction:
 	  self.logger.debug("[%d]    Validation [PASSED]"%self.tid)
-	else:
-	  self.logger.debug("[%d]    Validation  + [FAILED]"%self.tid)
 	return isRightTransaction
       
       if not isRightTransaction:
 	self.logger.debug("Service with different transaction")
-	self.logger.debug("[%d]    Validation ++ [FAILED]"%self.tid)
 	return False
       
       result = (isForDevice and isRightTransaction)
       
       if result:
 	self.logger.debug("[%d]    Validation [PASSED]"%self.tid)
-      else:
-	self.logger.debug("[%d]    Validation + + [FAILED]"%self.tid)
       return result
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
