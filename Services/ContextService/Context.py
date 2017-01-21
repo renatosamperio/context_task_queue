@@ -83,8 +83,6 @@ class ContextGroup:
       msg 		= json.loads(json_msg)
       msgKeys 		= msg.keys()
       
-      self.logger.debug("==> Message with topic [%s] with default topic [%s]" %
-			(topic, service.topic))
       # Processing messages with context enquires for 'context' topic
       if topic == service.topic:
 	header 		= msg["header"]
@@ -711,7 +709,6 @@ class ContextGroup:
 	  ##    exit False if it does not exists
 	  if not transactionExists and isStopAction:
 	    self.logger.debug( "[VALIDATE] Transaction [%s] does not exits, failed exiting..."%transaction)
-	    self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	    return False
 	  self.logger.debug("[VALIDATE]  - Using transaction with ID [%s]" %(transaction))
 	  
@@ -722,7 +719,6 @@ class ContextGroup:
 	  if not contextExists and isStopAction:
 	    self.logger.debug("[VALIDATE]  - Context ID [%s] NOT found in transaction [%s], failed exiting" 
 		%(contextId, transaction))
-	    self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	    return False
 	  self.logger.debug("[VALIDATE]  - Found context ID [%s] in transaction [%s]" 
 	      %(contextId, transaction))
@@ -741,7 +737,6 @@ class ContextGroup:
 	    if not serviceExists and isStopAction:
 		self.logger.debug("[VALIDATE]  - Service [%s] not found in transaction [%s], failed exiting" 
 		    %(serviceId, transaction))
-		self.logger.debug("[VALIDATE] => Validation [FAILED]")
 		return False
 	    elif serviceExists:
 		self.logger.debug("[VALIDATE]  - Service [%s] found in transaction [%s]" 
@@ -759,7 +754,6 @@ class ContextGroup:
 	    if serviceState is not None and (nonAcceptedServices and isStartAction):
 		self.logger.debug("[VALIDATE]  - Service [%s] current state is [%s] and action [%s], failed exiting" 
 		    %(serviceId, serviceState, action))
-		self.logger.debug("[VALIDATE] => Validation [FAILED]")
 		return False
 	    self.logger.debug("[VALIDATE]  - Found service [%s] with state [%s] and received action [%s]" 
 		  %(serviceId, serviceState, action))
@@ -768,10 +762,8 @@ class ContextGroup:
 
 	else:
 	  self.logger.debug( "[VALIDATE] Unkown action [%s], failed exiting..."%action)
-	  self.logger.debug("[VALIDATE] => Validation [FAILED]")
 	  return False
 	## PASSED all tests...
-	self.logger.debug("[VALIDATE] => Validation [PASSED]")
 	return True
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
