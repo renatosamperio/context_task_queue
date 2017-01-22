@@ -5,24 +5,27 @@ cache:
     pip
 python:
   - 2.7
-env:
+  - pypy
+
 before_install:
-  - sudo apt-get --assume-yes install python-dev build-essential librtmp-dev git libxml2-dev libxslt1-dev
-  - sudo apt-get --assume-yes install libzmq-dev
   - |
+    sudo apt-get --assume-yes install libzmq-dev
+    sudo apt-get --assume-yes install python-dev build-essential librtmp-dev git libxml2-dev libxslt1-dev
     sudo apt-get --assume-yes install libcurl4-openssl-dev 
     sudo apt-get --assume-yes install libcurl4-gnutls-dev
-  - sudo apt-get --assume-yes install tshark 
+    sudo apt-get --assume-yes install tshark 
 
-  - wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/requirements.txt
-  - pip install -r requirements.txt
+  - |
+    wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/requirements.txt
+    pip install -r requirements.txt
 
-  - wget https://github.com/KimiNewt/pyshark/archive/master.zip
-  - unzip master.zip; cd pyshark-master/
-  - wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/Tools/Install/fix_export_xml.patch
-  - patch src/pyshark/packet/layer.py < fix_export_xml.patch
-  - cd src && sudo python setup.py install && cd ../..
-  - sudo rm -rf pyshark-master; rm master.zip
+  - |
+    wget https://github.com/KimiNewt/pyshark/archive/master.zip
+    unzip master.zip; cd pyshark-master/
+    wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/Tools/Install/fix_export_xml.patch
+    patch src/pyshark/packet/layer.py < fix_export_xml.patch
+    cd src && sudo python setup.py install && cd ../..
+    sudo rm -rf pyshark-master; rm master.zip
 
 install:
   - sudo python setup.py install install_scripts
