@@ -268,11 +268,11 @@ class ServiceHandler:
 	return False, reason
       
       ## Keeping starting values
-      self.logger.debug("    Keeping starting values")
+      self.logger.debug("    Allocating service ID [%s]"%header["service_id"])
       self.service_id    = header["service_id"]
 
       ## Ending successfully
-      self.logger.debug("    Ending start of task successfully")
+      self.logger.debug("    Started service handler successfully")
       return True, reason
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
