@@ -9,8 +9,9 @@ env:
 before_install:
   - sudo apt-get --assume-yes install python-dev build-essential librtmp-dev git libxml2-dev libxslt1-dev
   - sudo apt-get --assume-yes install libzmq-dev
-  - sudo apt-get --assume-yes install libcurl4-openssl-dev 
-  - sudo apt-get --assume-yes install libcurl4-gnutls-dev
+  - |
+    sudo apt-get --assume-yes install libcurl4-openssl-dev 
+    sudo apt-get --assume-yes install libcurl4-gnutls-dev
   - sudo apt-get --assume-yes install tshark 
 
   - wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/requirements.txt
