@@ -5,7 +5,6 @@ cache:
     pip
 python:
   - 2.7
-  - pypy
 
 before_install:
   - |
@@ -26,6 +25,10 @@ before_install:
     patch src/pyshark/packet/layer.py < fix_export_xml.patch
     cd src && sudo python setup.py install && cd ../..
     sudo rm -rf pyshark-master; rm master.zip
+  - |
+    python --version
+    ls -la /usr/local/lib/python2.7/dist-packages/zmicroservices-1.0.2-py2.7.egg
+    python -c "import Services"
 
 install:
   - sudo python setup.py install install_scripts
