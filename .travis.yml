@@ -26,6 +26,8 @@ before_install:
     cd src && sudo python setup.py install && cd ../..
     sudo rm -rf pyshark-master; rm master.zip
   - |
+    sudo python setup.py install install_scripts
+  - |
     python --version
     ls -la /usr/local/lib/python2.7/dist-packages/zmicroservices-1.0.2-py2.7.egg
     python -c "import Services"
