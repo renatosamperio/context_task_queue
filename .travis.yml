@@ -25,6 +25,7 @@ before_install:
     patch src/pyshark/packet/layer.py < fix_export_xml.patch
     cd src && sudo python setup.py install && cd ../..
     sudo rm -rf pyshark-master; rm master.zip
+  - python -c "import pyshark"
   - |
     sudo python setup.py install install_scripts
   - |
