@@ -34,7 +34,7 @@ before_install:
     cd src && sudo python setup.py install && cd ../..
     sudo rm -rf pyshark-master; rm master.zip
     ls -la /usr/local/lib/python2.7/dist-packages/
-
+    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg"
     python -c "import pyshark"
 install:
   - |
