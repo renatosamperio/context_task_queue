@@ -16,27 +16,10 @@ before_install:
 
   - |
     wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/requirements.txt
-    pip install -r requirements.txt
-
-    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
-    
+    sudo pip install -r requirements.txt
+    rm requirements.txt
     ls -la /usr/local/lib/python2.7/dist-packages/
-    [ -d /usr/local/lib/python2.7/dist-packages/xmltodict-0.10.2-py2.7.egg ] && echo "--> xmltodict-0.10.2 exists" || echo "--> xmltodict-0.10.2 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/xmltodict-0.10.2-py2.7.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/psutil-5.0.1-py2.7-linux-x86_64.egg ] && echo "--> psutil-5.0.1 exists" || echo "--> psutil-5.0.1 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/psutil-5.0.1-py2.7-linux-x86_64.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/oauth2client-4.0.0-py2.7.egg ] && echo "--> oauth2client-4.0.0 exists" || echo "--> oauth2client-4.0.0 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/oauth2client-4.0.0-py2.7.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/google_api_python_client-1.5.5-py2.7.egg ] && echo "--> google_api_python_client-1.5.5 exists" || echo "--> google_api_python_client-1.5.5 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/google_api_python_client-1.5.5-py2.7.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/paramiko-2.1.1-py2.7.egg ] && echo "--> paramiko-2.1.1 exists" || echo "--> paramiko-2.1.1 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/paramiko-2.1.1-py2.7.egg"
-    
-    echo "--> A_PYTHONPATH: ${PYTHONPATH}"
+
   - |
     wget https://github.com/KimiNewt/pyshark/archive/master.zip
     unzip master.zip; cd pyshark-master/
@@ -44,36 +27,13 @@ before_install:
     patch src/pyshark/packet/layer.py < fix_export_xml.patch
     cd src && sudo python setup.py install && cd ../..
     sudo rm -rf pyshark-master; rm master.zip
-
-    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
-    
     ls -la /usr/local/lib/python2.7/dist-packages/
-    [ -d /usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg ] && echo "--> Logbook-1.0.0 exists" || echo "--> Logbook-1.0.0 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg ] && echo "--> trollius-1.0.4 exists" || echo "--> trollius-1.0.4 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg ] && echo "--> py-1.4.32 exists" || echo "--> py-1.4.32 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/lxml-3.7.2-py2.7-linux-x86_64.egg ] && echo "--> lxml-3.7.2 exists" || echo "--> lxml-3.7.2 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/lxml-3.7.2-py2.7-linux-x86_64.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/futures-3.0.5-py2.7.egg ] && echo "--> futures-3.0.5 exists" || echo "--> futures-3.0.5 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/futures-3.0.5-py2.7.egg"
-    
-    [ -d /usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg ] && echo "--> pyshark-0.3.6.2 exists" || echo "--> pyshark-0.3.6.2 does not exist"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg"
-    
-    echo "--> A_PYTHONPATH: ${PYTHONPATH}"
+
     python -c "import pyshark"
 install:
   - |
     sudo python setup.py install install_scripts
-    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/zmicroservices-1.0.3-py2.7.egg"
+    ls -la /usr/local/lib/python2.7/dist-packages/
     python -c "import Services"
-    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
 
 script: travis_retry pytest
