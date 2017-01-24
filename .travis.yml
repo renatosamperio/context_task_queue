@@ -20,19 +20,20 @@ before_install:
 
     echo "--> B_PYTHONPATH: ${PYTHONPATH}"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/xmltodict-0.10.2-py2.7.egg ] && echo "xmltodict-0.10.2 exists" || echo "xmltodict-0.10.2 does not exist"
+    ls -la /usr/local/lib/python2.7/dist-packages/
+    [ -d /usr/local/lib/python2.7/dist-packages/xmltodict-0.10.2-py2.7.egg ] && echo "--> xmltodict-0.10.2 exists" || echo "--> xmltodict-0.10.2 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/xmltodict-0.10.2-py2.7.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/psutil-5.0.1-py2.7-linux-x86_64.egg ] && echo "/psutil-5.0.1 exists" || echo "psutil-5.0.1 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/psutil-5.0.1-py2.7-linux-x86_64.egg ] && echo "--> psutil-5.0.1 exists" || echo "--> psutil-5.0.1 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/psutil-5.0.1-py2.7-linux-x86_64.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/oauth2client-4.0.0-py2.7.egg ] && echo "oauth2client-4.0.0 exists" || echo "oauth2client-4.0.0 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/oauth2client-4.0.0-py2.7.egg ] && echo "--> oauth2client-4.0.0 exists" || echo "--> oauth2client-4.0.0 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/oauth2client-4.0.0-py2.7.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/google_api_python_client-1.5.5-py2.7.egg ] && echo "google_api_python_client-1.5.5 exists" || echo "google_api_python_client-1.5.5 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/google_api_python_client-1.5.5-py2.7.egg ] && echo "--> google_api_python_client-1.5.5 exists" || echo "--> google_api_python_client-1.5.5 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/google_api_python_client-1.5.5-py2.7.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/paramiko-2.1.1-py2.7.egg ] && echo "paramiko-2.1.1 exists" || echo "paramiko-2.1.1 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/paramiko-2.1.1-py2.7.egg ] && echo "--> paramiko-2.1.1 exists" || echo "--> paramiko-2.1.1 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/paramiko-2.1.1-py2.7.egg"
     
     echo "--> A_PYTHONPATH: ${PYTHONPATH}"
@@ -46,22 +47,23 @@ before_install:
 
     echo "--> B_PYTHONPATH: ${PYTHONPATH}"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg ] && echo "Logbook-1.0.0 exists" || echo "Logbook-1.0.0 does not exist"
+    ls -la /usr/local/lib/python2.7/dist-packages/
+    [ -d /usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg ] && echo "--> Logbook-1.0.0 exists" || echo "--> Logbook-1.0.0 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg ] && echo "trollius-1.0.4 exists" || echo "rollius-1.0.4 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg ] && echo "--> trollius-1.0.4 exists" || echo "--> trollius-1.0.4 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg ] && echo "py-1.4.32 exists" || echo "py-1.4.32 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg ] && echo "--> py-1.4.32 exists" || echo "--> py-1.4.32 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/lxml-3.7.2-py2.7-linux-x86_64.egg ] && echo "lxml-3.7.2 exists" || echo "lxml-3.7.2 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/lxml-3.7.2-py2.7-linux-x86_64.egg ] && echo "--> lxml-3.7.2 exists" || echo "--> lxml-3.7.2 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/lxml-3.7.2-py2.7-linux-x86_64.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/futures-3.0.5-py2.7.egg ] && echo "futures-3.0.5 exists" || echo "futures-3.0.5 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/futures-3.0.5-py2.7.egg ] && echo "--> futures-3.0.5 exists" || echo "--> futures-3.0.5 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/futures-3.0.5-py2.7.egg"
     
-    [ -d /usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg ] && echo "pyshark-0.3.6.2 exists" || echo "pyshark-0.3.6.2 does not exist"
+    [ -d /usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg ] && echo "--> pyshark-0.3.6.2 exists" || echo "--> pyshark-0.3.6.2 does not exist"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg"
     
     echo "--> A_PYTHONPATH: ${PYTHONPATH}"
