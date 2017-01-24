@@ -8,6 +8,7 @@ python:
 
 before_install:
   - |
+    sudo apt-get update
     sudo apt-get --assume-yes install libzmq-dev
     sudo apt-get --assume-yes install python-dev build-essential librtmp-dev git libxml2-dev libxslt1-dev
     sudo apt-get --assume-yes install libcurl4-openssl-dev 
@@ -16,6 +17,7 @@ before_install:
 
   - |
     wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/requirements.txt
+    sudo pip install --upgrade pip
     sudo pip install -r requirements.txt
     rm requirements.txt
     ls -la /usr/local/lib/python2.7/dist-packages/
