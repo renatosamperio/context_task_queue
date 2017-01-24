@@ -16,10 +16,14 @@ before_install:
     sudo apt-get --assume-yes install tshark 
 
   - |
-    wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/requirements.txt
     sudo pip install --upgrade pip
-    sudo pip install -r requirements.txt
-    rm requirements.txt
+    sudo pip install --upgrade google-api-python-client
+    sudo pip install --upgrade psutil
+    sudo pip install --upgrade xmltodict
+    sudo pip install --upgrade oauth2client
+    sudo pip install --upgrade pymongo
+    sudo pip install --upgrade dicttoxml
+    sudo pip install --upgrade paramiko
     ls -la /usr/local/lib/python2.7/dist-packages/
 
   - |
