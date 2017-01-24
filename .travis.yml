@@ -17,13 +17,15 @@ before_install:
   - |
     wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/requirements.txt
     pip install -r requirements.txt
+    echo "--> PYTHONPATH: ${PYTHONPATH}"
 
+    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/xmltodict-0.10.2-py2.7.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/psutil-5.0.1-py2.7-linux-x86_64.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/oauth2client-4.0.0-py2.7.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/google_api_python_client-1.5.5-py2.7.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/paramiko-2.1.1-py2.7.egg"
-
+    echo "--> A_PYTHONPATH: ${PYTHONPATH}"
   - |
     wget https://github.com/KimiNewt/pyshark/archive/master.zip
     unzip master.zip; cd pyshark-master/
@@ -31,8 +33,8 @@ before_install:
     patch src/pyshark/packet/layer.py < fix_export_xml.patch
     cd src && sudo python setup.py install && cd ../..
     sudo rm -rf pyshark-master; rm master.zip
-    python -c "import pyshark"
 
+    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg"
@@ -40,10 +42,14 @@ before_install:
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/futures-3.0.5-py2.7.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg"
     
+    echo "--> A_PYTHONPATH: ${PYTHONPATH}"
+    python -c "import pyshark"
 install:
   - |
     sudo python setup.py install install_scripts
-    python -c "import Services"
+    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/zmicroservices-1.0.3-py2.7.egg"
+    python -c "import Services"
+    echo "--> B_PYTHONPATH: ${PYTHONPATH}"
 
 script: travis_retry pytest
