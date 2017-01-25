@@ -38,8 +38,6 @@ before_install:
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/pyshark-0.3.6.2-py2.7.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/Logbook-1.0.0-py2.7-linux-x86_64.egg"
     export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/trollius-1.0.4-py2.7.egg"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/py-1.4.32-py2.7.egg"
-    export PYTHONPATH="${PYTHONPATH}:/usr/local/lib/python2.7/dist-packages/lxml-3.7.2-py2.7-linux-x86_64.egg"
     python -c "import pyshark"
     
 install:
