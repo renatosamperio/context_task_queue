@@ -157,7 +157,8 @@ class AutoCode(object):
       self.ModuleLocation= options['location']
       
       ## Setting logger
-      self.log = options['log_on']
+      if 'log_on' in options.keys():
+	self.log = options['log_on']
 
       # Validating state values whether they would be incomplete
       if 'task_type' in options.keys():
@@ -565,9 +566,18 @@ if __name__ == '__main__':
 	service.update({'sub_port': 	services['sub_port']})
 	service.update({'pub_port': 	services['pub_port']})
 	service.update({'service_path': services['service_path']})
-	service.update({'home_path': 	services['home_path']})
+	if 'home_path' not in services.keys():
+	  service.update({'home_path': 	'/opt/zmicroservices/'})
+	else:
+	  service.update({'home_path': 	services['home_path']})
 	service.update({'context_id': 	services['context_id']})
-	service.update({'log_on': 	bool(int(services['log_on']))})
+	if 'log_on' in services.keys():
+	  service.update({'log_on': 	bool(int(services['log_on']))})
+	if 'location' not in services.keys():
+	  service.update({'location': 	services['service_path']+'/Services'})
+	else:
+	  service.update({'location': 	services['location']})
+	service.update({'context_id': 	services['context_id']})
 	#pprint.pprint(service)
 	
 	## Checking if there is a type of task
