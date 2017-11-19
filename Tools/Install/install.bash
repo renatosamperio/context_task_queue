@@ -192,3 +192,17 @@ cd ~/workspace
 git clone https://github.com/renatosamperio/context_task_queue.git
 cd context_task_queue && python setup.py install install_scripts && cd ..
 
+echo -e "\e[92m \e[1m"
+echo "*****************************************************"
+echo "*****          INSTALLING DEPENDENCIES          *****"
+echo "*****             (PYTHON: Torrents)            *****"
+echo "*****************************************************"
+echo -e "\e[0m"
+sudo apt get install torrench
+sudo pip install six 
+git clone https://github.com/kryptxy/torrench.git && cd torrench
+wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/Tools/Install/torrech_p27.patch
+git apply --stat torrech_p27.patch
+git apply --check torrech_p27.patch
+git apply -v torrech_p27.patch
+sudo python setup.py install && cd ..
