@@ -1,0 +1,142 @@
+diff --git a/torrench/torrench.ini b/torrench/torrench.ini
+index 66ac08d..df663ef 100644
+--- a/torrench/torrench.ini
++++ b/torrench/torrench.ini
+@@ -17,5 +17,5 @@ CLIENT = transmission-gtk
+ ## Set the SERVER and PORT values accordingly
+ ## Leave as it is for defaults
+ ## Default: ["localhost:9091"]
+-SERVER =
+-PORT =
++SERVER = localhost
++PORT = 9091
+diff --git a/torrench/modules/idope.py b/torrench/modules/idope.py
+index d69f96d..2adc08d 100644
+--- a/torrench/modules/idope.py
++++ b/torrench/modules/idope.py
+@@ -147,7 +147,7 @@ class Idope(Config):
+                     selected_torrent, req_magnetic_link, torrent_link = self.mapper[temp-1]
+                     print("Selected index [%d] - %s\n" % (temp, self.colorify("yellow", selected_torrent)))
+                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
+-                    temp2 = input("1. Print links [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
++                    temp2 = raw_input("1. Print links [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                     temp2 = temp2.lower()
+                     self.logger.debug("selected option: [%c]" % (temp2))
+                     if temp2 == 'p':
+diff --git a/torrench/modules/kickasstorrent.py b/torrench/modules/kickasstorrent.py
+index 39632c4..69301ac 100644
+--- a/torrench/modules/kickasstorrent.py
++++ b/torrench/modules/kickasstorrent.py
+@@ -185,7 +185,7 @@ class KickassTorrents(Config):
+                     print("Selected index [%d] - %s\n" % (temp, selected_torrent))
+                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
+                     # Print Magnetic link / load magnet to client
+-                    temp2 = input("\n1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
++                    temp2 = raw_input("\n1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                     temp2 = temp2.lower()
+                     self.logger.debug("selected option: [%c]" % (temp2))
+                     if temp2 == 'p':
+diff --git a/torrench/modules/nyaa.py b/torrench/modules/nyaa.py
+index 45a7a5b..b01d7ec 100644
+--- a/torrench/modules/nyaa.py
++++ b/torrench/modules/nyaa.py
+@@ -173,7 +173,7 @@ class NyaaTracker(Config):
+                     selected_torrent = self.colorify("yellow", selected_torrent)
+                     print("Selected index [{idx}] - {torrent}\n".format(idx=prompt, torrent=selected_torrent))
+                     # Print Magnetic link / load magnet to client
+-                    prompt2 = input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
++                    prompt2 = raw_input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                     prompt2 = prompt2.lower()
+                     self.logger.debug("selected option: [%c]" % (prompt2))
+                     if prompt2 == 'p':
+diff --git a/torrench/modules/rarbg.py b/torrench/modules/rarbg.py
+index ee78c41..15b938e 100644
+--- a/torrench/modules/rarbg.py
++++ b/torrench/modules/rarbg.py
+@@ -123,7 +123,7 @@ class RarBg(Config):
+                     selected_torrent, req_magnetic_link, torrent_link = self.mapper[temp-1]
+                     print("Selected index [%d] - %s\n" % (temp, self.colorify("yellow", selected_torrent)))
+                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
+-                    temp2 = input("1. Print links [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
++                    temp2 = raw_input("1. Print links [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                     temp2 = temp2.lower()
+                     self.logger.debug("selected option: [%c]" % (temp2))
+                     if temp2 == 'p':
+diff --git a/torrench/modules/thepiratebay.py b/torrench/modules/thepiratebay.py
+index e189f3f..a88ed13 100644
+--- a/torrench/modules/thepiratebay.py
++++ b/torrench/modules/thepiratebay.py
+@@ -250,7 +250,7 @@ class ThePirateBay(Config):
+                     selected_torrent, req_magnetic_link, torrent_link = self.mapper[temp-1]
+                     print("Selected index [%d] - %s\n" % (temp, selected_torrent))
+                     self.logger.debug("selected torrent: %s ; index: %d" % (self.non_color_name, temp))
+-                    temp2 = input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n3. Get torrent details [g]\n\nOption [p/l/g]: ")
++                    temp2 = raw_input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n3. Get torrent details [g]\n\nOption [p/l/g]: ")
+                     temp2 = temp2.lower()
+                     self.logger.debug("selected option: [%c]" % (temp2))
+                     if temp2 == 'p':
+diff --git a/torrench/modules/tpb_details.py b/torrench/modules/tpb_details.py
+index be77fa0..91996c7 100644
+--- a/torrench/modules/tpb_details.py
++++ b/torrench/modules/tpb_details.py
+@@ -61,7 +61,7 @@ def get_details(url, index):
+                     pg_count = 0
+                     temp = False
+                 elif opt == 'n' or opt == 'N':
+-                    pg_inp = input("Number of pages to fetch comments from? [0 < n < %d]: " % (total_comments_pages));
++                    pg_inp = raw_input("Number of pages to fetch comments from? [0 < n < %d]: " % (total_comments_pages));
+                     if pg_inp == '':
+                         print("Bad Input")
+                     else:
+diff --git a/torrench/modules/x1337.py b/torrench/modules/x1337.py
+index 436579e..939b2f4 100644
+--- a/torrench/modules/x1337.py
++++ b/torrench/modules/x1337.py
+@@ -212,7 +212,7 @@ class x1337(Config):
+                     selected_torrent, torrent_link = self.mapper[temp-1]
+                     print("Selected index [%d] - %s\n" % (temp, selected_torrent))
+                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
+-                    temp2 = input("1. Print links [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
++                    temp2 = raw_input("1. Print links [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                     temp2 = temp2.lower()
+                     self.logger.debug("selected option: [%c]" % (temp2))
+                     if temp2 == 'p':
+diff --git a/torrench/modules/xbit.py b/torrench/modules/xbit.py
+index 7400a00..1403c88 100644
+--- a/torrench/modules/xbit.py
++++ b/torrench/modules/xbit.py
+@@ -125,7 +125,7 @@ class XBit(Config):
+                     selected_torrent, req_magnetic_link, torrent_id = self.mapper[temp-1]
+                     print("Selected index [%d] - %s\n" % (temp, self.colorify("yellow", selected_torrent)))
+                     self.logger.debug("selected torrent: %s ; index: %d" % (selected_torrent, temp))
+-                    temp2 = input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
++                    temp2 = raw_input("1. Print magnetic link [p]\n2. Load magnetic link to client [l]\n\nOption [p/l]: ")
+                     temp2 = temp2.lower()
+                     self.logger.debug("selected option: [%c]" % (temp2))
+                     if temp2 == 'p':
+diff --git a/torrench/utilities/Common.py b/torrench/utilities/Common.py
+index d773c76..0bb5ad3 100644
+--- a/torrench/utilities/Common.py
++++ b/torrench/utilities/Common.py
+@@ -11,7 +11,7 @@ import logging
+ import subprocess
+ import webbrowser
+ import pyperclip
+-from configparser import SafeConfigParser
++from six.moves.configparser import SafeConfigParser
+ 
+ 
+ class Common:
+diff --git a/torrench/utilities/Config.py b/torrench/utilities/Config.py
+index f2cbc7a..5871f7a 100644
+--- a/torrench/utilities/Config.py
++++ b/torrench/utilities/Config.py
+@@ -1,7 +1,7 @@
+ """ Config module."""
+ import os
+ import logging
+-from configparser import SafeConfigParser
++from six.moves.configparser import SafeConfigParser
+ from torrench.utilities.Common import Common
+ 
+ 
