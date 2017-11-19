@@ -202,7 +202,6 @@ sudo pip install six torrench
 git clone https://github.com/kryptxy/torrench.git && cd torrench
 wget https://raw.githubusercontent.com/renatosamperio/context_task_queue/master/Tools/Install/torrech_p27.patch
 git apply --stat torrech_p27.patch
-git apply --check torrech_p27.patch
 git apply -v torrech_p27.patch
 sudo python setup.py install && cd ..
 mkdir -p ~/.config/torrench

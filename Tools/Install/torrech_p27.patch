@@ -1,7 +1,7 @@
-diff --git a/torrench/torrench.ini b/torrench/torrench.ini
+diff --git a/torrench.ini b/torrench.ini
 index 66ac08d..df663ef 100644
---- a/torrench/torrench.ini
-+++ b/torrench/torrench.ini
+--- a/torrench.ini
++++ b/torrench.ini
 @@ -17,5 +17,5 @@ CLIENT = transmission-gtk
  ## Set the SERVER and PORT values accordingly
  ## Leave as it is for defaults
