@@ -38,6 +38,11 @@ class ContextMonitor:
 	 raise ContextError('Warning:', 'Message header missing "configuration"')
 	 return
       taskService = configuration['TaskService']
+
+      # Converting to list in case it is just one service per context
+      if not (type([])== type(taskService)):
+        taskService = [taskService]
+
       if len(taskService)>0 and type(taskService) != type([]):
 	raise ContextError('Warning:', 'TaskService list is empty in content configuration')
 	taskService = [taskService]
