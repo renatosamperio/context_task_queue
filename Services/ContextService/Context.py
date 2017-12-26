@@ -725,6 +725,9 @@ class ContextGroup:
 
 	  ## Checking if action exists is different return value
 	  tasks = msg['content']['configuration']['TaskService']
+	  if not isinstance(list, type(tasks)):
+            tasks = [tasks]
+
 	  for lTask in tasks:
 	    serviceId = lTask['id']
 	    service = self.contextInfo.GetServiceID(transaction, serviceId)
