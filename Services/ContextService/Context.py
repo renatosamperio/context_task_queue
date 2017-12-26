@@ -725,7 +725,7 @@ class ContextGroup:
 
 	  ## Checking if action exists is different return value
 	  tasks = msg['content']['configuration']['TaskService']
-	  if not isinstance(list, type(tasks)):
+	  if not (type([])== type(tasks)):
             tasks = [tasks]
 
 	  for lTask in tasks:
