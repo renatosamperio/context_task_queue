@@ -14,7 +14,7 @@ from setuptools.command.test import test as TestCommand
 from subprocess import Popen
 
 PACKAGE_NAME = 'zmicroservices'
-PACKAGE_VERSION = "1.0.3"
+PACKAGE_VERSION = "1.0.4"
 HELPERS_PATH = '/opt/zmicroservices'
 
 def copy_files(src, dst):
