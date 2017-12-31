@@ -276,7 +276,7 @@ class TaskedService(object):
 			## TODO: Report why is it failing!
 			items = {'pid': self.tid,
 			  'reason': type_state}
-			self.action.notify('failed', 'sucess', items=items)
+			self.action.notify('failed', 'success', items=items)
 
 		  ## Logging simplified process monitoring information
 		  self.logger.debug('[%s] Service [%s, %d] has (rss=%.2f MiB, vms=%.2f MiB, mem=%3.4f%%) in %.2fms' 
