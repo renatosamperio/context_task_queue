@@ -23,21 +23,6 @@ def GetUnicode(line):
     line = unicode(line, 'utf-8')
   return u''.join(line).encode('utf-8').strip()
 
-def GetHTML(url_):
-  ''' '''
-  try:
-    buffer = StringIO()
-    c = pycurl.Curl()
-    c.setopt(c.URL, url_)
-    c.setopt(c.WRITEDATA, buffer)
-    c.perform()
-    c.close()
-
-    body = buffer.getvalue()
-    return body.decode('utf8')
-  except Exception as inst:
-    ParseException(inst)
-
 def FindChilden(pid, logger=None):
   try:
   
