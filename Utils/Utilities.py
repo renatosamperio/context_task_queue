@@ -9,6 +9,7 @@ import random
 import pycurl
 import logging
 import logging.handlers
+import re
 
 from StringIO import StringIO
 
@@ -18,6 +19,28 @@ LOG_FILENAME	= 'context_provider.log'
 ''' Base name for logger'''
 LOG_NAME	= 'ContextProvider'
 
+def RemoveColor(line):
+  '''
+    new_line = remove_color(line)
+  '''
+  r= re.compile("\033\[[0-9;]+m")
+  try:
+    line = line.encode('ascii','ignore').decode('unicode_escape')
+    #p = os.popen("compiz-check")
+    #p.close()
+
+  except UnicodeEncodeError as inst:
+    print "@@@"
+    #print(line.decode('unicode_escape').encode('utf-8','ignore'))
+    line2 = filter(lambda x: x in set(string.printable), line)
+    print "@@@", line2
+    print "@@@", r.sub("", line2)
+    Utilities.ParseException(inst, logger=self.logger)
+  except Exception as inst:
+    Utilities.ParseException(inst, logger=self.logger)
+  finally:
+      return r.sub("", line)
+    
 def GetUnicode(line):
   if isinstance(line, unicode) == False:
     line = unicode(line, 'utf-8')
