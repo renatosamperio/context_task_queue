@@ -36,6 +36,7 @@ class $TaskClass(threading.Thread):
       ## Adding local variables
       self.service	= None
       self.onStart	= True
+      self.not_searching= False
 
       # Generating instance of strategy
       for key, value in kwargs.iteritems():
@@ -82,8 +83,15 @@ class $TaskClass(threading.Thread):
       
       self.logger.debug('Looping for task [%d]'%self.tid)
       while not self.tStop.isSet():
+        if self.not_searching:
+          self.logger.debug('   ~~~ Starting action handler action')
 	# Do something here!
 	# ...
+          self.logger.debug('   ~~~ Posting results')
+          self.service.notify("updated", result_state, items=itemsCall)
+
+          self.logger.debug('   ~~~ Resetting search query...')
+          self.not_searching = False
 	self.tStop.wait(5)
 	
       # Ending thread routine
@@ -122,6 +130,14 @@ class $TaskClass(threading.Thread):
   def execute(self, service):
     ''' Execute $TaskClass task by calling a "run" method in the service'''
 
+  def SetSearch(self, status):
+    try:
+      ## Getting correct action
+      VARIABLE1      = status['VARIABLE1']
+      VARIABLE2      = status['VARIABLE2']
+      self.not_searching = True
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
 
 ## Standalone main method
 LOG_NAME = 'TaskTool'
