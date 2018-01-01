@@ -269,7 +269,6 @@ def message(options):
       
       ## Getting XML and interface from arguments
       configuration = ParseTasks(options)
-      print "===>configuration:", configuration
       if configuration is None:
 	print "- Task parsing failed..."
 	sys.exit(0)
