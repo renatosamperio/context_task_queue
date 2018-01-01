@@ -46,15 +46,11 @@ class Similarity:
 
   def score(self, base, other):
     try:
-      #print "=== other1:", other
       other = other.replace(".", " ")
-      #print "=== other2:", other
       complete_phrase = 1.0 if base in other else 0.0
       similarity = self.cosine_sim(base, other)
-      #print "=== complete_phrase:", complete_phrase
       #print "=== similarity:", similarity
       score = (complete_phrase+similarity)/2.0
-      #print "=== score:", score
       return score
     except Exception as inst:
       Utilities.ParseException(inst, logger=logger)
