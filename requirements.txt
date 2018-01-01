@@ -9,3 +9,5 @@ dicttoxml==1.7.4
 paramiko==2.1.1
 pycurl==7.43.0
 google-api-python-client==1.5.5
+nltk==3.2.5
+sklearn==0.19.1
