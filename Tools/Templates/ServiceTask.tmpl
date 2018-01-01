@@ -124,10 +124,31 @@ class Service$ServiceType(ServiceHandler):
       header = msg['header']
       status =  msg['content']['status']
 
+      if 'service_name' not in header.keys():
+        self.logger.debug("[service_name] Not found in [header]")
+        return
+
+      if 'status' not in content.keys():
+        self.logger.debug("[status] Not found in [content]")
+        return
+      status =  content['status']
+
+      if 'result' not in status.keys():
+        self.logger.debug("[result] Not found in [status]")
+        return
+      
       # Filtering reporting process
       ## if header['service_name'] == 'PROCESS1' and status["result"] == "success":
-      ##   self.logger.debug("Received message from PROCESS1")
-      ##   Do something useful
+      ##   self.logger.debug("Received message from [PROCESS1]")
+      ##   statusKeys = status.keys()
+      ##   if 'VARIABLE1' not in statusKeys:
+      ##     self.logger.debug("[search_title] Not found in [VARIABLE1]")
+      ##     return
+      ##   if 'VARIABLE2' not in statusKeys:
+      ##     self.logger.debug("[top_items] Not found in [VARIABLE2]")
+      ##     return
+      ##   self.logger.debug("Passing message to action handler")
+      ##   self.actionHandler.SetSearch(status)
 
       ## elif header['service_name'] == 'PROCESS2'  and status["result"] == 'success':
       ##   self.logger.debug("Received message from PROCESS2'")
