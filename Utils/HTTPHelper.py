@@ -4,8 +4,10 @@
 import requests
 import bs4
 import re
+
 from bs4 import BeautifulSoup
 from StringIO import StringIO
+from difflib import get_close_matches, SequenceMatcher
 
 from Utilities import ParseException
 
@@ -32,7 +34,7 @@ def ExtractData( source):
     soup=bs4.BeautifulSoup(source, "lxml")
     return soup
 
-def WordByWord( str1, str2 ):
+def WordByWord( str1, str2):
   ''''''
   ignore = '.,|[!@#$%^&*?_~-+/()]'
   try:
@@ -94,4 +96,4 @@ def WordByWord( str1, str2 ):
     #return hitsPercentage, average
     return hitsPercentage
   except Exception as inst:
-    ParseException(inst, logger=self.logger)
+    ParseException(inst)
