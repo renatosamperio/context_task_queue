@@ -123,11 +123,15 @@ class Service$ServiceType(ServiceHandler):
 	return isRightTransaction
 	  
       header = msg['header']
-      status =  msg['content']['status']
 
       if 'service_name' not in header.keys():
         self.logger.debug("[service_name] Not found in [header]")
         return
+
+      if 'content' not in msg.keys():
+        self.logger.debug("[content] Not found in [content]")
+        return
+      content =  msg['content']
 
       if 'status' not in content.keys():
         self.logger.debug("[status] Not found in [content]")
@@ -143,10 +147,10 @@ class Service$ServiceType(ServiceHandler):
       ##   self.logger.debug("Received message from [PROCESS1]")
       ##   statusKeys = status.keys()
       ##   if 'VARIABLE1' not in statusKeys:
-      ##     self.logger.debug("[search_title] Not found in [VARIABLE1]")
+      ##     self.logger.debug("[VARIABLE1] Not found in [PROCESS1]")
       ##     return
       ##   if 'VARIABLE2' not in statusKeys:
-      ##     self.logger.debug("[top_items] Not found in [VARIABLE2]")
+      ##     self.logger.debug("[VARIABLE2] Not found in [PROCESS1]")
       ##     return
       ##   self.logger.debug("Passing message to action handler")
       ##   self.actionHandler.SetSearch(status)
