@@ -125,31 +125,33 @@ class MongoAccess:
   def Update(self, condition=None, substitute=None, upsertValue=False):
     '''
     Updates data from database. 
-    condition	dictionary with lookup condition
-    substitue	item to substitute
-    upsertValue	True for insert if not exist, False otherwise
+    condition    dictionary with lookup condition
+    substitue    item to substitute
+    upsertValue    True for insert if not exist, False otherwise
     
     returns True if update was OK, otherwise False
     '''
+    result = False
     try: 
-      result = False
-      if condition is not None and substitute is not None:
-	
-	if '_id' in substitute.keys():
-	  substitute.pop('_id', 0)
-	
-	if len(condition)<1:
-	  self.logger.debug("Updating documents from collection")
-	  
-	resultSet = self.collection.update(condition,{
-				'$set': substitute
-			      }, upsert=upsertValue, multi=False)
-	
-	self.logger.debug("Updated existing:"+str(resultSet['updatedExisting']))
-	result = resultSet['ok'] == 1
-      else:
-	self.logger.debug("Invalid condition for updateing")
-      result = True
+        if condition is None or len(condition)<1:
+            self.logger.debug("Error: Invalid given condition" )
+            return
+            
+        if substitute is None:
+            self.logger.debug("Error: Invalid given substitute" )
+            return
+        
+        if '_id' not in substitute.keys():
+            self.logger.debug("Warning: not given _id in substitute part")
+        else:
+            substitute.pop('_id', 0)
+    
+        self.logger.debug("Updating documents from collection [%s]"%(self.coll_name))
+        resultSet = self.collection.update(condition,
+                                           {'$set': substitute}, 
+                                           upsert=upsertValue, 
+                                           multi=False)
+        result = resultSet['ok'] == 1
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     finally:
