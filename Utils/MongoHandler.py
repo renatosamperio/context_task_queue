@@ -156,7 +156,54 @@ class MongoAccess:
       Utilities.ParseException(inst, logger=self.logger)
     finally:
       return result
-    
+
+  def Update_TimeSeries_Day(self, item, item_index, items_id):
+    '''
+    Generate a time series model 
+    https://www.mongodb.com/blog/post/schema-design-for-time-series-data-in-mongodb
+    '''
+    result = False
+    try:
+        ## Check if given item already exists, otherwise
+        ## insert new time series model for each item ID
+        condition               = {item_index: item[item_index]}
+        posts                   = self.Find(condition)
+        datetime_now            = datetime.datetime.utcnow()
+        
+        ## We can receive more than one time series item
+        ## to update per call in the same item
+        #TODO: Do a more efficient update/insert for bulk items
+        if posts.count() < 1:
+            ## Prepare time series model for time series
+            def get_day_timeseries_model(value, datetime_now):
+                return { 
+                    "timestamp_day": datetime_now.year,
+                    "value": {
+                        str(datetime_now.month): {
+                            str(datetime_now.day) : value
+                        }
+                    }
+                };
+            for item_id in items_id:
+                item[item_id]   = get_day_timeseries_model(item[item_id], datetime_now)
+            ## Inserting time series model
+            post_id             = self.Insert(item)
+            self.logger.debug("    Inserted time series item with hash [%s] in collection [%s]"% 
+                              (item[item_index], self.coll_name))
+        else:
+            # Updating condition and substitute values
+            for item_id in items_id:
+                set_key         = item_id+".value."+str(datetime_now.month)+"."+str(datetime_now.day)
+                subs_item_id    = {set_key: item[item_id] }
+                post_id = self.Update(condition, subs_item_id)
+                self.logger.debug("    Updated time series item with hash [%s] in collection [%s]"% 
+                                  (item[item_index], self.coll_name))
+                
+    except Exception as inst:
+      Utilities.ParseException(inst, logger=self.logger)
+    finally:
+      return result
+
 def db_handler_call(options):
   ''' Method for calling MongoAccess handler'''
   #print options
