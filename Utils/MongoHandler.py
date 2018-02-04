@@ -5,6 +5,7 @@ import time
 import json
 import pymongo
 import ast
+import datetime
 
 import logging
 import logging.handlers
@@ -104,7 +105,7 @@ class MongoAccess:
       ## Deleting documents
       result = self.collection.remove(condition)
       if result['ok']>0:
-	self.logger.debug("  Deleted %s documents in %sms"% (str(result['n']), str(result['syncMillis'])))
+	self.logger.debug("  Deleted %s documents in %s, s"% (str(result['n']), str(result['syncMillis'])))
       else:
 	self.logger.debug("  Deleted failed: %s", str(result))
 
@@ -116,11 +117,11 @@ class MongoAccess:
     collSize = None
     try: 
       collSize = self.collection.count()
-      self.logger.debug("Collection [%s] has size of [%d]"%(self.collection, collSize))
+      self.logger.debug("Collection [%s] has size of [%d]"%(self.coll_name, collSize))
     except Exception as inst:
       Utilities.ParseException(inst, logger=logger)
     return collSize
-  
+ 
   def Update(self, condition=None, substitute=None, upsertValue=False):
     '''
     Updates data from database. 
