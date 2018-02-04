@@ -17,13 +17,14 @@ import Utilities
 class MongoAccess:
   def __init__(self, debug=False):
     ''' '''
-    component		= self.__class__.__name__
-    self.logger		= Utilities.GetLogger(component)
+    component		   = self.__class__.__name__
+    self.logger        = Utilities.GetLogger(component)
     if not debug:
       self.logger.setLevel(logging.INFO)
-    self.collection 	= None
-    self.db	 	= None
-    self.debug	 	= debug
+    self.coll_name     = None
+    self.collection    = None
+    self.db	 	       = None
+    self.debug	 	   = debug
     self.logger.debug("Creating mongo client with debug mode [%s]"%
 		      ('ON' if self.debug else 'OFF'))
     
@@ -42,6 +43,7 @@ class MongoAccess:
       # Getting instance of collection
       self.logger.debug("Getting instance of collection")
       self.collection = self.db[collection]
+      self.coll_name = collection
       
       result = self.collection is not None
     
@@ -53,7 +55,7 @@ class MongoAccess:
   def Insert(self, document):
     post_id = None
     try: 
-      self.logger.debug("Inserting document in collection [%s]"%(self.collection))
+      self.logger.debug("Inserting document in collection [%s]"%(self.coll_name))
       post_id = self.collection.insert(document)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -63,7 +65,7 @@ class MongoAccess:
     '''Collects data from database '''
     posts = None
     try: 
-      self.logger.debug("Finding document in collection [%s]"%(self.collection))
+      self.logger.debug("Finding document in collection [%s]"%(self.coll_name))
       posts = self.collection.find(condition)
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
