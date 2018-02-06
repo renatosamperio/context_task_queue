@@ -56,11 +56,12 @@ class MongoAccess:
   def Insert(self, document):
     post_id = None
     try: 
-      self.logger.debug("Inserting document in collection [%s]"%(self.coll_name))
-      post_id = self.collection.insert(document)
+        self.logger.debug("Inserting document in collection [%s]"%(self.coll_name))
+        post_id = self.collection.insert(document)
     except Exception as inst:
-      Utilities.ParseException(inst, logger=self.logger)
-    return post_id
+        Utilities.ParseException(inst, logger=self.logger)
+    finally:
+        return post_id
 
   def Find(self, condition={}):
     '''Collects data from database '''
@@ -141,10 +142,10 @@ class MongoAccess:
             self.logger.debug("Error: Invalid given substitute" )
             return
         
-        if '_id' not in substitute.keys():
-            self.logger.debug("Warning: not given _id in substitute part")
-        else:
-            substitute.pop('_id', 0)
+        ## if '_id' not in substitute.keys():
+        ##     self.logger.debug("Warning: not given _id in substitute part")
+        ## else:
+        ##     substitute.pop('_id', 0)
     
         self.logger.debug("Updating documents from collection [%s]"%(self.coll_name))
         resultSet = self.collection.update(condition,
@@ -195,7 +196,7 @@ class MongoAccess:
             for item_id in items_id:
                 set_key         = item_id+".value."+str(datetime_now.month)+"."+str(datetime_now.day)
                 subs_item_id    = {set_key: item[item_id] }
-                post_id = self.Update(condition, subs_item_id)
+                result = self.Update(condition, subs_item_id)
                 self.logger.debug("    Updated time series item with hash [%s] in collection [%s]"% 
                                   (item[item_index], self.coll_name))
                 
