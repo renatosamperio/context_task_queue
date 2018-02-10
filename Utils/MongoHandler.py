@@ -79,25 +79,24 @@ class MongoAccess:
     return posts
     
   def Print(self, posts, with_id=False):
-    '''Prints collection of posts '''
-    try: 
-      if not isinstance(posts,type(None)):
-	sizePosts= posts.count()
-	for i in range(sizePosts):
-	  post = posts[i]
-	  postKeys = post.keys()
-	  
-	  line = ''
-	  for key in postKeys:
-	    if not with_id and key=='_id':
-	      continue
-	    line += ('{'+key+': '+str(post[key])+"} ")
-	  line = line.strip()
-	  self.logger.debug('  '+str(line))
-      else:
-	self.logger.debug("Invalid input posts for printing")
-    except Exception as inst:
-      Utilities.ParseException(inst, logger=self.logger)
+      '''Prints collection of posts '''
+      try: 
+          if not isinstance(posts,type(None)):
+              sizePosts= posts.count()
+              for i in range(sizePosts):
+                  post = posts[i]
+                  postKeys = post.keys()
+                  line = ''
+                  for key in postKeys:
+                      if not with_id and key=='_id':
+                          continue
+                      line += ('{'+key+': '+str(post[key])+"} ")
+                  line = line.strip()
+                  self.logger.debug('  '+str(line))
+          else:
+              self.logger.debug("Invalid input posts for printing")
+      except Exception as inst:
+          Utilities.ParseException(inst, logger=self.logger)
 
   def Remove(self, condition=None):
     '''Deletes data from database '''
