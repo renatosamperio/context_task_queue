@@ -169,11 +169,11 @@ def MemoryUsage(pid, serviceId='', log=None, memMap=False, openFiles=False, open
   except Exception as inst:
     ParseException(inst, logger=log)
     
-def GetLogger(logName=LOG_NAME, useFile=True):
+def GetLogger(logName=LOG_NAME, useFile=True, fileLen=1000000, nFiles=5):
   ''' Returns an instance of logger '''
   logger = logging.getLogger(logName)
   if useFile:
-    fileHandler = GetFileLogger()
+    fileHandler = GetFileLogger(fileLength=fileLen, numFiles=nFiles)
     logger.addHandler(fileHandler)
   return logger
     
