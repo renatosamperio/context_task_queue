@@ -35,13 +35,15 @@ class MongoAccess:
   def connect(self, database, collection, host='localhost', port=27017):
     ''' '''
     result = False
+    if database is None:
+        self.logger.debug("Error: Invalid database name")
     try: 
-      self.logger.debug("Creating mongo client")
+      self.logger.debug("Generating instance of mongo client")
       # Creating mongo client
       client = MongoClient(host, port)
 
       # Getting instance of database
-      self.logger.debug("Getting instance of database")
+      self.logger.debug("Getting instance of database [%s]"%database)
       self.db = client[database]
 
       # Getting instance of collection
@@ -121,7 +123,7 @@ class MongoAccess:
     collSize = None
     try: 
       collSize = self.collection.count()
-      self.logger.debug("Collection [%s] has size of [%d]"%(self.coll_name, collSize))
+      self.logger.debug("Collection [%s] has a size of [%d]"%(self.coll_name, collSize))
     except Exception as inst:
       Utilities.ParseException(inst, logger=logger)
     return collSize
@@ -149,12 +151,17 @@ class MongoAccess:
         ##     self.logger.debug("Warning: not given _id in substitute part")
         ## else:
         ##     substitute.pop('_id', 0)
-    
-        self.logger.debug("Updating documents from collection [%s]"%(self.coll_name))
+        upsert_label = "existing "
+        if upsertValue:
+            upsert_label = "and creating new "
+        
+        self.logger.debug("Updating %sdocuments from collection [%s]"%
+                          (upsert_label, self.coll_name))
         resultSet = self.collection.update(condition,
                                            {'$set': substitute}, 
                                            upsert=upsertValue, 
                                            multi=False)
+        
         result = resultSet['ok'] == 1
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
@@ -192,7 +199,7 @@ class MongoAccess:
                 item[item_id]   = get_day_timeseries_model(item[item_id], datetime_now)
             ## Inserting time series model
             post_id             = self.Insert(item)
-            self.logger.debug("    Inserted time series item with hash [%s] in collection [%s]"% 
+            self.logger.debug("  -     Inserted time series item with hash [%s] in collection [%s]"% 
                               (item[item_index], self.coll_name))
         else:
             # Updating condition and substitute values
@@ -204,9 +211,10 @@ class MongoAccess:
                                   (item[item_index], self.coll_name))
                 
     except Exception as inst:
-      Utilities.ParseException(inst, logger=self.logger)
+        result = False
+        Utilities.ParseException(inst, logger=self.logger)
     finally:
-      return result
+        return result
 
 def db_handler_call(options):
   ''' Method for calling MongoAccess handler'''
