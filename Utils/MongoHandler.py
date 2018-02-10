@@ -1,20 +1,23 @@
 #!/usr/bin/env python
-
 import sys, os
 import time
 import json
 import pymongo
 import ast
 import datetime
+import copy
+import pprint
 
 import logging
 import logging.handlers
 
 from optparse import OptionParser, OptionGroup
 from pymongo import MongoClient
+from collections import Counter
 
 import Utilities
 
+sys.setrecursionlimit(5000)
 class MongoAccess:
   def __init__(self, debug=False):
     ''' '''
