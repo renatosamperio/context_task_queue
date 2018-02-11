@@ -5,7 +5,6 @@ import json
 import pymongo
 import ast
 import datetime
-import copy
 import pprint
 
 import logging
@@ -13,7 +12,6 @@ import logging.handlers
 
 from optparse import OptionParser, OptionGroup
 from pymongo import MongoClient
-from collections import Counter
 
 import Utilities
 
@@ -162,163 +160,13 @@ class MongoAccess:
                                            multi=False)
         
         result = resultSet['ok'] == 1
+        if not result:
+            self.logger.debug("Warning: Not expected result set:\n%s"%
+                              str(resultSet))
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     finally:
       return result
-
-  def Compare(self, posts, element, items_id):
-    '''Prints collection of posts '''
-    result_comparison = False
-    
-    def compare_ftor(post_copy, elem_copy, list_comparators):
-        '''
-        Comparator for time series update
-        '''
-        are_similar = True
-        try:
-            for comparator in list_comparators:
-                ## Remove list of items that are used for time series
-                ## but first compare today's values                                
-                if key == comparator:
-                    self.logger.debug("  -       Removing [%s] from dict copy", key)
-                    datetime_now    = datetime.datetime.utcnow()
-                    month           = str(datetime_now.month)
-                    day             = str(datetime_now.day)
-                    todays_db       = post_copy[key]['value'][month][day]
-                    todays_website  = elem_copy[key]
-                    are_similar     = are_similar and (todays_db < todays_website)
-                    if todays_db > todays_website:
-                        self.logger.debug("  -       Existing value for [%s] is better", key)
-                    ## print "---> ",key,": P[", post_copy[key],"] == E[",elem_copy[key],"]"
-                    print "---> ",key,": P[", todays_db,"] == E[",todays_website,"] :", are_similar
-                    del post_copy[key]
-                    del elem_copy[key]
-        except Exception as inst:
-            Utilities.ParseException(inst, logger=self.logger)
-        finally:
-            return are_similar
-    try: 
-        if isinstance(posts,type(None)):
-            self.logger.debug("Invalid input posts for printing")
-            
-        for post in posts:
-            post_copy   = copy.deepcopy(post)
-            elem_copy   = copy.deepcopy(element)
-        
-            postKeys = post.keys()
-            for key in postKeys:
-                if key=='_id':
-                    del post_copy[key]
-                
-                if compare_ftor is not None:
-                    result_comparison = cmp(post_copy, elem_copy)
-                    result_comparison = compare_ftor(post_copy, elem_copy, items_id)
-            print "="*40, "elem_copy:"
-            pprint.pprint(elem_copy)
-            print "="*40, "post_copy:"
-            pprint.pprint(post_copy)
-            print ""
-                
-
-    except Exception as inst:
-        Utilities.ParseException(inst, logger=self.logger)
-    finally:
-        return result_comparison
-
-  def UpdateMissing(self, posts, element):
-    '''
-    '''
-    result = False
-    try: 
-        if isinstance(posts,type(None)):
-            self.logger.debug("Invalid input posts for printing")
-            
-        for post in posts:  ## it should be only 1 post!
-            elementKeys = element.keys()
-            postKeys    = post.keys()
-            (Counter(elementKeys) - Counter(postKeys))
-            extra_in_db = (Counter(postKeys) - Counter(elementKeys)).keys()
-            missed_in_db= (Counter(elementKeys) - Counter(postKeys)).keys()
-#             
-            for key in extra_in_db:
-                if key != '_id':
-                    self.logger.debug('  -     TODO: Remove item [%s] from DB', key)
-                    
-            ## Return true if there is nothing to update
-            if len(missed_in_db) > 0:
-                for key in missed_in_db:
-                    result = self.Update(
-                        condition={"_id": post["_id"]}, 
-                        substitute={"page": element['page']}, 
-                        upsertValue=False)
-                    self.logger.debug('  -     Added item [%s] to DB ', key)
-            else:
-                result = True
-    except Exception as inst:
-        Utilities.ParseException(inst, logger=self.logger)
-    finally:
-        return result
-    
-  def Update_TimeSeries_Day(self, item, item_index, items_id):
-    '''
-    Generate a time series model 
-    https://www.mongodb.com/blog/post/schema-design-for-time-series-data-in-mongodb
-    '''
-    result = False
-    try:
-        ## Check if given item already exists, otherwise
-        ## insert new time series model for each item ID
-        condition               = {item_index: item[item_index]}
-        posts                   = self.Find(condition)
-        datetime_now            = datetime.datetime.utcnow()
-        
-        ## We can receive more than one time series item
-        ## to update per call in the same item
-        #TODO: Do a more efficient update/insert for bulk items
-        if posts.count() < 1:
-            ## Prepare time series model for time series
-            def get_day_timeseries_model(value, datetime_now):
-                return { 
-                    "timestamp_day": datetime_now.year,
-                    "value": {
-                        str(datetime_now.month): {
-                            str(datetime_now.day) : value
-                        }
-                    }
-                };
-            for item_id in items_id:
-                item[item_id]   = get_day_timeseries_model(item[item_id], datetime_now)
-            ## Inserting time series model
-            post_id             = self.Insert(item)
-            self.logger.debug("  -     Inserted time series item with hash [%s] in collection [%s]"% 
-                              (item[item_index], self.coll_name))
-        else:
-            ## Check if there are missing or extra keys
-            updated_missing     = self.UpdateMissing(posts, item)
-            if not updated_missing:
-                self.logger.debug("Error: Failed item update");
-            
-            ## Check if time series already exist
-            are_similar  = self.Compare(posts, item, items_id)
-            if are_similar:
-                self.logger.debug("  -     Update: Items are different!")
-                # Updating condition and substitute values
-                for item_id in items_id:
-                    set_key         = item_id+".value."+str(datetime_now.month)+"."+str(datetime_now.day)
-                    subs_item_id    = {set_key: item[item_id] }
-                    result = result and self.Update(condition, subs_item_id)
-                    self.logger.debug("  -     Updated time series item with hash [%s] in collection [%s]"% 
-                                      (item[item_index], self.coll_name))
-            else:
-                self.logger.debug("  -     Update: Items are similar")
-                result = True
-                
-    except Exception as inst:
-        result = False
-        Utilities.ParseException(inst, logger=self.logger)
-    finally:
-        return result
 
 def db_handler_call(options):
   ''' Method for calling MongoAccess handler'''
