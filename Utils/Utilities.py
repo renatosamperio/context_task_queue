@@ -212,6 +212,10 @@ def IdGenerator(size=6, chars=string.ascii_uppercase + string.digits):
 def GetPID():
   return ctypes.CDLL('libc.so.6').syscall(186)
 
+def IsNpArrayConsecutive(data, stepsize=1):
+    import numpy as np
+    return np.split(data, np.where(np.diff(data) != stepsize)[0]+1)
+
 class TailingError(RuntimeError):
    def __init__(self, arg, host):
       self.args = arg
