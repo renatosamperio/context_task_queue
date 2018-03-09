@@ -127,8 +127,9 @@ class MongoAccess:
   def Size(self):
     collSize = None
     try: 
-      collSize = self.collection.count()
-      self.logger.debug("Collection [%s] has a size of [%s]"%(self.coll_name, str(collSize)))
+      if self.collection is not None:
+        collSize = self.collection.count()
+        self.logger.debug("Collection [%s] has a size of [%s]"%(self.coll_name, str(collSize)))
     except Exception as inst:
       Utilities.ParseException(inst, logger=self.logger)
     finally:
