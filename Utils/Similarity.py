@@ -46,8 +46,8 @@ class Similarity:
 
   def score(self, base, other):
     try:
-      other = other.replace(".", " ")
-      complete_phrase = 1.0 if base in other else 0.0
+      other = other.replace(".", " ").strip()
+      complete_phrase = 1.0 if base.strip() in other else 0.0
       similarity = self.cosine_sim(base, other)
       #print "=== similarity:", similarity
       score = (complete_phrase+similarity)/2.0
