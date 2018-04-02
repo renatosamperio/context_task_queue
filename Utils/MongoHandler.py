@@ -12,6 +12,7 @@ import logging.handlers
 
 from optparse import OptionParser, OptionGroup
 from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
 
 import Utilities
 
@@ -39,6 +40,13 @@ class MongoAccess:
       self.logger.debug("Generating instance of mongo client")
       # Creating mongo client
       client = MongoClient(host, port)
+      
+      try:
+        # The ismaster command is cheap and does not require auth.
+        client.admin.command('ismaster')
+      except ConnectionFailure:
+        self.logger.debug("Error: Server not available")
+        return result
 
       # Getting instance of database
       self.logger.debug("Getting instance of database [%s]"%database)
