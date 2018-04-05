@@ -122,7 +122,7 @@ class MongoAccess:
       collSize = self.collection.count()
       self.logger.debug("Collection [%s] has a size of [%d]"%(self.coll_name, collSize))
     except Exception as inst:
-      Utilities.ParseException(inst, logger=logger)
+      Utilities.ParseException(inst, logger=self.logger)
     return collSize
  
   def Update(self, condition=None, substitute=None, upsertValue=False):
@@ -194,7 +194,7 @@ def db_handler_call(options):
 			       substitute=options.replace)
       
   except Exception as inst:
-    Utilities.ParseException(inst, logger=logger)
+    Utilities.ParseException(inst, logger=self.logger)
   
 if __name__ == '__main__':
   ''''''
