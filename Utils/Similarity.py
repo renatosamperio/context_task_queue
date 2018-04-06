@@ -53,7 +53,7 @@ class Similarity:
       score = (complete_phrase+similarity)/2.0
       return score
     except Exception as inst:
-      Utilities.ParseException(inst, logger=logger)
+      Utilities.ParseException(inst)
 
 def example4(task):
   logger = Utilities.GetLogger(LOG_NAME, useFile=False)
