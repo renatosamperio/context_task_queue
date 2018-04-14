@@ -46,10 +46,26 @@ class Similarity:
 
   def score(self, base, other):
     try:
+      ## Stripping inputs
       other = other.replace(".", " ").strip()
-      complete_phrase = 1.0 if base.strip() in other else 0.0
-      similarity = self.cosine_sim(base, other)
-      #print "=== similarity:", similarity
+      base = base.strip()
+
+      ## Removing extra spaces in sentences
+      base_splitted = base.split()
+      base_splitted = ' '.join(base_splitted)
+      other_splitted = other.split()
+      other_splitted = ' '.join(other_splitted)
+
+      ## Sub-scoring if base is inside other
+      complete_phrase = 1.0 if base_splitted in other_splitted else 0.0
+      
+      ## If both sentences are the same don't do similarity
+      if base == other:
+          similarity = 1.0
+      else:
+          similarity = self.cosine_sim(base, other)
+
+      ## Scoring measurements
       score = (complete_phrase+similarity)/2.0
       return score
     except Exception as inst:
