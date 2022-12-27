@@ -1,5 +1,5 @@
 pip==9.0.1
-setuptools==28.8.0
+setuptools==65.5.1
 pyzmq==15.2.0
 psutil==5.0.1
 xmltodict==0.10.2
